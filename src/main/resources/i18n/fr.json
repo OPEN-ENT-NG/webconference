@@ -1,3 +1,8 @@
 {
-  "webconference.title": "Web conference"
+  "webconference.title": "Web conference",
+  "webconference.room.create": "Créer une salle",
+  "webconference.room.name": "Nom",
+  "webconference.create": "Créer",
+  "webconference.sessions": "session(s)",
+  "webconference.attendee.invite": "Inviter des participants"
 }

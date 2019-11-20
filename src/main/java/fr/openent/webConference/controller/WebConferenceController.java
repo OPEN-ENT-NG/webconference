@@ -1,5 +1,6 @@
-package fr.openent.webConference;
+package fr.openent.webConference.controller;
 
+import fr.openent.webConference.WebConference;
 import fr.wseduc.rs.ApiDoc;
 import fr.wseduc.rs.Get;
 import fr.wseduc.security.SecuredAction;

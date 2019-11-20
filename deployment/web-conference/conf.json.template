@@ -8,6 +8,7 @@
     	"app-icon" : "Web-conference-large",
         "host": "${host}",
         "ssl" : $ssl,
+        "sql": true,
         "auto-redeploy": false,
         "userbook-host": "${host}",
         "integration-mode" : "HTTP",

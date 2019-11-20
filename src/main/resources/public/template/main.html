@@ -1,0 +1,30 @@
+<div class="ten centered">
+    <div ng-include="'/webconference/public/template/current-room.html'"></div>
+    <div class="row">
+        <div class="card cell horizontal-margin horizontal-spacing vertical-spacing" ng-click="vm.selectedRoom = room"
+             ng-repeat="room in vm.rooms">
+            <h4>[[room.name]]</h4>
+            <div>[[room.sessions]]
+                <i18n>webconference.sessions</i18n>
+            </div>
+        </div>
+        <div class="create-form card cell horizontal-margin horizontal-spacing vertical-spacing">
+            <h4 class="row">
+                <i18n>webconference.room.create</i18n>
+            </h4>
+            <label for="room-name" class="row">
+                <i18n>webconference.room.name</i18n>
+            </label>
+            <div class="row">
+                <input type="text" id="room-name" ng-model="vm.room.name">
+            </div>
+            <div class="row">
+                <div class="right-magnet">
+                    <button ng-click="vm.createRoom(vm.room)">
+                        <i18n>webconference.create</i18n>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

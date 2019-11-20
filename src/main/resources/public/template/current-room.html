@@ -1,0 +1,12 @@
+<h1>
+    [[vm.selectedRoom.name]]
+</h1>
+<p class="row">[[vm.selectedRoom.sessions]]
+    <i18n>webconference.sessions</i18n>
+</p>
+<div>
+    <label class="row">
+        <i18n>webconference.attendee.invite</i18n>
+    </label>
+    <input type="text" class="four" ng-model="vm.selectedRoom.link" readonly>
+</div>
