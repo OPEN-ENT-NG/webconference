@@ -89,6 +89,16 @@ public class RoomController extends ControllerHelper {
         });
     }
 
+    private void joinAsAttendee(JsonObject room, UserInfos user, Handler<Either<String, String>> handler) {
+        String activeSessionId = room.getString("active_session");
+        if (activeSessionId != null) {
+            handler.handle(new Either.Right<>(BigBlueButton.getInstance().getRedirectURL(activeSessionId, user.getUsername(), room.getString("attendee_pw"))));
+        } else {
+            String url = config.getString("host") + "/webconference/rooms/" + room.getString("id") + "/waiting";
+            handler.handle(new Either.Right<>(url));
+        }
+    }
+
     @Get("/rooms/:id/join")
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     @ApiDoc("Join given room")
@@ -112,9 +122,15 @@ public class RoomController extends ControllerHelper {
                 }
             };
 
-            if (user.getUserId().equals(room.getString("owner"))) {
-                joinAsModerator(room, user, joiningHandler);
-            }
+            if (user.getUserId().equals(room.getString("owner"))) joinAsModerator(room, user, joiningHandler);
+            else joinAsAttendee(room, user, joiningHandler);
         }));
+    }
+
+    @Get("/rooms/:id/waiting")
+    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @ApiDoc("Waiting page")
+    public void waiting(HttpServerRequest request) {
+        renderView(request, null, "waiting.html", null);
     }
 }
