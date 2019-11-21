@@ -10,27 +10,43 @@ CREATE TABLE webconference.scripts
 
 CREATE TABLE webconference.room
 (
-    id           character varying(36)       NOT NULL,
-    name         character varying(250)      NOT NULL,
-    owner        character varying(36)       NOT NULL,
-    sessions     bigint                      NOT NULL DEFAULT 0,
-    moderator_pw character varying(36)       NOT NULL,
-    attendee_pw  character varying(36)       NOT NULL,
-    link         character varying(250)      NOT NULL,
-    created      timestamp without time zone NOT NULL default now(),
+    id             character varying(36)       NOT NULL,
+    name           character varying(250)      NOT NULL,
+    owner          character varying(36)       NOT NULL,
+    sessions       bigint                      NOT NULL DEFAULT 0,
+    moderator_pw   character varying(36)       NOT NULL,
+    attendee_pw    character varying(36)       NOT NULL,
+    link           character varying(250)      NOT NULL,
+    created        timestamp without time zone NOT NULL default now(),
+    active_session character varying(250),
     CONSTRAINT room_pkey PRIMARY KEY (id)
 );
 
 CREATE TABLE webconference.session
 (
-    id         character varying(250)      NOT NULL,
-    start_date date                        NOT NULL,
-    start_time time without time zone      NOT NULL,
-    end_date   date                        NOT NULL,
-    end_time   time without time zone      NOT NULL,
-    created    timestamp without time zone NOT NULL DEFAULT now(),
-    meeting_id character varying(250)      NOT NULL,
-    room_id    character varying(36)       NOT NULL,
+    id          character varying(36)       NOT NULL,
+    start_date  date                        NOT NULL DEFAULT now(),
+    start_time  time without time zone      NOT NULL DEFAULT now(),
+    end_date    date,
+    end_time    time without time zone,
+    created     timestamp without time zone NOT NULL DEFAULT now(),
+    internal_id character varying(250)      NOT NULL,
+    room_id     character varying(36)       NOT NULL,
     CONSTRAINT session_pkey PRIMARY KEY (id),
     CONSTRAINT fk_room_id FOREIGN KEY (room_id) REFERENCES webconference.room (id)
 );
+
+CREATE OR REPLACE FUNCTION webconference.set_active_session() RETURNS TRIGGER AS
+$BODY$
+BEGIN
+    UPDATE webconference.room
+    SET active_session = NEW.id
+    WHERE id = NEW.room_id;
+
+    RETURN NEW;
+END;
+$BODY$
+    LANGUAGE plpgsql;
+
+CREATE TRIGGER set_active_session AFTER INSERT ON webconference.session
+    FOR EACH ROW EXECUTE PROCEDURE webconference.set_active_session();

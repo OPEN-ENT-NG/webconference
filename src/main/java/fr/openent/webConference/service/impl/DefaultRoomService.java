@@ -27,6 +27,13 @@ public class DefaultRoomService implements RoomService {
     }
 
     @Override
+    public void get(String id, Handler<Either<String, JsonObject>> handler) {
+        String query = "SELECT id, name, moderator_pw, attendee_pw, active_session, owner FROM " + WebConference.DB_SCHEMA + ".room WHERE id = ?;";
+        JsonArray params = new JsonArray().add(id);
+        Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
+    }
+
+    @Override
     public void create(JsonObject room, UserInfos user, Handler<Either<String, JsonObject>> handler) {
         String id = UUID.randomUUID().toString();
         String moderatorPW = UUID.randomUUID().toString();

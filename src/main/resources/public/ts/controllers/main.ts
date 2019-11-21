@@ -1,6 +1,8 @@
 import {ng, template} from 'entcore';
 import {IRoom} from '../interfaces';
 
+declare const window: any;
+
 interface ViewModel {
 	rooms: IRoom[]
 	room: IRoom
@@ -10,6 +12,8 @@ interface ViewModel {
 	}
 
 	createRoom(room: IRoom)
+
+	startCurrentRoom()
 }
 
 export const mainController = ng.controller('MainController',
@@ -36,6 +40,10 @@ export const mainController = ng.controller('MainController',
 			};
 
 			$scope.safeApply();
+		};
+
+		vm.startCurrentRoom = () => {
+			window.open(vm.selectedRoom.link);
 		};
 
 		loadRooms();

@@ -9,6 +9,8 @@ import org.entcore.common.user.UserInfos;
 public interface RoomService {
     void list(UserInfos user, Handler<Either<String, JsonArray>> handler);
 
+    void get(String id, Handler<Either<String, JsonObject>> handler);
+
     void create(JsonObject room, UserInfos user, Handler<Either<String, JsonObject>> handler);
 
     void update(String id, JsonObject room, Handler<Either<String, JsonObject>> handler);

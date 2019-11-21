@@ -4,9 +4,16 @@
 <p class="row">[[vm.selectedRoom.sessions]]
     <i18n>webconference.sessions</i18n>
 </p>
-<div>
-    <label class="row">
-        <i18n>webconference.attendee.invite</i18n>
-    </label>
-    <input type="text" class="four" ng-model="vm.selectedRoom.link" readonly>
+<div class="row">
+    <div class="eight cell">
+        <label class="row">
+            <i18n>webconference.attendee.invite</i18n>
+        </label>
+        <input type="text" class="four" ng-model="vm.selectedRoom.link" readonly>
+    </div>
+    <div class="cell four">
+        <button ng-click="vm.startCurrentRoom()">
+            <i18n>webconference.room.start</i18n>
+        </button>
+    </div>
 </div>

@@ -4,5 +4,6 @@
   "webconference.room.name": "Nom",
   "webconference.create": "Créer",
   "webconference.sessions": "session(s)",
-  "webconference.attendee.invite": "Inviter des participants"
+  "webconference.attendee.invite": "Inviter des participants",
+  "webconference.room.start": "Démarrer"
 }
