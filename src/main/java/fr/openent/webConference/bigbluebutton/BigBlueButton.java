@@ -126,7 +126,9 @@ public class BigBlueButton {
         parameters = parameters + "&checksum=" + checksum;
         httpClient.getAbs(this.host + this.apiEndpoint + "/" + Actions.CREATE + "?" + parameters, response -> {
             if (response.statusCode() != 200) {
-                log.error("[WebConference@BigBlueButton] Failed to create meeting");
+                String message = "[WebConference@BigBlueButton] Failed to create meeting";
+                log.error(message);
+                handler.handle(new Either.Left<>(message));
             } else {
                 response.bodyHandler(body -> {
                     try {
@@ -162,5 +164,43 @@ public class BigBlueButton {
 
         private BigBlueButtonHolder() {
         }
+    }
+
+    public void addWebHook(String webhook, Handler<Either<String, String>> handler) {
+        String parameter = "callbackURL=" + this.encodeParams(webhook);
+        String checksum = checksum(Actions.CREATE_HOOK + parameter + this.secret);
+        String url = this.host + this.apiEndpoint + "/" + Actions.CREATE_HOOK + "?" + parameter + "&checksum=" + checksum;
+        log.info("[WebConference@BigBlueButton] web hook end point : " + url);
+        this.httpClient.getAbs(url, response -> {
+            if (response.statusCode() != 200) {
+                String message = "[WebConference@BigBlueButton] Failed to add webhook";
+                log.error(message);
+                handler.handle(new Either.Left<>(message));
+            } else {
+                response.bodyHandler(body -> {
+                    try {
+                        Document res = parseResponse(body);
+                        XPathFactory xpf = XPathFactory.newInstance();
+                        XPath path = xpf.newXPath();
+                        String returnCode = path.evaluate("/response/returncode", res.getDocumentElement());
+
+                        if (!"SUCCESS".equals(returnCode)) {
+                            handler.handle(new Either.Left<>("[WebConference@BigBlueButton] Response is not SUCCESS"));
+                            return;
+                        }
+
+                        String hookId = path.evaluate("/response/hookID", res.getDocumentElement());
+                        handler.handle(new Either.Right<>(hookId));
+                    } catch (XPathExpressionException | NullPointerException e) {
+                        log.error("[WebConference@BigBlueButton] Failed to parse web hook response", e);
+                        handler.handle(new Either.Left<>(e.toString()));
+                    }
+                });
+                response.exceptionHandler(throwable -> {
+                    log.error("[WebConference@BigBlueButton] Failed to register web hook", throwable);
+                    handler.handle(new Either.Left<>(throwable.toString()));
+                });
+            }
+        }).end();
     }
 }

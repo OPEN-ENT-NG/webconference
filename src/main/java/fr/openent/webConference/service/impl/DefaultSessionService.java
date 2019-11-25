@@ -20,4 +20,12 @@ public class DefaultSessionService implements SessionService {
 
         Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
     }
+
+    @Override
+    public void end(String sessionId, Handler<Either<String, JsonObject>> handler) {
+        String query = "UPDATE " + WebConference.DB_SCHEMA + ".session SET end_date = now(), end_time = now() WHERE id = ?;";
+        JsonArray params = new JsonArray().add(sessionId);
+
+        Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
+    }
 }

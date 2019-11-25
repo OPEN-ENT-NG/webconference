@@ -50,3 +50,19 @@ $BODY$
 
 CREATE TRIGGER set_active_session AFTER INSERT ON webconference.session
     FOR EACH ROW EXECUTE PROCEDURE webconference.set_active_session();
+
+CREATE OR REPLACE FUNCTION webconference.remove_active_session() RETURNS TRIGGER AS
+$BODY$
+BEGIN
+    UPDATE webconference.room
+    SET active_session = null
+    WHERE id = NEW.room_id;
+
+    RETURN NEW;
+END;
+$BODY$
+    LANGUAGE plpgsql;
+
+CREATE TRIGGER inactive_session AFTER INSERT OR UPDATE OF end_date ON webconference.session
+    FOR EACH ROW
+EXECUTE PROCEDURE webconference.remove_active_session();
