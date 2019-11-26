@@ -48,15 +48,9 @@ public class BigBlueButton {
                     .setDefaultHost(host)
                     .setDefaultPort("https".equals(uri.getScheme()) ? 433 : 80)
                     .setSsl("https".equals(uri.getScheme()))
-                    .setKeepAlive(true);
-//            if (System.getProperty("httpclient.proxyHost") != null) {
-//                ProxyOptions proxyOptions = new ProxyOptions()
-//                        .setHost(System.getProperty("httpclient.proxyHost"))
-//                        .setPort(Integer.parseInt(System.getProperty("httpclient.proxyPort")))
-//                        .setUsername(System.getProperty("httpclient.proxyUsername"))
-//                        .setPassword(System.getProperty("httpclient.proxyPassword"));
-//                opts.setProxyOptions(proxyOptions);
-//            }
+                    .setKeepAlive(true)
+                    .setVerifyHost(false)
+                    .setTrustAll(true);
             this.httpClient = vertx.createHttpClient(opts);
         } catch (URISyntaxException e) {
             e.printStackTrace();
