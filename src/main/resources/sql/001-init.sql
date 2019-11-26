@@ -33,7 +33,7 @@ CREATE TABLE webconference.session
     internal_id character varying(250)      NOT NULL,
     room_id     character varying(36)       NOT NULL,
     CONSTRAINT session_pkey PRIMARY KEY (id),
-    CONSTRAINT fk_room_id FOREIGN KEY (room_id) REFERENCES webconference.room (id)
+    CONSTRAINT fk_room_id FOREIGN KEY (room_id) REFERENCES webconference.room (id) ON DELETE CASCADE
 );
 
 CREATE OR REPLACE FUNCTION webconference.set_active_session() RETURNS TRIGGER AS
