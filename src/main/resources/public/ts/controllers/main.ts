@@ -20,6 +20,10 @@ interface ViewModel {
 	openRoomUpdate(room: IRoom)
 
 	startCurrentRoom()
+
+	endCurrentRoom()
+
+	selectRoomHasActiveSession()
 }
 
 export const mainController = ng.controller('MainController',
@@ -51,7 +55,21 @@ export const mainController = ng.controller('MainController',
 		vm.startCurrentRoom = () => {
 			vm.selectedRoom.sessions++;
 			window.open(vm.selectedRoom.link);
+			vm.selectedRoom.active_session = '';
 			$scope.safeApply();
+		};
+
+		vm.selectRoomHasActiveSession = () => 'active_session' in vm.selectedRoom && vm.selectedRoom.active_session !== null;
+
+		vm.endCurrentRoom = async () => {
+			try {
+				await RoomService.end(vm.selectedRoom);
+				delete vm.selectedRoom.active_session;
+				$scope.safeApply();
+			} catch (e) {
+				console.error(`Failed to end meeting ${vm.selectedRoom.id}`, vm.selectedRoom);
+				throw e;
+			}
 		};
 
 		vm.openRoomUpdate = (room) => {

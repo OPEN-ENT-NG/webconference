@@ -2,7 +2,7 @@ package fr.openent.webConference.controller;
 
 import fr.openent.webConference.WebConference;
 import fr.openent.webConference.bigbluebutton.BigBlueButton;
-import fr.openent.webConference.secutiry.RoomFilter;
+import fr.openent.webConference.security.RoomFilter;
 import fr.openent.webConference.service.RoomService;
 import fr.openent.webConference.service.SessionService;
 import fr.openent.webConference.service.impl.DefaultRoomService;
@@ -68,6 +68,10 @@ public class RoomController extends ControllerHelper {
     }
 
     private void joinAsModerator(JsonObject room, UserInfos user, Handler<Either<String, String>> handler) {
+        if (room.containsKey("active_session") && room.getString("active_session") != null) {
+            handler.handle(new Either.Right<>(BigBlueButton.getInstance().getRedirectURL(room.getString("active_session"), user.getUsername(), room.getString("moderator_pw"))));
+            return;
+        }
         String sessionId = UUID.randomUUID().toString();
         BigBlueButton.getInstance().create(room.getString("name"), sessionId, room.getString("moderator_pw"), room.getString("attendee_pw"), creationEvent -> {
             if (creationEvent.isLeft()) {
@@ -125,6 +129,38 @@ public class RoomController extends ControllerHelper {
             if (user.getUserId().equals(room.getString("owner"))) joinAsModerator(room, user, joiningHandler);
             else joinAsAttendee(room, user, joiningHandler);
         }));
+    }
+
+    @Get("/rooms/:id/end")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(RoomFilter.class)
+    @ApiDoc("Close meeting room")
+    public void end(HttpServerRequest request) {
+        String roomId = request.getParam("id");
+        roomService.get(roomId, evt -> {
+            if (evt.isLeft()) {
+                log.error("[WebConference@RoomController] Failed to retrieve room. Id: " + roomId);
+                renderError(request);
+                return;
+            }
+
+            JsonObject room = evt.right().getValue();
+            if (!room.containsKey("active_session")) {
+                notFound(request);
+                return;
+            }
+
+            String activeSession = room.getString("active_session");
+            String moderatorPW = room.getString("moderator_pw");
+            BigBlueButton.getInstance().end(activeSession, moderatorPW, endEvt -> {
+                if (endEvt.isLeft()) {
+                    log.error("[WebConference@RoomController] Failed to end session " + activeSession);
+                    renderError(request);
+                } else {
+                    noContent(request);
+                }
+            });
+        });
     }
 
     @Get("/rooms/:id/waiting")

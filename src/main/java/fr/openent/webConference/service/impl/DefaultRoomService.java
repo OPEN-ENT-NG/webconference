@@ -21,7 +21,7 @@ public class DefaultRoomService implements RoomService {
 
     @Override
     public void list(UserInfos user, Handler<Either<String, JsonArray>> handler) {
-        String query = "SELECT id, name, sessions, link FROM " + WebConference.DB_SCHEMA + ".room WHERE owner = ? ORDER BY name";
+        String query = "SELECT id, name, sessions, link, active_session FROM " + WebConference.DB_SCHEMA + ".room WHERE owner = ? ORDER BY name";
         JsonArray params = new JsonArray().add(user.getUserId());
         Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(handler));
     }

@@ -159,6 +159,42 @@ public class BigBlueButton {
         }).end();
     }
 
+    public void end(String meetingId, String moderatorPW, Handler<Either<String, Boolean>> handler) {
+        String parameters = "meetingID=" + meetingId + "&password=" + moderatorPW;
+        String checksum = checksum(Actions.END + parameters + this.secret);
+        parameters = parameters + "&checksum=" + checksum;
+        httpClient.getAbs(this.host + this.apiEndpoint + "/" + Actions.END + "?" + parameters, response -> {
+            if (response.statusCode() != 200) {
+                String message = "[WebConference@BigBlueButton] Failed to end meeting : " + meetingId;
+                log.error(message);
+                handler.handle(new Either.Left<>(message));
+            } else {
+                response.bodyHandler(body -> {
+                    try {
+                        Document res = parseResponse(body);
+                        XPathFactory xpf = XPathFactory.newInstance();
+                        XPath path = xpf.newXPath();
+                        String returnCode = path.evaluate("/response/returncode", res.getDocumentElement());
+
+                        if (!"SUCCESS".equals(returnCode)) {
+                            handler.handle(new Either.Left<>("[WebConference@BigBlueButton] Response is not SUCCESS"));
+                            return;
+                        }
+
+                        handler.handle(new Either.Right<>(true));
+                    } catch (XPathExpressionException | NullPointerException e) {
+                        log.error("[WebConference@BigBlueButton] Failed to parse end meeting response body");
+                        handler.handle(new Either.Left<>(e.toString()));
+                    }
+                });
+                response.exceptionHandler(throwable -> {
+                    log.error("[WebConference@BigBlueButton] Failed to end meeting. An error is catch by exception handler. Meetind : " + meetingId, throwable);
+                    handler.handle(new Either.Left<>(throwable.toString()));
+                });
+            }
+        }).end();
+    }
+
     private static class BigBlueButtonHolder {
         private static final BigBlueButton instance = new BigBlueButton();
 

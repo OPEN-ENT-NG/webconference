@@ -10,6 +10,8 @@ export interface RoomService {
     update(room: IRoom): Promise<IRoom>;
 
     delete(room: IRoom): Promise<IRoom>;
+
+    end(room: IRoom): Promise<void>;
 }
 
 export const RoomService = ng.service('RoomService', (): RoomService => ({
@@ -30,6 +32,11 @@ export const RoomService = ng.service('RoomService', (): RoomService => ({
 
     async delete({id}): Promise<IRoom> {
         await http.delete(`/${appPrefix}/rooms/${id}`);
+        return;
+    },
+
+    async end({id}): Promise<void> {
+        await http.get(`/${appPrefix}/rooms/${id}/end`);
         return;
     }
 }));

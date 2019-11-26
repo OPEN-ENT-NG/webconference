@@ -1,4 +1,4 @@
-package fr.openent.webConference.secutiry;
+package fr.openent.webConference.security;
 
 import fr.openent.webConference.WebConference;
 import fr.openent.webConference.helper.Workflow;

@@ -18,7 +18,11 @@
         </div>
         <div class="cell four center-component" style="flex: 0 0 30%;">
             <button ng-click="vm.startCurrentRoom()">
-                <i18n>webconference.room.start</i18n>
+                <i18n ng-show="!vm.selectRoomHasActiveSession()">webconference.room.start</i18n>
+                <i18n ng-show="vm.selectRoomHasActiveSession()">webconference.room.join</i18n>
+            </button>
+            <button ng-click="vm.endCurrentRoom()" ng-show="vm.selectRoomHasActiveSession()">
+                <i18n>webconference.room.end</i18n>
             </button>
         </div>
     </div>
