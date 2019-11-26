@@ -13,6 +13,12 @@ interface ViewModel {
 
 	createRoom(room: IRoom)
 
+	updateRoom(room: IRoom)
+
+	deleteRoom(room: IRoom)
+
+	openRoomUpdate(room: IRoom)
+
 	startCurrentRoom()
 }
 
@@ -22,10 +28,10 @@ export const mainController = ng.controller('MainController',
 		vm.lightbox = {
 			show: false
 		};
-		vm.rooms = [];
-		vm.room = {
-			name: ''
-		};
+
+		const openLightbox = () => vm.lightbox.show = true;
+		const closeLightbox = () => vm.lightbox.show = false;
+		const initEmptyRoom = () => ({name: ''});
 
 		const loadRooms = () => RoomService.list().then(rooms => {
 			vm.rooms = rooms;
@@ -35,25 +41,50 @@ export const mainController = ng.controller('MainController',
 		vm.createRoom = async (room: IRoom) => {
 			const newRoom = await RoomService.create(room);
 			vm.rooms = [...vm.rooms, newRoom];
-			vm.room = {
-				name: ''
-			};
+			vm.room = initEmptyRoom();
+			if (vm.rooms.length === 1) vm.selectedRoom = vm.rooms[0];
+			closeLightbox();
 
 			$scope.safeApply();
 		};
 
 		vm.startCurrentRoom = () => {
+			vm.selectedRoom.sessions++;
 			window.open(vm.selectedRoom.link);
+			$scope.safeApply();
 		};
 
-		loadRooms();
-		template.open('main', 'main');
+		vm.openRoomUpdate = (room) => {
+			vm.room = {...room};
+			openLightbox();
+		};
+
+
+		vm.updateRoom = async (room) => {
+			const {name, id} = await RoomService.update(room);
+			vm.room = initEmptyRoom();
+			vm.rooms.forEach(aRoom => {
+				if (aRoom.id === id) aRoom.name = name;
+			});
+			closeLightbox();
+			$scope.safeApply();
+		};
+
+		vm.deleteRoom = async (room) => {
+			await RoomService.delete(room);
+			vm.rooms = vm.rooms.filter(aRoom => room.id !== aRoom.id);
+			if (vm.selectedRoom.id === room.id) vm.selectedRoom = vm.rooms[0];
+			$scope.safeApply();
+		};
 
 		$scope.safeApply = function () {
 			let phase = $scope.$root.$$phase;
 			if (phase !== '$apply' && phase !== '$digest') {
 				$scope.$apply();
 			}
-		}
+		};
 
+		vm.room = initEmptyRoom();
+		loadRooms().then($scope.safeApply);
+		template.open('main', 'main');
 	}]);

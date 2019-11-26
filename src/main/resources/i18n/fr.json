@@ -1,9 +1,13 @@
 {
   "webconference.title": "Web conference",
   "webconference.room.create": "Créer une salle",
-  "webconference.room.name": "Nom",
+  "webconference.room.name": "Nom de la salle",
   "webconference.create": "Créer",
+  "webconference.update": "Modifier",
+  "webconference.delete": "Supprimer",
   "webconference.sessions": "session(s)",
   "webconference.attendee.invite": "Inviter des participants",
-  "webconference.room.start": "Démarrer"
+  "webconference.room.start": "Ouvrir la salle",
+  "webconference.rooms.empty": "Oups ! Pas de salle ? Pour commencer à utiliser le module, vous devez créer une salle.",
+  "webconferences.room.create": "Créer une salle"
 }

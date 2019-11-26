@@ -1,19 +1,25 @@
-<h1>
-    [[vm.selectedRoom.name]]
-</h1>
-<p class="row">[[vm.selectedRoom.sessions]]
-    <i18n>webconference.sessions</i18n>
-</p>
-<div class="row">
-    <div class="eight cell">
-        <label class="row">
-            <i18n>webconference.attendee.invite</i18n>
-        </label>
-        <input type="text" class="four" ng-model="vm.selectedRoom.link" readonly>
-    </div>
-    <div class="cell four">
-        <button ng-click="vm.startCurrentRoom()">
-            <i18n>webconference.room.start</i18n>
-        </button>
+<div class="card horizontal-spacing-twice vertical-spacing vertical-spacing-six row">
+    <div class="cell vertical-spacing-twice row center-component flex-row f-row">
+        <div class="center-component" style="flex: 0 0 70%;">
+            <h1 style="align-self: flex-start; margin-bottom: 0;">
+                [[vm.selectedRoom.name]]
+            </h1>
+            <h4 class="row">[[vm.selectedRoom.sessions]]
+                <i18n>webconference.sessions</i18n>
+            </h4>
+            <div class="row">
+                <label class="row">
+                    <em>
+                        <i18n>webconference.attendee.invite</i18n>
+                    </em>
+                </label>
+                <input type="text" class="twelve" ng-model="vm.selectedRoom.link" readonly>
+            </div>
+        </div>
+        <div class="cell four center-component" style="flex: 0 0 30%;">
+            <button ng-click="vm.startCurrentRoom()">
+                <i18n>webconference.room.start</i18n>
+            </button>
+        </div>
     </div>
 </div>

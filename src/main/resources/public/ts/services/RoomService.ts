@@ -6,6 +6,10 @@ export interface RoomService {
     list(): Promise<IRoom[]>;
 
     create(room: IRoom): Promise<IRoom>;
+
+    update(room: IRoom): Promise<IRoom>;
+
+    delete(room: IRoom): Promise<IRoom>;
 }
 
 export const RoomService = ng.service('RoomService', (): RoomService => ({
@@ -17,5 +21,15 @@ export const RoomService = ng.service('RoomService', (): RoomService => ({
     async create(room): Promise<IRoom> {
         const {data} = await http.post(`/${appPrefix}/rooms`, room);
         return data;
+    },
+
+    async update({name, id}): Promise<IRoom> {
+        const {data} = await http.put(`/${appPrefix}/rooms/${id}`, {name});
+        return data;
+    },
+
+    async delete({id}): Promise<IRoom> {
+        await http.delete(`/${appPrefix}/rooms/${id}`);
+        return;
     }
 }));

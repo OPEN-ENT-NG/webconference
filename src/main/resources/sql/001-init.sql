@@ -66,3 +66,18 @@ $BODY$
 CREATE TRIGGER inactive_session AFTER INSERT OR UPDATE OF end_date ON webconference.session
     FOR EACH ROW
 EXECUTE PROCEDURE webconference.remove_active_session();
+
+CREATE OR REPLACE FUNCTION webconference.increment_room_sessions() RETURNS TRIGGER AS
+$BODY$
+BEGIN
+    UPDATE webconference.room
+    SET sessions = sessions + 1
+    WHERE id = NEW.room_id;
+
+    RETURN NEW;
+END;
+$BODY$
+    LANGUAGE plpgsql;
+
+CREATE TRIGGER increment_room_sessions AFTER INSERT ON webconference.session
+    FOR EACH ROW EXECUTE PROCEDURE webconference.increment_room_sessions();
