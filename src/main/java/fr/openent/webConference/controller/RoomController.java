@@ -98,8 +98,7 @@ public class RoomController extends ControllerHelper {
         if (activeSessionId != null) {
             handler.handle(new Either.Right<>(BigBlueButton.getInstance().getRedirectURL(activeSessionId, user.getUsername(), room.getString("attendee_pw"))));
         } else {
-            String url = config.getString("host") + "/webconference/rooms/" + room.getString("id") + "/waiting";
-            handler.handle(new Either.Right<>(url));
+            handler.handle(new Either.Right<>(""));
         }
     }
 
@@ -120,9 +119,14 @@ public class RoomController extends ControllerHelper {
                     log.error("[WebConference@BigBlueButton] Failed to join room", evt.left().getValue());
                     renderError(request);
                 } else {
-                    request.response().setStatusCode(302);
-                    request.response().putHeader("Location", evt.right().getValue());
-                    request.response().end();
+                    String redirect = evt.right().getValue();
+                    if (!"".equals(redirect)) {
+                        request.response().setStatusCode(302);
+                        request.response().putHeader("Location", evt.right().getValue());
+                        request.response().end();
+                    } else {
+                        renderView(request, null, "waiting.html", null);
+                    }
                 }
             };
 
@@ -161,12 +165,5 @@ public class RoomController extends ControllerHelper {
                 }
             });
         });
-    }
-
-    @Get("/rooms/:id/waiting")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
-    @ApiDoc("Waiting page")
-    public void waiting(HttpServerRequest request) {
-        renderView(request, null, "waiting.html", null);
     }
 }
