@@ -24,6 +24,8 @@ interface ViewModel {
 	endCurrentRoom()
 
 	selectRoomHasActiveSession()
+
+	refresh()
 }
 
 export const mainController = ng.controller('MainController',
@@ -94,6 +96,8 @@ export const mainController = ng.controller('MainController',
 			if (vm.selectedRoom.id === room.id) vm.selectedRoom = vm.rooms[0];
 			$scope.safeApply();
 		};
+
+		vm.refresh = () => document.location.reload();
 
 		$scope.safeApply = function () {
 			let phase = $scope.$root.$$phase;

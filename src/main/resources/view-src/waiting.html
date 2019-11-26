@@ -12,7 +12,14 @@
 
 <body ng-controller="MainController as vm">
 <portal>
-    En attente
+    <div class="row center-component flex row top-spacing-ten">
+        <h4>
+            <i18n>webconference.waiting.message</i18n>
+        </h4>
+        <button ng-click="vm.refresh()" class="vertical-spacing-six">
+            <i18n>webconference.waiting.refresh</i18n>
+        </button>
+    </div>
 </portal>
 </body>
 
