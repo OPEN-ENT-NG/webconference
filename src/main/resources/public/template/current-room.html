@@ -10,7 +10,15 @@
                         <i18n>webconference.attendee.invite</i18n>
                     </em>
                 </label>
-                <input type="text" class="twelve" ng-model="vm.selectedRoom.link" readonly>
+                <div class="row">
+                    <input type="text" class="ten cell" ng-model="vm.selectedRoom.link" readonly>
+                    <button class="cell"
+                            data-clipboard-text="[[vm.selectedRoom.link]]"
+                            id="clipboard-link-field"
+                            style="padding: 5px;display: flex;justify-content: center;align-items: center;margin-left: 5px;">
+                        <img src="/webconference/public/image/clipboard.png" width="20" height="20"
+                             alt="clipboard"></button>
+                </div>
             </div>
         </div>
         <div class="cell four center-component" style="flex: 0 0 30%;">

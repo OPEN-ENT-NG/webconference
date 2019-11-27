@@ -1,5 +1,6 @@
 import {ng, template} from 'entcore';
 import {IRoom} from '../interfaces';
+import * as Clipboard from 'clipboard';
 
 declare const window: any;
 
@@ -107,6 +108,9 @@ export const mainController = ng.controller('MainController',
 		};
 
 		vm.room = initEmptyRoom();
-		loadRooms().then($scope.safeApply);
+		loadRooms().then(() => {
+			$scope.safeApply();
+			new Clipboard('#clipboard-link-field');
+		});
 		template.open('main', 'main');
 	}]);
