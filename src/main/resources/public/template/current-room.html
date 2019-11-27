@@ -4,9 +4,6 @@
             <h1 style="align-self: flex-start; margin-bottom: 0;">
                 [[vm.selectedRoom.name]]
             </h1>
-            <h4 class="row">[[vm.selectedRoom.sessions]]
-                <i18n>webconference.sessions</i18n>
-            </h4>
             <div class="row">
                 <label class="row">
                     <em>
@@ -18,10 +15,10 @@
         </div>
         <div class="cell four center-component" style="flex: 0 0 30%;">
             <button ng-click="vm.startCurrentRoom()">
-                <i18n ng-show="!vm.selectRoomHasActiveSession()">webconference.room.start</i18n>
-                <i18n ng-show="vm.selectRoomHasActiveSession()">webconference.room.join</i18n>
+                <i18n ng-show="!vm.hasActiveSession(vm.selectedRoom)">webconference.room.start</i18n>
+                <i18n ng-show="vm.hasActiveSession(vm.selectedRoom)">webconference.room.join</i18n>
             </button>
-            <button ng-click="vm.endCurrentRoom()" ng-show="vm.selectRoomHasActiveSession()">
+            <button ng-click="vm.endCurrentRoom()" ng-show="vm.hasActiveSession(vm.selectedRoom)">
                 <i18n>webconference.room.end</i18n>
             </button>
         </div>

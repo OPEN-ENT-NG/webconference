@@ -23,7 +23,7 @@ interface ViewModel {
 
 	endCurrentRoom()
 
-	selectRoomHasActiveSession()
+	hasActiveSession(room: IRoom)
 
 	refresh()
 }
@@ -61,7 +61,7 @@ export const mainController = ng.controller('MainController',
 			$scope.safeApply();
 		};
 
-		vm.selectRoomHasActiveSession = () => 'active_session' in vm.selectedRoom && vm.selectedRoom.active_session !== null;
+		vm.hasActiveSession = (room) => 'active_session' in room && room.active_session !== null;
 
 		vm.endCurrentRoom = async () => {
 			try {

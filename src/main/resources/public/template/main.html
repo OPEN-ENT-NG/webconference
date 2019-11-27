@@ -6,16 +6,14 @@
                  ng-click="vm.selectedRoom = room"
                  ng-repeat="room in vm.rooms|orderBy:'name'">
                 <div style="flex: 0 0 20%;" class="vertical-spacing-twice center-component">
-                    <div class="center-component cyan room-image" style="border-radius: 4px;">
+                    <div class="center-component room-image" style="border-radius: 4px;"
+                         ng-class="{green: vm.hasActiveSession(room), cyan: !vm.hasActiveSession(room)}">
                         <img src="/webconference/public/image/webconference.png" alt="webconference"
                              style="width: 25px; height: 25px; margin: 10px;">
                     </div>
                 </div>
                 <div class="align-start center-component flex-row vertical-spacing-twice" style="flex: 0 0 70%">
                     <h4 style="margin: 0;">[[room.name]]</h4>
-                    <div>[[room.sessions]]
-                        <i18n>webconference.sessions</i18n>
-                    </div>
                 </div>
                 <div class="center-component" style="flex: 0 0 10%">
                     <dots-menu>
