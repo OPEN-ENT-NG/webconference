@@ -28,6 +28,7 @@
             </div>
 
             <div class="cell center-component f-row flex-row horizontal-spacing twelve-mobile"
+                 ng-click="vm.lightbox.show = true;"
                  style="border: 1px dashed lightgray;">
                 <div style="flex: 0 0 20%;" class="vertical-spacing-twice center-component">
                     <div class="center-component cyan room-image" style="border-radius: 4px;">
@@ -36,7 +37,7 @@
                     </div>
                 </div>
                 <div class="align-start center-component flex-row vertical-spacing-twice" style="flex: 0 0 80%">
-                    <h4 ng-click="vm.lightbox.show = true;">
+                    <h4>
                         <i18n>webconference.room.create</i18n>
                     </h4>
                 </div>
