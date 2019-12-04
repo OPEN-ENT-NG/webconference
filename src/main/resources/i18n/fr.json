@@ -1,5 +1,5 @@
 {
-  "webconference.title": "Web conference",
+  "webconference.title": "Web-conférence",
   "webconference.room.create": "Créer une salle",
   "webconference.room.name": "Nom de la salle",
   "webconference.create": "Créer",
@@ -13,5 +13,6 @@
   "webconference.rooms.empty": "Oups ! Pas de salle ? Pour commencer à utiliser le module, vous devez créer une salle.",
   "webconferences.room.create": "Créer une salle",
   "webconference.waiting.message": "Oups ! La salle que vous tentez de rejoindre n'est pas encore ouverte.",
-  "webconference.waiting.refresh": "Actualiser"
+  "webconference.waiting.refresh": "Actualiser",
+  "copy.link": "copier le lien"
 }

@@ -1,0 +1,85 @@
+.header {
+  display: flex;
+  height: 50px;
+
+  button {
+    margin-top: 0;
+  }
+}
+.rooms {
+  .title-container {
+    display: flex;
+    align-items: center;
+    padding-top: 10px;
+    h2 {
+      font-size: 34px;
+    }
+    button {
+
+    }
+  }
+
+  .url-container {
+    .input-url {
+      padding-right: 15px;
+
+      input {
+        width: 100%;
+      }
+    }
+
+    a {
+      display: flex;
+      fill: $wc-blue;
+      transition: all 250ms ease;
+      &:hover {
+        fill: $wc-orange;
+      }
+    }
+  }
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-gap: 25px;
+
+  .flex-card {
+    height: 130px;
+    display: flex;
+
+    &:hover {
+      box-shadow: 0 0 20px rgba($wc-cyan, 0.4%);
+    }
+
+    &.card {
+      &.active {
+        border: 1px solid $wc-cyan;
+        box-shadow: 0 0 20px rgba($wc-cyan, 0.4%);
+      }
+    }
+
+    .icon {
+      width: 30%;
+
+      .img-container {
+        border-radius: 4px;
+
+        img, .img {
+          width: 25px;
+          height: 25px;
+          margin: 10px;
+          fill: white;
+        }
+      }
+    }
+
+    .title {
+      width: 60%;
+    }
+
+    .dots-menu {
+      width: 10%;
+    }
+  }
+}

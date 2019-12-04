@@ -1,34 +1,36 @@
-<div class="card horizontal-spacing-twice vertical-spacing vertical-spacing-six row">
-    <div class="cell vertical-spacing-twice row center-component flex-row f-row">
-        <div class="center-component" style="flex: 0 0 70%;">
-            <h1 style="align-self: flex-start; margin-bottom: 0;">
-                [[vm.selectedRoom.name]]
-            </h1>
-            <div class="row">
+<div class="rooms">
+    <div class="card horizontal-spacing-twice vertical-spacing vertical-spacing-six row">
+        <div class="center-component">
+            <div class="twelve title-container">
+                <h2 ng-class="vm.hasActiveSession(vm.selectedRoom) ? 'six' : 'nine'">
+                    [[vm.selectedRoom.name]]
+                </h2>
+                <button ng-click="vm.startCurrentRoom()" class="three">
+                    <i18n ng-show="!vm.hasActiveSession(vm.selectedRoom)">webconference.room.start</i18n>
+                    <i18n ng-show="vm.hasActiveSession(vm.selectedRoom)">webconference.room.join</i18n>
+                </button>
+                <button ng-click="vm.endCurrentRoom()" ng-show="vm.hasActiveSession(vm.selectedRoom)" class="three cancel">
+                    <i18n>webconference.room.end</i18n>
+                </button>
+            </div>
+            <div class="twelve">
                 <label class="row">
                     <em>
                         <i18n>webconference.attendee.invite</i18n>
                     </em>
                 </label>
-                <div class="row">
-                    <input type="text" class="ten cell" ng-model="vm.selectedRoom.link" readonly>
-                    <button class="cell"
-                            data-clipboard-text="[[vm.selectedRoom.link]]"
-                            id="clipboard-link-field"
-                            style="padding: 5px;display: flex;justify-content: center;align-items: center;margin-left: 5px;">
-                        <img src="/webconference/public/image/clipboard.png" width="20" height="20"
-                             alt="clipboard"></button>
+                <div class="eight url-container">
+                    <div class="input-url nine cell">
+                        <input type="text" ng-model="vm.selectedRoom.link" readonly>
+                    </div>
+
+                    <a id="clipboard-link-field"
+                       data-clipboard-text="[[vm.selectedRoom.link]]">
+                        <div class="img" ng-include="'/webconference/public/image/content-copy.svg'"></div>
+                        <i18n>copy.link</i18n>
+                    </a>
                 </div>
             </div>
-        </div>
-        <div class="cell four center-component" style="flex: 0 0 30%;">
-            <button ng-click="vm.startCurrentRoom()">
-                <i18n ng-show="!vm.hasActiveSession(vm.selectedRoom)">webconference.room.start</i18n>
-                <i18n ng-show="vm.hasActiveSession(vm.selectedRoom)">webconference.room.join</i18n>
-            </button>
-            <button ng-click="vm.endCurrentRoom()" ng-show="vm.hasActiveSession(vm.selectedRoom)">
-                <i18n>webconference.room.end</i18n>
-            </button>
         </div>
     </div>
 </div>

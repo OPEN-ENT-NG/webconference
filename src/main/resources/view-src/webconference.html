@@ -10,8 +10,19 @@
     <script type="text/ng-template" id="empty"></script>
 </head>
 
-<body ng-controller="MainController as vm">
+<body ng-controller="MainController as vm" class="wc">
 <portal>
+    <div class="header twelve">
+        <h1 class="eight">
+            <i18n>webconference.title</i18n>
+        </h1>
+        <button ng-click="vm.lightbox.show = true;" class="two">
+            <i18n>webconferences.room.create</i18n>
+        </button>
+        <lightbox show="vm.lightbox.show" on-close="vm.lightbox.show = false;">
+            <div ng-include="'/webconference/public/template/room-creation.html'"></div>
+        </lightbox>
+    </div>
     <container template="main"></container>
 </portal>
 </body>
