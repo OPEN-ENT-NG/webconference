@@ -2,16 +2,18 @@
     <div class="card horizontal-spacing-twice vertical-spacing vertical-spacing-six row">
         <div class="center-component">
             <div class="twelve title-container">
-                <h2 ng-class="vm.hasActiveSession(vm.selectedRoom) ? 'six' : 'nine'">
+                <h2 class="seven">
                     [[vm.selectedRoom.name]]
                 </h2>
-                <button ng-click="vm.startCurrentRoom()" class="three">
-                    <i18n ng-show="!vm.hasActiveSession(vm.selectedRoom)">webconference.room.start</i18n>
-                    <i18n ng-show="vm.hasActiveSession(vm.selectedRoom)">webconference.room.join</i18n>
-                </button>
-                <button ng-click="vm.endCurrentRoom()" ng-show="vm.hasActiveSession(vm.selectedRoom)" class="three cancel">
-                    <i18n>webconference.room.end</i18n>
-                </button>
+                <div class="five button">
+                    <button ng-click="vm.startCurrentRoom()">
+                        <i18n ng-show="!vm.hasActiveSession(vm.selectedRoom)">webconference.room.start</i18n>
+                        <i18n ng-show="vm.hasActiveSession(vm.selectedRoom)">webconference.room.join</i18n>
+                    </button>
+                    <button ng-click="vm.endCurrentRoom()" class="cancel" ng-show="vm.hasActiveSession(vm.selectedRoom)">
+                        <i18n>webconference.room.end</i18n>
+                    </button>
+                </div>
             </div>
             <div class="twelve">
                 <label class="row">
