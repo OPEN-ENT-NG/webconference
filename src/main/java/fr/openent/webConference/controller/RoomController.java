@@ -161,7 +161,14 @@ public class RoomController extends ControllerHelper {
                     log.error("[WebConference@RoomController] Failed to end session " + activeSession);
                     renderError(request);
                 } else {
-                    noContent(request);
+                    sessionService.end(activeSession, event -> {
+                        if (event.isLeft()) {
+                            log.error("[WebConference@RoomController] Failed to end sql session " + activeSession, event.left().getValue());
+                            renderError(request);
+                        } else {
+                            noContent(request);
+                        }
+                    });
                 }
             });
         });
