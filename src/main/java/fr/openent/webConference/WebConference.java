@@ -27,6 +27,7 @@ public class WebConference extends BaseServer {
 		JsonObject BBBConf = config.getJsonObject("bigbluebutton", new JsonObject());
 		BigBlueButton.getInstance()
 				.setHost(vertx, BBBConf.getString("host", ""));
+		BigBlueButton.getInstance().setSource(config.getString("host"));
 		BigBlueButton.getInstance().setApiEndpoint(BBBConf.getString("api_endpoint", ""));
 		BigBlueButton.getInstance()
 				.setSecret(BBBConf.getString("secret", ""));

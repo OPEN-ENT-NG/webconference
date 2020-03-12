@@ -123,6 +123,7 @@ public class RoomController extends ControllerHelper {
                     if (!"".equals(redirect)) {
                         request.response().setStatusCode(302);
                         request.response().putHeader("Location", evt.right().getValue());
+                        request.response().putHeader("Client-Server", BigBlueButton.getInstance().getSource());
                         request.response().end();
                     } else {
                         renderView(request, null, "waiting.html", null);

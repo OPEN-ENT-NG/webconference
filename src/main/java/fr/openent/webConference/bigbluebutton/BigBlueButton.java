@@ -6,6 +6,7 @@ import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientOptions;
+import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import org.w3c.dom.Document;
@@ -33,11 +34,20 @@ public class BigBlueButton {
     private String host;
     private String apiEndpoint;
     private String secret;
+    private String source;
     private static final Logger log = LoggerFactory.getLogger(BigBlueButton.class);
     private HttpClient httpClient;
 
     public static BigBlueButton getInstance() {
         return BigBlueButtonHolder.instance;
+    }
+
+    public void setSource(String source) {
+        this.source = source;
+    }
+
+    public String getSource() {
+        return this.source;
     }
 
     public void setHost(Vertx vertx, String host) {
@@ -118,7 +128,7 @@ public class BigBlueButton {
         String parameters = "name=" + encodedName + "&meetingID=" + meetingID + "&moderatorPW=" + moderatorPW + "&attendeePW=" + attendeePW;
         String checksum = checksum(Actions.CREATE + parameters + this.secret);
         parameters = parameters + "&checksum=" + checksum;
-        httpClient.getAbs(this.host + this.apiEndpoint + "/" + Actions.CREATE + "?" + parameters, response -> {
+        HttpClientRequest request = httpClient.getAbs(this.host + this.apiEndpoint + "/" + Actions.CREATE + "?" + parameters, response -> {
             if (response.statusCode() != 200) {
                 String message = "[WebConference@BigBlueButton] Failed to create meeting";
                 log.error(message);
@@ -150,14 +160,16 @@ public class BigBlueButton {
                     handler.handle(new Either.Left<>(throwable.toString()));
                 });
             }
-        }).end();
+        });
+        request.putHeader("Client-Server", this.source);
+        request.end();
     }
 
     public void end(String meetingId, String moderatorPW, Handler<Either<String, Boolean>> handler) {
         String parameters = "meetingID=" + meetingId + "&password=" + moderatorPW;
         String checksum = checksum(Actions.END + parameters + this.secret);
         parameters = parameters + "&checksum=" + checksum;
-        httpClient.getAbs(this.host + this.apiEndpoint + "/" + Actions.END + "?" + parameters, response -> {
+        HttpClientRequest request = httpClient.getAbs(this.host + this.apiEndpoint + "/" + Actions.END + "?" + parameters, response -> {
             if (response.statusCode() != 200) {
                 String message = "[WebConference@BigBlueButton] Failed to end meeting : " + meetingId;
                 log.error(message);
@@ -186,7 +198,9 @@ public class BigBlueButton {
                     handler.handle(new Either.Left<>(throwable.toString()));
                 });
             }
-        }).end();
+        });
+        request.putHeader("Client-Server", this.source);
+        request.end();
     }
 
     private static class BigBlueButtonHolder {
@@ -201,7 +215,7 @@ public class BigBlueButton {
         String checksum = checksum(Actions.CREATE_HOOK + parameter + this.secret);
         String url = this.host + this.apiEndpoint + "/" + Actions.CREATE_HOOK + "?" + parameter + "&checksum=" + checksum;
         log.info("[WebConference@BigBlueButton] web hook end point : " + url);
-        this.httpClient.getAbs(url, response -> {
+        HttpClientRequest request = this.httpClient.getAbs(url, response -> {
             if (response.statusCode() != 200) {
                 String message = "[WebConference@BigBlueButton] Failed to add webhook";
                 log.error(message);
@@ -231,6 +245,8 @@ public class BigBlueButton {
                     handler.handle(new Either.Left<>(throwable.toString()));
                 });
             }
-        }).end();
+        });
+        request.putHeader("Client-Server", this.source);
+        request.end();
     }
 }
