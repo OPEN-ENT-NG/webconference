@@ -69,34 +69,54 @@ public class RoomController extends ControllerHelper {
 
     private void joinAsModerator(JsonObject room, UserInfos user, Handler<Either<String, String>> handler) {
         if (room.containsKey("active_session") && room.getString("active_session") != null) {
-            handler.handle(new Either.Right<>(BigBlueButton.getInstance().getRedirectURL(room.getString("active_session"), user.getUsername(), room.getString("moderator_pw"))));
-            return;
-        }
-        String sessionId = UUID.randomUUID().toString();
-        BigBlueButton.getInstance().create(room.getString("name"), sessionId, room.getString("moderator_pw"), room.getString("attendee_pw"), creationEvent -> {
-            if (creationEvent.isLeft()) {
-                log.error("[WebConference@RoomController] Failed to join room. Session creation failed.");
-                handler.handle(new Either.Left<>(creationEvent.left().getValue()));
-                return;
-            }
-
-            String internalId = creationEvent.right().getValue();
-            sessionService.create(sessionId, room.getString("id"), internalId, event -> {
-                if (event.isLeft()) {
-                    log.error("[WebConference@RoomController] Failed to save session.");
-                    handler.handle(new Either.Left<>(event.left().toString()));
+            BigBlueButton.getInstance().isMeetingRunning(room.getString("active_session"), evt -> {
+                if(evt.isLeft()) handler.handle(new Either.Left<>(evt.left().getValue()));
+                else {
+                    Boolean isRunning = evt.right().getValue();
+                    if (isRunning) handler.handle(new Either.Right<>(BigBlueButton.getInstance().getRedirectURL(room.getString("active_session"), user.getUsername(), room.getString("moderator_pw"))));
+                    else {
+                        room.remove("active_session");
+                        joinAsModerator(room, user, handler);
+                    }
+                }
+            });
+        } else {
+            String sessionId = UUID.randomUUID().toString();
+            BigBlueButton.getInstance().create(room.getString("name"), sessionId, room.getString("moderator_pw"), room.getString("attendee_pw"), creationEvent -> {
+                if (creationEvent.isLeft()) {
+                    log.error("[WebConference@RoomController] Failed to join room. Session creation failed.");
+                    handler.handle(new Either.Left<>(creationEvent.left().getValue()));
                     return;
                 }
 
-                handler.handle(new Either.Right<>(BigBlueButton.getInstance().getRedirectURL(sessionId, user.getUsername(), room.getString("moderator_pw"))));
+                String internalId = creationEvent.right().getValue();
+                sessionService.create(sessionId, room.getString("id"), internalId, event -> {
+                    if (event.isLeft()) {
+                        log.error("[WebConference@RoomController] Failed to save session.");
+                        handler.handle(new Either.Left<>(event.left().toString()));
+                        return;
+                    }
+
+                    handler.handle(new Either.Right<>(BigBlueButton.getInstance().getRedirectURL(sessionId, user.getUsername(), room.getString("moderator_pw"))));
+                });
             });
-        });
+        }
     }
 
     private void joinAsAttendee(JsonObject room, UserInfos user, Handler<Either<String, String>> handler) {
         String activeSessionId = room.getString("active_session");
         if (activeSessionId != null) {
-            handler.handle(new Either.Right<>(BigBlueButton.getInstance().getRedirectURL(activeSessionId, user.getUsername(), room.getString("attendee_pw"))));
+            BigBlueButton.getInstance().isMeetingRunning(activeSessionId, evt -> {
+                if (evt.isLeft()) handler.handle(new Either.Left<>(evt.left().getValue()));
+                else {
+                    Boolean isRunning = evt.right().getValue();
+                    if (isRunning) handler.handle(new Either.Right<>(BigBlueButton.getInstance().getRedirectURL(activeSessionId, user.getUsername(), room.getString("attendee_pw"))));
+                    else {
+                        room.remove("active_session");
+                        joinAsAttendee(room, user, handler);
+                    }
+                }
+            });
         } else {
             handler.handle(new Either.Right<>(""));
         }

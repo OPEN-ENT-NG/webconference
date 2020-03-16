@@ -203,6 +203,45 @@ public class BigBlueButton {
         request.end();
     }
 
+    public void isMeetingRunning(String meetingId, Handler<Either<String, Boolean>> handler) {
+        String parameters = "meetingID=" + meetingId;
+        String checksum = checksum(Actions.IS_MEETING_RUNNING + parameters + this.secret);
+        parameters = parameters + "&checksum=" + checksum;
+        HttpClientRequest request = httpClient.getAbs(this.host + this.apiEndpoint + "/" + Actions.IS_MEETING_RUNNING + "?" + parameters, response -> {
+            if (response.statusCode() != 200) {
+                String message = "[WebConference@BigBlueButton] Failed check meeting status : " + meetingId;
+                log.error(message);
+                handler.handle(new Either.Left<>(message));
+            } else {
+                response.bodyHandler(body -> {
+                    try {
+                        Document res = parseResponse(body);
+                        XPathFactory xpf = XPathFactory.newInstance();
+                        XPath path = xpf.newXPath();
+                        String returnCode = path.evaluate("/response/returncode", res.getDocumentElement());
+
+                        if (!"SUCCESS".equals(returnCode)) {
+                            handler.handle(new Either.Left<>("[WebConference@BigBlueButton] Response is not SUCCESS"));
+                            return;
+                        }
+
+                        String running = path.evaluate("/response/running", res.getDocumentElement());
+                        handler.handle(new Either.Right<>(Boolean.parseBoolean(running)));
+                    } catch (XPathExpressionException | NullPointerException e) {
+                        log.error("[WebConference@BigBlueButton] Failed to parse end meeting response body");
+                        handler.handle(new Either.Left<>(e.toString()));
+                    }
+                });
+                response.exceptionHandler(throwable -> {
+                    log.error("[WebConference@BigBlueButton] Failed to check meeting status. An error is catch by exception handler. Meeting : " + meetingId, throwable);
+                    handler.handle(new Either.Left<>(throwable.toString()));
+                });
+            }
+        });
+        request.putHeader("Client-Server", this.source);
+        request.end();
+    }
+
     private static class BigBlueButtonHolder {
         private static final BigBlueButton instance = new BigBlueButton();
 
