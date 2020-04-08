@@ -6,6 +6,8 @@ import fr.openent.webConference.controller.WebConferenceController;
 import fr.openent.webConference.controller.WebHookController;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonObject;
+import org.entcore.common.events.EventStore;
+import org.entcore.common.events.EventStoreFactory;
 import org.entcore.common.http.BaseServer;
 
 public class WebConference extends BaseServer {
@@ -20,8 +22,10 @@ public class WebConference extends BaseServer {
 		super.start();
 		EventBus eb = getEventBus(vertx);
 
-		addController(new WebConferenceController());
-		addController(new RoomController(eb, config));
+		EventStore eventStore = EventStoreFactory.getFactory().getEventStore(WebConference.class.getSimpleName());
+
+		addController(new WebConferenceController(eventStore));
+		addController(new RoomController(eb, config, eventStore));
 		addController(new WebHookController());
 
 		JsonObject BBBConf = config.getJsonObject("bigbluebutton", new JsonObject());

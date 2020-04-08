@@ -3,6 +3,7 @@ package fr.openent.webConference.controller;
 import fr.openent.webConference.WebConference;
 import fr.openent.webConference.bigbluebutton.BigBlueButton;
 import fr.openent.webConference.bigbluebutton.ErrorCode;
+import fr.openent.webConference.event.Event;
 import fr.openent.webConference.security.RoomFilter;
 import fr.openent.webConference.service.RoomService;
 import fr.openent.webConference.service.SessionService;
@@ -21,6 +22,7 @@ import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.controller.ControllerHelper;
+import org.entcore.common.events.EventStore;
 import org.entcore.common.http.filter.ResourceFilter;
 import org.entcore.common.user.UserInfos;
 import org.entcore.common.user.UserUtils;
@@ -35,9 +37,11 @@ public class RoomController extends ControllerHelper {
     private RoomService roomService;
     private SessionService sessionService = new DefaultSessionService();
     private StructureService structureService = new DefaultStructureService();
+    private EventStore eventStore;
 
-    public RoomController(EventBus eb, JsonObject config) {
+    public RoomController(EventBus eb, JsonObject config, EventStore eventStore) {
         this.eb = eb;
+        this.eventStore = eventStore;
         roomService = new DefaultRoomService(config.getString("host"));
     }
 
@@ -116,6 +120,7 @@ public class RoomController extends ControllerHelper {
                     }
 
                     handler.handle(new Either.Right<>(BigBlueButton.getInstance().getRedirectURL(sessionId, user.getUsername(), room.getString("moderator_pw"))));
+                    eventStore.createAndStoreEvent(Event.ROOM_CREATION.name(), user);
                 });
             });
         }
@@ -164,6 +169,7 @@ public class RoomController extends ControllerHelper {
                         request.response().putHeader("Location", evt.right().getValue());
                         request.response().putHeader("Client-Server", BigBlueButton.getInstance().getSource());
                         request.response().end();
+                        eventStore.createAndStoreEvent(Event.ROOM_ACCESS.name(), user);
                     } else {
                         renderView(request, null, "waiting.html", null);
                     }
