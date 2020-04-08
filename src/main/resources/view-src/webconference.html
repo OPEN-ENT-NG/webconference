@@ -6,17 +6,17 @@
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <script src="/webconference/public/dist/entcore/ng-app.js" type="text/javascript" id="context"></script>
     <script src="/webconference/public/dist/application.js" type="text/javascript"></script>
-
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1"/>
     <script type="text/ng-template" id="empty"></script>
 </head>
 
 <body ng-controller="MainController as vm" class="wc">
 <portal>
     <div class="header twelve">
-        <h1 class="eight">
+        <h1 class="eight six-mobile">
             <i18n>webconference.title</i18n>
         </h1>
-        <div class="two button">
+        <div class="two button six-mobile">
             <button ng-click="vm.lightbox.show = true;">
                 <i18n>webconferences.room.create</i18n>
             </button>

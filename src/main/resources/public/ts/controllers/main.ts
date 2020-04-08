@@ -152,7 +152,7 @@ export const mainController = ng.controller('MainController',
 		vm.room = initEmptyRoom();
 		loadRooms().then(() => {
 			$scope.safeApply();
-			new Clipboard('#clipboard-link-field');
+			new Clipboard('.clipboard-link-field');
 		});
 		template.open('main', 'main');
 	}]);
