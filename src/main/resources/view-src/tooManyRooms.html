@@ -4,6 +4,7 @@
 <head>
     <title>{{#i18n}}webconference.title{{/i18n}}</title>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1"/>
     <script src="/webconference/public/dist/entcore/ng-app.js" type="text/javascript" id="context"></script>
     <script src="/webconference/public/dist/application.js" type="text/javascript"></script>
     <script>
@@ -44,7 +45,7 @@
                             <div ng-if="vm.hasWorkflowMessagerie()">
                                 <div class="action-item">
                                     <a ng-href="/conversation/conversation#/write-mail/{{id}}/User">
-                                        <i class="cell no-margin centered-text icon-force-size send-mail"></i>
+                                        <i class="cell no-margin centered-text icon-force-size send-mail zero-mobile"></i>
                                         <span class="cell medium-block-container"><i18n>userBook.class.write-message</i18n></span>
                                     </a>
                                 </div>
@@ -58,12 +59,6 @@
             </div>
         </div>
     </div>
-    <!--    <div class="row center-component flex row top-spacing-ten">-->
-    <!--        <h4>{{#i18n}}webconference.tooManyRooms.message{{/i18n}}</h4>-->
-    <!--        <button ng-click="vm.refresh()" class="vertical-spacing-six">-->
-    <!--            {{#i18n}}webconference.waiting.refresh{{/i18n}}-->
-    <!--        </button>-->
-    <!--    </div>-->
 </portal>
 </body>
 
