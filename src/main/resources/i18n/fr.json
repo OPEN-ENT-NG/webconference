@@ -19,5 +19,6 @@
   "webconference.tooManyRooms.message": "Oups ! Votre établissement a atteint son nombre maximum de salles.",
   "webconference.tooManyRooms.description": "Il semblerait que votre établissement ait atteint le nombre maximum de salles qui lui est réservé. Essayez de vous rapprocher des propriétaires de salles ouvertes.",
   "webconference.opened.rooms": "Salle(s) ouverte(s)",
-  "webconference.write-message": "Envoyer un message"
+  "webconference.write-message": "Envoyer un message",
+  "webconference.user": "Utilisateur"
 }
