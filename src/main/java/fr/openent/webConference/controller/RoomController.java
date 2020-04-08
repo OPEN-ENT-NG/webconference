@@ -2,11 +2,14 @@ package fr.openent.webConference.controller;
 
 import fr.openent.webConference.WebConference;
 import fr.openent.webConference.bigbluebutton.BigBlueButton;
+import fr.openent.webConference.bigbluebutton.ErrorCode;
 import fr.openent.webConference.security.RoomFilter;
 import fr.openent.webConference.service.RoomService;
 import fr.openent.webConference.service.SessionService;
+import fr.openent.webConference.service.StructureService;
 import fr.openent.webConference.service.impl.DefaultRoomService;
 import fr.openent.webConference.service.impl.DefaultSessionService;
+import fr.openent.webConference.service.impl.DefaultStructureService;
 import fr.wseduc.rs.*;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
@@ -15,6 +18,7 @@ import fr.wseduc.webutils.request.RequestUtils;
 import io.vertx.core.Handler;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServerRequest;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.http.filter.ResourceFilter;
@@ -30,6 +34,7 @@ public class RoomController extends ControllerHelper {
     private EventBus eb;
     private RoomService roomService;
     private SessionService sessionService = new DefaultSessionService();
+    private StructureService structureService = new DefaultStructureService();
 
     public RoomController(EventBus eb, JsonObject config) {
         this.eb = eb;
@@ -68,12 +73,25 @@ public class RoomController extends ControllerHelper {
     }
 
     private void joinAsModerator(JsonObject room, UserInfos user, Handler<Either<String, String>> handler) {
+        if (room.getString("uai") == null) {
+            roomService.setStructure(room.getString("id"), user.getStructures().isEmpty() ? "" : user.getStructures().get(0), evt -> {
+                if (evt.isLeft()) {
+                    log.error("[WebConference@RoomController] Failed to set structure session", evt.left().getValue());
+                    handler.handle(new Either.Left<>(evt.left().getValue()));
+                } else {
+                    joinAsModerator(evt.right().getValue(), user, handler);
+                }
+            });
+            return;
+        }
+
         if (room.containsKey("active_session") && room.getString("active_session") != null) {
             BigBlueButton.getInstance().isMeetingRunning(room.getString("active_session"), evt -> {
-                if(evt.isLeft()) handler.handle(new Either.Left<>(evt.left().getValue()));
+                if (evt.isLeft()) handler.handle(new Either.Left<>(evt.left().getValue()));
                 else {
                     Boolean isRunning = evt.right().getValue();
-                    if (isRunning) handler.handle(new Either.Right<>(BigBlueButton.getInstance().getRedirectURL(room.getString("active_session"), user.getUsername(), room.getString("moderator_pw"))));
+                    if (isRunning)
+                        handler.handle(new Either.Right<>(BigBlueButton.getInstance().getRedirectURL(room.getString("active_session"), user.getUsername(), room.getString("moderator_pw"))));
                     else {
                         room.remove("active_session");
                         joinAsModerator(room, user, handler);
@@ -82,7 +100,7 @@ public class RoomController extends ControllerHelper {
             });
         } else {
             String sessionId = UUID.randomUUID().toString();
-            BigBlueButton.getInstance().create(room.getString("name"), sessionId, room.getString("moderator_pw"), room.getString("attendee_pw"), creationEvent -> {
+            BigBlueButton.getInstance().create(room.getString("name"), sessionId, room.getString("moderator_pw"), room.getString("attendee_pw"), room.getString("uai", ""), creationEvent -> {
                 if (creationEvent.isLeft()) {
                     log.error("[WebConference@RoomController] Failed to join room. Session creation failed.");
                     handler.handle(new Either.Left<>(creationEvent.left().getValue()));
@@ -137,7 +155,8 @@ public class RoomController extends ControllerHelper {
             Handler<Either<String, String>> joiningHandler = evt -> {
                 if (evt.isLeft()) {
                     log.error("[WebConference@BigBlueButton] Failed to join room", evt.left().getValue());
-                    renderError(request);
+                    if (ErrorCode.TOO_MANY_ROOMS.code().equals(evt.left().getValue())) tooManyRooms(request, room);
+                    else renderError(request);
                 } else {
                     String redirect = evt.right().getValue();
                     if (!"".equals(redirect)) {
@@ -154,6 +173,18 @@ public class RoomController extends ControllerHelper {
             if (user.getUserId().equals(room.getString("owner"))) joinAsModerator(room, user, joiningHandler);
             else joinAsAttendee(room, user, joiningHandler);
         }));
+    }
+
+    private void tooManyRooms(HttpServerRequest request, JsonObject room) {
+        structureService.retrieveActiveUsers(room.getString("structure", ""), evt -> {
+            if (evt.isLeft()) {
+                log.error("[WebConference@RoomController] failed to retrieve structure active users for structure " + room.getString("structure", "<no structure identifier>"), evt.left().getValue());
+                renderError(request);
+            } else {
+                JsonArray users = evt.right().getValue();
+                renderView(request, new JsonObject().put("users", users), ErrorCode.TOO_MANY_ROOMS.code() + ".html", null);
+            }
+        });
     }
 
     @Get("/rooms/:id/end")

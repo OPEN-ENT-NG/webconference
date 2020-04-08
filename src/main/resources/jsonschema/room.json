@@ -4,9 +4,13 @@
   "properties": {
     "name": {
       "type": "string"
+    },
+    "structure": {
+      "type": "string"
     }
   },
   "required": [
-    "name"
+    "name",
+    "structure"
   ]
 }

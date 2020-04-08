@@ -1,11 +1,22 @@
 <h3 class="row">
     <i18n>webconference.room.create</i18n>
 </h3>
-<label for="room-name" class="cell three">
-    <i18n>webconference.room.name</i18n>
-</label>
-<div class="cell nine">
-    <input type="text" class="twelve" id="room-name" ng-model="vm.room.name" maxlength="50">
+<div class="row" ng-show="vm.structures.length > 1">
+    <label for="room-structure" class="cell three">
+        <i18n>webconference.structure</i18n>
+    </label>
+    <div class="cell nine">
+        <select id="room-structure" ng-model="vm.room.structure"
+                ng-options="structure.id as structure.name for structure in vm.structures"></select>
+    </div>
+</div>
+<div class="row">
+    <label for="room-name" class="cell three">
+        <i18n>webconference.room.name</i18n>
+    </label>
+    <div class="cell nine">
+        <input type="text" class="twelve" id="room-name" ng-model="vm.room.name" maxlength="50">
+    </div>
 </div>
 <div class="row">
     <div class="right-magnet">

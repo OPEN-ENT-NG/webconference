@@ -14,5 +14,10 @@
   "webconferences.room.create": "Créer une salle",
   "webconference.waiting.message": "Oups ! La salle que vous tentez de rejoindre n'est pas encore ouverte.",
   "webconference.waiting.refresh": "Actualiser",
-  "copy.link": "copier le lien"
+  "copy.link": "copier le lien",
+  "webconference.structure": "Établissement",
+  "webconference.tooManyRooms.message": "Oups ! Votre établissement a atteint son nombre maximum de salles.",
+  "webconference.tooManyRooms.description": "Il semblerait que votre établissement ait atteint le nombre maximum de salles qui lui est réservé. Essayez de vous rapprocher des propriétaires de salles ouvertes.",
+  "webconference.opened.rooms": "Salle(s) ouverte(s)",
+  "webconference.write-message": "Envoyer un message"
 }

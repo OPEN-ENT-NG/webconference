@@ -4,4 +4,5 @@ export interface IRoom {
     link?: string
     sessions?: number
     active_session?: string
+    structure: string
 }

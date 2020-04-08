@@ -16,6 +16,11 @@
                 </div>
             </div>
             <div class="twelve">
+                <div ng-show="vm.structures.length > 1 && vm.selectedRoom.structure"><em class="metadata"> <em
+                        class="metadata">
+                    <i18n>webconference.structure</i18n>
+                    :
+                    [[vm.structureMap.get(vm.selectedRoom.structure) || '']]</em></em></div>
                 <label class="row">
                     <em>
                         <i18n>webconference.attendee.invite</i18n>

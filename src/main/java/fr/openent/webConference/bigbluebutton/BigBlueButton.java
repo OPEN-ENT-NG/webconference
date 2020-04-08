@@ -123,45 +123,46 @@ public class BigBlueButton {
         return url;
     }
 
-    public void create(String name, String meetingID, String moderatorPW, String attendeePW, Handler<Either<String, String>> handler) {
+    public void create(String name, String meetingID, String moderatorPW, String attendeePW, String structure, Handler<Either<String, String>> handler) {
         String encodedName = encodeParams(name);
         String parameters = "name=" + encodedName + "&meetingID=" + meetingID + "&moderatorPW=" + moderatorPW + "&attendeePW=" + attendeePW;
         String checksum = checksum(Actions.CREATE + parameters + this.secret);
         parameters = parameters + "&checksum=" + checksum;
         HttpClientRequest request = httpClient.getAbs(this.host + this.apiEndpoint + "/" + Actions.CREATE + "?" + parameters, response -> {
-            if (response.statusCode() != 200) {
-                String message = "[WebConference@BigBlueButton] Failed to create meeting";
-                log.error(message);
-                handler.handle(new Either.Left<>(message));
-            } else {
-                response.bodyHandler(body -> {
-                    try {
-                        Document res = parseResponse(body);
-                        XPathFactory xpf = XPathFactory.newInstance();
-                        XPath path = xpf.newXPath();
-                        String returnCode = path.evaluate("/response/returncode", res.getDocumentElement());
+            response.bodyHandler(body -> {
+                try {
+                    Document res = parseResponse(body);
+                    XPathFactory xpf = XPathFactory.newInstance();
+                    XPath path = xpf.newXPath();
+                    String returnCode = path.evaluate("/response/returncode", res.getDocumentElement());
 
-                        if (!"SUCCESS".equals(returnCode)) {
-                            handler.handle(new Either.Left<>("[WebConference@BigBlueButton] Response is not SUCCESS"));
+                    if (!"SUCCESS".equals(returnCode) || response.statusCode() != 200) {
+                        String messageKey = path.evaluate("/response/messageKey", res.getDocumentElement());
+                        if (ErrorCode.TOO_MANY_ROOMS.code().equals(messageKey)) {
+                            handler.handle(new Either.Left<>(ErrorCode.TOO_MANY_ROOMS.code()));
                             return;
                         }
 
-                        String internalId = path.evaluate("/response/internalMeetingID", res.getDocumentElement());
-                        if (internalId == null)
-                            handler.handle(new Either.Left<>("[WebConference@BigBlueButton] No internal id"));
-                        else handler.handle(new Either.Right<>(internalId));
-                    } catch (XPathExpressionException | NullPointerException e) {
-                        log.error("[WebConference@BigBlueButton] Failed to parse creation response", e);
-                        handler.handle(new Either.Left<>(e.toString()));
+                        handler.handle(new Either.Left<>("[WebConference@BigBlueButton] Failed to create meeting"));
+                        return;
                     }
-                });
-                response.exceptionHandler(throwable -> {
-                    log.error("[WebConference@BigBlueButton] Failed to create meeting. An error is catch by exception handler", throwable);
-                    handler.handle(new Either.Left<>(throwable.toString()));
-                });
-            }
+
+                    String internalId = path.evaluate("/response/internalMeetingID", res.getDocumentElement());
+                    if (internalId == null)
+                        handler.handle(new Either.Left<>("[WebConference@BigBlueButton] No internal id"));
+                    else handler.handle(new Either.Right<>(internalId));
+                } catch (XPathExpressionException | NullPointerException e) {
+                    log.error("[WebConference@BigBlueButton] Failed to parse creation response", e);
+                    handler.handle(new Either.Left<>(e.toString()));
+                }
+            });
+            response.exceptionHandler(throwable -> {
+                log.error("[WebConference@BigBlueButton] Failed to create meeting. An error is catch by exception handler", throwable);
+                handler.handle(new Either.Left<>(throwable.toString()));
+            });
         });
         request.putHeader("Client-Server", this.source);
+        request.putHeader("Structure", structure);
         request.end();
     }
 

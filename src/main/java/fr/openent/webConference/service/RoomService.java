@@ -16,4 +16,6 @@ public interface RoomService {
     void update(String id, JsonObject room, Handler<Either<String, JsonObject>> handler);
 
     void delete(String id, Handler<Either<String, JsonObject>> handler);
+
+    void setStructure(String id, String structureId, Handler<Either<String, JsonObject>> handler);
 }

@@ -14,7 +14,9 @@
                     </div>
                 </div>
                 <div class="title align-start center-component flex-row vertical-spacing-twice">
-                    <h4>[[room.name]]</h4>
+                    <h4 style="margin-bottom: 0;">[[room.name]]</h4>
+                    <em class="metadata" ng-show="vm.structures.length > 1 && room.structure">[[vm.structureMap.get(room.structure)
+                        || '']]</em>
                 </div>
                 <div class="dots-menu center-component">
                     <dots-menu>
