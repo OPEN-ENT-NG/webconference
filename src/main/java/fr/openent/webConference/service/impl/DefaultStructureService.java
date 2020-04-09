@@ -13,6 +13,7 @@ import org.entcore.common.neo4j.Neo4jResult;
 import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -59,6 +60,20 @@ public class DefaultStructureService implements StructureService {
                     ((List<JsonObject>) users.getList()).forEach(user -> user.put("roomName", userRoomNameMap.get(user.getString("id"))));
                     handler.handle(new Either.Right<>(users));
                 }));
+            }
+        }));
+    }
+
+    @Override
+    public void getPlatformUAIs(Handler<Either<String, JsonArray>> handler) {
+        String query = "MATCH (s:Structure) RETURN s.UAI AS uai";
+        Neo4j.getInstance().execute(query, new JsonObject(), Neo4jResult.validResultHandler(evt -> {
+            if (evt.isLeft()) {
+                handler.handle(evt.left());
+            } else {
+                List<String> uais = ((List<JsonObject>) evt.right().getValue().getList()).stream().map(structure -> structure.getString("uai")).collect(Collectors.toList());
+                uais.removeAll(Collections.singleton(null));
+                handler.handle(new Either.Right<>(new JsonArray(uais)));
             }
         }));
     }

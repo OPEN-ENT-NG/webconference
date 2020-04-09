@@ -10,4 +10,6 @@ public interface StructureService {
     void retrieveUAI(String id, Handler<Either<String, JsonObject>> handler);
 
     void retrieveActiveUsers(String id, Handler<Either<String, JsonArray>> handler);
+
+    void getPlatformUAIs(Handler<Either<String, JsonArray>> handler);
 }

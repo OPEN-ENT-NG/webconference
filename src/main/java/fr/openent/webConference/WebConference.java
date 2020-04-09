@@ -2,6 +2,7 @@ package fr.openent.webConference;
 
 import fr.openent.webConference.bigbluebutton.BigBlueButton;
 import fr.openent.webConference.controller.RoomController;
+import fr.openent.webConference.controller.SynchroController;
 import fr.openent.webConference.controller.WebConferenceController;
 import fr.openent.webConference.controller.WebHookController;
 import io.vertx.core.eventbus.EventBus;
@@ -27,6 +28,7 @@ public class WebConference extends BaseServer {
 		addController(new WebConferenceController(eventStore));
 		addController(new RoomController(eb, config, eventStore));
 		addController(new WebHookController());
+		addController(new SynchroController());
 
 		JsonObject BBBConf = config.getJsonObject("bigbluebutton", new JsonObject());
 		BigBlueButton.getInstance()
