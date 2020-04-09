@@ -15,6 +15,7 @@ import fr.wseduc.rs.*;
 import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
 import fr.wseduc.webutils.Either;
+import fr.wseduc.webutils.I18n;
 import fr.wseduc.webutils.request.RequestUtils;
 import io.vertx.core.Handler;
 import io.vertx.core.eventbus.EventBus;
@@ -76,14 +77,14 @@ public class RoomController extends ControllerHelper {
         roomService.delete(id, defaultResponseHandler(request));
     }
 
-    private void joinAsModerator(JsonObject room, UserInfos user, Handler<Either<String, String>> handler) {
+    private void joinAsModerator(JsonObject room, UserInfos user, String locale, Handler<Either<String, String>> handler) {
         if (room.getString("uai") == null) {
             roomService.setStructure(room.getString("id"), user.getStructures().isEmpty() ? "" : user.getStructures().get(0), evt -> {
                 if (evt.isLeft()) {
                     log.error("[WebConference@RoomController] Failed to set structure session", evt.left().getValue());
                     handler.handle(new Either.Left<>(evt.left().getValue()));
                 } else {
-                    joinAsModerator(evt.right().getValue(), user, handler);
+                    joinAsModerator(evt.right().getValue(), user, locale, handler);
                 }
             });
             return;
@@ -98,13 +99,13 @@ public class RoomController extends ControllerHelper {
                         handler.handle(new Either.Right<>(BigBlueButton.getInstance().getRedirectURL(room.getString("active_session"), user.getUsername(), room.getString("moderator_pw"))));
                     else {
                         room.remove("active_session");
-                        joinAsModerator(room, user, handler);
+                        joinAsModerator(room, user, locale, handler);
                     }
                 }
             });
         } else {
             String sessionId = UUID.randomUUID().toString();
-            BigBlueButton.getInstance().create(room.getString("name"), sessionId, room.getString("moderator_pw"), room.getString("attendee_pw"), room.getString("uai", ""), creationEvent -> {
+            BigBlueButton.getInstance().create(room.getString("name"), sessionId, room.getString("moderator_pw"), room.getString("attendee_pw"), room.getString("uai", ""), locale, creationEvent -> {
                 if (creationEvent.isLeft()) {
                     log.error("[WebConference@RoomController] Failed to join room. Session creation failed.");
                     handler.handle(new Either.Left<>(creationEvent.left().getValue()));
@@ -176,7 +177,8 @@ public class RoomController extends ControllerHelper {
                 }
             };
 
-            if (user.getUserId().equals(room.getString("owner"))) joinAsModerator(room, user, joiningHandler);
+            if (user.getUserId().equals(room.getString("owner")))
+                joinAsModerator(room, user, I18n.acceptLanguage(request), joiningHandler);
             else joinAsAttendee(room, user, joiningHandler);
         }));
     }

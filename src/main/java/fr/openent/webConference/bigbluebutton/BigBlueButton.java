@@ -123,7 +123,7 @@ public class BigBlueButton {
         return url;
     }
 
-    public void create(String name, String meetingID, String moderatorPW, String attendeePW, String structure, Handler<Either<String, String>> handler) {
+    public void create(String name, String meetingID, String moderatorPW, String attendeePW, String structure, String locale, Handler<Either<String, String>> handler) {
         String encodedName = encodeParams(name);
         String parameters = "name=" + encodedName + "&meetingID=" + meetingID + "&moderatorPW=" + moderatorPW + "&attendeePW=" + attendeePW;
         String checksum = checksum(Actions.CREATE + parameters + this.secret);
@@ -162,7 +162,8 @@ public class BigBlueButton {
             });
         });
         request.putHeader("Client-Server", this.source);
-        request.putHeader("Structure", structure);
+        request.putHeader("Client-Structure", structure);
+        request.putHeader("Client-Locale", locale);
         request.end();
     }
 
