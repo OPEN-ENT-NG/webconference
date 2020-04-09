@@ -1,7 +1,7 @@
 package fr.openent.webConference.bigbluebutton;
 
 public enum ErrorCode {
-    TOO_MANY_ROOMS("tooManyRooms");
+    TOO_MANY_SESSIONS("tooManySessions");
 
     private final String code;
 

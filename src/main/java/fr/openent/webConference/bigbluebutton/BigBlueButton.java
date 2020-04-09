@@ -138,8 +138,8 @@ public class BigBlueButton {
 
                     if (!"SUCCESS".equals(returnCode) || response.statusCode() != 200) {
                         String messageKey = path.evaluate("/response/messageKey", res.getDocumentElement());
-                        if (ErrorCode.TOO_MANY_ROOMS.code().equals(messageKey)) {
-                            handler.handle(new Either.Left<>(ErrorCode.TOO_MANY_ROOMS.code()));
+                        if (ErrorCode.TOO_MANY_SESSIONS.code().equals(messageKey)) {
+                            handler.handle(new Either.Left<>(ErrorCode.TOO_MANY_SESSIONS.code()));
                             return;
                         }
 

@@ -161,7 +161,8 @@ public class RoomController extends ControllerHelper {
             Handler<Either<String, String>> joiningHandler = evt -> {
                 if (evt.isLeft()) {
                     log.error("[WebConference@BigBlueButton] Failed to join room", evt.left().getValue());
-                    if (ErrorCode.TOO_MANY_ROOMS.code().equals(evt.left().getValue())) tooManyRooms(request, room);
+                    if (ErrorCode.TOO_MANY_SESSIONS.code().equals(evt.left().getValue()))
+                        tooManySessions(request, room);
                     else renderError(request);
                 } else {
                     String redirect = evt.right().getValue();
@@ -183,14 +184,14 @@ public class RoomController extends ControllerHelper {
         }));
     }
 
-    private void tooManyRooms(HttpServerRequest request, JsonObject room) {
+    private void tooManySessions(HttpServerRequest request, JsonObject room) {
         structureService.retrieveActiveUsers(room.getString("structure", ""), evt -> {
             if (evt.isLeft()) {
                 log.error("[WebConference@RoomController] failed to retrieve structure active users for structure " + room.getString("structure", "<no structure identifier>"), evt.left().getValue());
                 renderError(request);
             } else {
                 JsonArray users = evt.right().getValue();
-                renderView(request, new JsonObject().put("users", users), ErrorCode.TOO_MANY_ROOMS.code() + ".html", null);
+                renderView(request, new JsonObject().put("users", users), ErrorCode.TOO_MANY_SESSIONS.code() + ".html", null);
             }
         });
     }
