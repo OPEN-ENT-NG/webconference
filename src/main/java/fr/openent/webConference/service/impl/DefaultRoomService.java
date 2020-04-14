@@ -66,7 +66,7 @@ public class DefaultRoomService implements RoomService {
         JsonArray params = new JsonArray()
                 .add(id)
                 .add(room.getString("name", ""))
-                .add(user.getUserId())
+                .add(user.getUserId() != null ? user.getUserId() : "")
                 .add(moderatorPW)
                 .add(attendeePW)
                 .add(link)
