@@ -65,12 +65,12 @@ public class DefaultRoomService implements RoomService {
         String query = "INSERT INTO " + WebConference.DB_SCHEMA + ".room(id, name, owner, moderator_pw, attendee_pw, link, structure) VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING *;";
         JsonArray params = new JsonArray()
                 .add(id)
-                .add(room.getString("name"))
+                .add(room.getString("name", ""))
                 .add(user.getUserId())
                 .add(moderatorPW)
                 .add(attendeePW)
                 .add(link)
-                .add(room.getString("structure"));
+                .add(room.getString("structure", ""));
 
         Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
     }
