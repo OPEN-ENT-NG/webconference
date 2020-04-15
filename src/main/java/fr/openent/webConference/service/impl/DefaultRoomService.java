@@ -52,11 +52,11 @@ public class DefaultRoomService implements RoomService {
     }
 
     @Override
-    public void create(String host, JsonObject room, UserInfos user, Handler<Either<String, JsonObject>> handler) {
+    public void create(String referer, JsonObject room, UserInfos user, Handler<Either<String, JsonObject>> handler) {
         String id = UUID.randomUUID().toString();
         String moderatorPW = UUID.randomUUID().toString();
         String attendeePW = UUID.randomUUID().toString();
-        String link = host + "/webconference/rooms/" + id + "/join";
+        String link = referer + "/rooms/" + id + "/join";
         String query = "INSERT INTO " + WebConference.DB_SCHEMA + ".room(id, name, owner, moderator_pw, attendee_pw, link, structure) VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING *;";
         JsonArray params = new JsonArray()
                 .add(id)
