@@ -14,12 +14,7 @@ import org.entcore.common.user.UserInfos;
 import java.util.UUID;
 
 public class DefaultRoomService implements RoomService {
-    private String host;
     private StructureService structureService = new DefaultStructureService();
-
-    public DefaultRoomService(String host) {
-        this.host = host;
-    }
 
     @Override
     public void list(UserInfos user, Handler<Either<String, JsonArray>> handler) {
@@ -57,11 +52,11 @@ public class DefaultRoomService implements RoomService {
     }
 
     @Override
-    public void create(JsonObject room, UserInfos user, Handler<Either<String, JsonObject>> handler) {
+    public void create(String host, JsonObject room, UserInfos user, Handler<Either<String, JsonObject>> handler) {
         String id = UUID.randomUUID().toString();
         String moderatorPW = UUID.randomUUID().toString();
         String attendeePW = UUID.randomUUID().toString();
-        String link = this.host + "/webconference/rooms/" + id + "/join";
+        String link = host + "/webconference/rooms/" + id + "/join";
         String query = "INSERT INTO " + WebConference.DB_SCHEMA + ".room(id, name, owner, moderator_pw, attendee_pw, link, structure) VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING *;";
         JsonArray params = new JsonArray()
                 .add(id)

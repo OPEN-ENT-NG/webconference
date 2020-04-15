@@ -43,7 +43,7 @@ public class RoomController extends ControllerHelper {
     public RoomController(EventBus eb, JsonObject config, EventStore eventStore) {
         this.eb = eb;
         this.eventStore = eventStore;
-        roomService = new DefaultRoomService(config.getString("host"));
+        roomService = new DefaultRoomService();
     }
 
     @Get("/rooms")
@@ -56,7 +56,8 @@ public class RoomController extends ControllerHelper {
     @SecuredAction(WebConference.create)
     @ApiDoc("Create a room")
     public void create(HttpServerRequest request) {
-        RequestUtils.bodyToJson(request, pathPrefix + "room", room -> UserUtils.getUserInfos(eb, request, user -> roomService.create(room, user, defaultResponseHandler(request))));
+        String host = request.scheme() + "://" + getHost(request);
+        RequestUtils.bodyToJson(request, pathPrefix + "room", room -> UserUtils.getUserInfos(eb, request, user -> roomService.create(host, room, user, defaultResponseHandler(request))));
     }
 
     @Put("/rooms/:id")
