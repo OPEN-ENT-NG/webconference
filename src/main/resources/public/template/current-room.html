@@ -1,31 +1,35 @@
 <div class="rooms">
-    <div class="card horizontal-spacing-twice vertical-spacing vertical-spacing-six row">
+    <div class="card horizontal-spacing-twice vertical-spacing row">
         <div class="center-component">
             <div class="twelve title-container">
-                <h2 class="seven eight-mobile">
+                <h2 class="six twelve-mobile">
                     [[vm.selectedRoom.name]]
                 </h2>
-                <div class="zero four-mobile url-container vertical-spacing-twice">
-                    <div class="input-url nine cell zero-mobile">
-                        <input type="text" ng-model="vm.selectedRoom.link" readonly>
-                    </div>
-
-                    <a class="clipboard-link-field"
-                       data-clipboard-text="[[vm.selectedRoom.link]]">
-                        <div class="img" ng-include="'/webconference/public/image/content-copy.svg'"></div>
-                        <i18n>copy.link</i18n>
-                    </a>
-                </div>
-                <div class="five button zero-mobile">
+                <div class="six button zero-mobile">
                     <button ng-click="vm.startCurrentRoom()">
                         <i18n ng-show="!vm.hasActiveSession(vm.selectedRoom)">webconference.room.start</i18n>
                         <i18n ng-show="vm.hasActiveSession(vm.selectedRoom)">webconference.room.join</i18n>
                     </button>
-                    <button ng-click="vm.endCurrentRoom()" class="cancel"
+                    <button style="margin-left: 5px" ng-click="vm.endCurrentRoom()" class="cancel"
                             ng-show="vm.hasActiveSession(vm.selectedRoom)">
                         <i18n>webconference.room.end</i18n>
                     </button>
                 </div>
+            </div>
+            <div class="zero twelve-mobile url-container top-spacing-twice bottom-spacing-three">
+                <label class="row">
+                    <em>
+                        <i18n>webconference.attendee.invite</i18n>
+                    </em>
+                </label>
+                <div class="input-url nine cell seven-mobile">
+                    <input type="text" ng-model="vm.selectedRoom.link" readonly>
+                </div>
+                <a class="clipboard-link-field"
+                    data-clipboard-text="[[vm.selectedRoom.link]]">
+                    <i class="copy"></i>
+                    <i18n>copy.link</i18n>
+                </a>
             </div>
             <div class="twelve">
                 <div ng-show="vm.structures.length > 1 && vm.selectedRoom.structure"><em class="metadata"> <em
@@ -38,14 +42,14 @@
                         <i18n>webconference.attendee.invite</i18n>
                     </em>
                 </label>
-                <div class="eight url-container zero-mobile">
+                <div class="twelve url-container zero-mobile">
                     <div class="input-url nine cell">
                         <input type="text" ng-model="vm.selectedRoom.link" readonly>
                     </div>
 
                     <a class="clipboard-link-field"
                        data-clipboard-text="[[vm.selectedRoom.link]]">
-                        <div class="img" ng-include="'/webconference/public/image/content-copy.svg'"></div>
+                       <i class="copy"></i>
                         <i18n>copy.link</i18n>
                     </a>
                 </div>
@@ -54,7 +58,7 @@
                         <i18n ng-show="!vm.hasActiveSession(vm.selectedRoom)">webconference.room.start</i18n>
                         <i18n ng-show="vm.hasActiveSession(vm.selectedRoom)">webconference.room.join</i18n>
                     </button>
-                    <button ng-click="vm.endCurrentRoom()" class="cancel"
+                    <button style="margin-left: 5px" ng-click="vm.endCurrentRoom()" class="cancel"
                             ng-show="vm.hasActiveSession(vm.selectedRoom)">
                         <i18n>webconference.room.end</i18n>
                     </button>

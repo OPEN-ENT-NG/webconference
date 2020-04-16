@@ -1,4 +1,4 @@
-<div class="cards-view eight twelve-mobile centered">
+<div class="cards-view twelve">
     <div class="row" ng-show="vm.rooms && vm.rooms.length > 0">
         <div ng-include="'/webconference/public/template/current-room.html'"></div>
         <div class="grid">
@@ -8,13 +8,13 @@
                  ng-repeat="room in vm.rooms|orderBy:'name'">
                 <div class="icon vertical-spacing-twice center-component">
                     <div class="img-container center-component room-image"
-                         ng-class="{green: vm.hasActiveSession(room), cyan: !vm.hasActiveSession(room)}">
+                         ng-class="{green: vm.hasActiveSession(room), red: !vm.hasActiveSession(room)}">
                         <div class="img" ng-include="'/webconference/public/image/' + (vm.hasActiveSession(room) ? 'phone.svg' : 'phone-hangup.svg')">
                         </div>
                     </div>
                 </div>
                 <div class="title align-start center-component flex-row vertical-spacing-twice">
-                    <h4 style="margin-bottom: 0;">[[room.name]]</h4>
+                    <h4>[[room.name]]</h4>
                     <em class="metadata" ng-show="vm.structures.length > 1 && room.structure">[[vm.structureMap.get(room.structure)
                         || '']]</em>
                 </div>

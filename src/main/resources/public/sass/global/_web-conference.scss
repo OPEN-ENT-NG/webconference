@@ -1,3 +1,104 @@
-body.wc {
-  @import "components/index";
+.wc {
+  .header {
+    display: flex;
+    height: 50px;
+    .button {
+      display: flex;
+      justify-content: flex-end;
+    }
+  }
+  .rooms {
+    .title-container {
+      display: flex;
+      align-items: center;
+      padding-top: 10px;
+      h2 {
+        font-size: 34px;
+      }
+      .button {
+        display: flex;
+        justify-content: flex-end;
+      }
+    } 
+    .url-container {
+      .input-url {
+        padding-right: 15px;
+  
+        input {
+          width: 100%;
+        }
+      }
+      a {
+        display: flex;
+        transition: all 250ms ease;
+        align-items: center;
+        i.copy {
+          font-size: 20px;
+          margin-right: 5px;
+        }
+        &:hover {
+          fill: $orange;
+        }
+      }
+    }
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-gap: 25px;
+  
+    .flex-card {
+      height: 130px;
+      display: flex;
+      .icon {
+        width: 30%;
+        .img-container {
+          border-radius: 4px;
+          img, .img {
+            width: 25px;
+            height: 25px;
+            margin: 10px;
+            fill: white;
+          }
+        }
+      }
+      .title {
+        width: 60%;
+      }
+      .dots-menu {
+        width: 10%;
+      }
+    }
+  }
+  .red {
+    background-color: rgba($red, 0.75);
+  }
+}
+
+@media screen and (max-width: $tablette) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr)!important;
+  }
+  .rooms .title-container h2 {
+    font-size: 24px;
+  }
+  #clipboard-link-field {
+    font-size: 12px;
+    svg {
+      height: 15px;
+    }
+  }
+  .rooms > card {
+    padding-bottom: 15px;
+  }
+  .url-container {
+    width: auto;
+    display: inline-block;
+  }
+}
+
+@media screen and (max-width: $fat-mobile) {
+  .grid {
+    grid-template-columns: repeat(1, 1fr)!important;
+  }
 }

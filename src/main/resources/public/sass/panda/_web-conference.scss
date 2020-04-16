@@ -1,0 +1,41 @@
+.wc {
+  .header {
+    padding-top: 10px;
+  }
+  .rooms {
+    padding: 10px;
+    .card {
+      padding: 20px;
+      border: 1px solid $light-grey;
+      border-radius: 4px;
+    }
+  }
+  .grid {
+    padding: 25px;
+    .flex-card {
+      &.card {
+        border: 1px solid $light-grey;
+        border-radius: 4px;
+        &:hover {
+          border-color: $orange;
+          box-shadow: 1px 1px 10px rgba(black, 0.1);
+          @include run-transition(all);
+        }
+        &.active {
+          border-color: $orange;
+          background-color: rgba($cyan, 0.1);
+        }
+        h4 {
+          margin: 0;
+        }
+      }
+    }
+  }
+
+  .rooms .title-container {
+    padding-top: 0;
+    h2 {
+      margin: 5px 0;
+    }
+  }
+}
