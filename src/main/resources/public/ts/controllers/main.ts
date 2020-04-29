@@ -124,10 +124,13 @@ export const mainController = ng.controller('MainController',
 
 
 		vm.updateRoom = async (room) => {
-			const {name, id} = await RoomService.update(room);
+			const {name, id, structure} = await RoomService.update(room);
 			vm.room = initEmptyRoom();
 			vm.rooms.forEach(aRoom => {
-				if (aRoom.id === id) aRoom.name = name;
+				if (aRoom.id === id) {
+					aRoom.name = name;
+					aRoom.structure = structure;
+				}
 			});
 			closeLightbox();
 			$scope.safeApply();

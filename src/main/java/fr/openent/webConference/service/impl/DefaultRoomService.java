@@ -72,9 +72,10 @@ public class DefaultRoomService implements RoomService {
 
     @Override
     public void update(String id, JsonObject room, Handler<Either<String, JsonObject>> handler) {
-        String query = "UPDATE " + WebConference.DB_SCHEMA + ".room SET name=? WHERE id = ? RETURNING *;";
+        String query = "UPDATE " + WebConference.DB_SCHEMA + ".room SET name=?, structure = ? WHERE id = ? RETURNING *;";
         JsonArray params = new JsonArray()
                 .add(room.getString("name"))
+                .add(room.getString("structure"))
                 .add(id);
 
         Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));

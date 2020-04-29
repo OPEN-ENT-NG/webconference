@@ -25,8 +25,8 @@ export const RoomService = ng.service('RoomService', (): RoomService => ({
         return data;
     },
 
-    async update({name, id}): Promise<IRoom> {
-        const {data} = await http.put(`/${appPrefix}/rooms/${id}`, {name});
+    async update({name, id, structure}): Promise<IRoom> {
+        const {data} = await http.put(`/${appPrefix}/rooms/${id}`, {name, structure});
         return data;
     },
 
