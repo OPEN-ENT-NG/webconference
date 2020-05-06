@@ -26,6 +26,8 @@ interface ViewModel {
 
 	openRoomUpdate(room: IRoom)
 
+	openRoomCreation()
+
 	startCurrentRoom()
 
 	endCurrentRoom()
@@ -121,6 +123,11 @@ export const mainController = ng.controller('MainController',
 			vm.room = {...room};
 			openLightbox();
 		};
+
+		vm.openRoomCreation = () => {
+			vm.room = initEmptyRoom();
+			openLightbox();
+		}
 
 
 		vm.updateRoom = async (room) => {
