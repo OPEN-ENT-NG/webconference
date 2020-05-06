@@ -79,7 +79,7 @@ public class RoomController extends ControllerHelper {
     }
 
     private void joinAsModerator(JsonObject room, UserInfos user, String locale, Handler<Either<String, String>> handler) {
-        if (room.getString("uai") == null) {
+        if (room.getString("uai") == null && room.getString("structure") == null) {
             roomService.setStructure(room.getString("id"), user.getStructures().isEmpty() ? "" : user.getStructures().get(0), evt -> {
                 if (evt.isLeft()) {
                     log.error("[WebConference@RoomController] Failed to set structure session", evt.left().getValue());
