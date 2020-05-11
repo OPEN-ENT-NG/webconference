@@ -73,6 +73,9 @@
   .red {
     background-color: rgba($red, 0.75);
   }
+  button {
+    margin: 1px; // separate buttons
+  }
 }
 
 @media screen and (max-width: $tablette) {
@@ -100,5 +103,11 @@
 @media screen and (max-width: $fat-mobile) {
   .grid {
     grid-template-columns: repeat(1, 1fr)!important;
+  }
+  dots-menu.right {
+    .options{
+        right: 20px;
+        left: auto;
+    }
   }
 }
