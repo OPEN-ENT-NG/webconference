@@ -8,7 +8,12 @@ var sourcemaps = require('gulp-sourcemaps');
 var argv = require('yargs').argv;
 var fs = require('fs');
 
+var dev = false;
+
 gulp.task('drop-cache', function(){
+    if(dev){
+        return;
+    }
      return gulp.src(['./src/main/resources/public/dist'], { read: false })
 		.pipe(clean());
 });
@@ -40,7 +45,7 @@ gulp.task('rev', ['webpack'], () => {
 });
 
 gulp.task('build', ['rev'], () => {
-    var refs = gulp.src("./src/main/resources/view-src/**/*.html")
+    var refs = gulp.src("./src/main/resources/view-src/**/*.+(html|json)")
         .pipe(revReplace({manifest: gulp.src("./rev-manifest.json") }))
         .pipe(gulp.dest("./src/main/resources/view"));
 
@@ -52,12 +57,13 @@ gulp.task('build', ['rev'], () => {
 
 function getModName(fileContent){
     var getProp = function(prop){
-        return fileContent.split(prop + '=')[1].split(/\\r?\\n/)[0];
+        return fileContent.split(prop + '=')[1].split(/\r?\n/)[0];
     }
     return getProp('modowner') + '~' + getProp('modname') + '~' + getProp('version');
 }
 
 gulp.task('watch', () => {
+    dev = true;
     var springboard = argv.springboard;
     if(!springboard){
         springboard = '../springboard-open-ent/';
