@@ -1,4 +1,4 @@
-import {idiom, model, ng, template} from 'entcore';
+import {idiom, model, ng, template, notify} from 'entcore';
 import {IRoom, IStructure} from '../interfaces';
 import * as Clipboard from 'clipboard';
 
@@ -162,7 +162,16 @@ export const mainController = ng.controller('MainController',
 		vm.room = initEmptyRoom();
 		loadRooms().then(() => {
 			$scope.safeApply();
-			new Clipboard('.clipboard-link-field');
+			let clipboard = new Clipboard('.clipboard-link-field');
+			
+			clipboard.on('success', function(e) {
+				e.clearSelection();
+				notify.info('copy.link.success');
+			});
+			
+			clipboard.on('error', function(e) {
+				notify.error('copy.link.error');
+			});
 		});
 		template.open('main', 'main');
 	}]);
