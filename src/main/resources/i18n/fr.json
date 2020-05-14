@@ -15,7 +15,7 @@
   "webconference.waiting.message": "Oups ! La salle que vous tentez de rejoindre n'est pas encore ouverte.",
   "webconference.waiting.refresh": "Actualiser",
   "copy.link": "copier le lien",
-  "copy.link.success": "Le lien a bien été copié.",
+  "copy.link.success": "Le lien est copié dans le presse-papier.",
   "copy.link.error": "Une erreur est survenue lors de la copie du lien.",  
   "webconference.structure": "Établissement",
   "webconference.tooManyRooms.message": "Oups ! Votre établissement a atteint son nombre maximum de salles.",
