@@ -1,5 +1,6 @@
 package fr.openent.webConference.bigbluebutton;
 
+import fr.openent.webConference.tiers.RoomProvider;
 import fr.wseduc.webutils.Either;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
@@ -7,8 +8,10 @@ import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientOptions;
 import io.vertx.core.http.HttpClientRequest;
+import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
+
 import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -19,6 +22,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
+
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
@@ -30,27 +34,43 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Formatter;
 
-public class BigBlueButton {
+public class BigBlueButton implements RoomProvider {
     private String host;
     private String apiEndpoint;
     private String secret;
     private String source;
     private static final Logger log = LoggerFactory.getLogger(BigBlueButton.class);
     private HttpClient httpClient;
+    
+    public static BigBlueButton newInstance( final Vertx vertx, final String source, final String appAddress, final JsonObject BBBConf ) {
+		BigBlueButton instance = new BigBlueButton();
+		instance.setHost(vertx, BBBConf.getString("host", ""));
+		instance.setSource( source );
+		instance.setApiEndpoint(BBBConf.getString("api_endpoint", ""));
+		instance.setSecret(BBBConf.getString("secret", ""));
 
-    public static BigBlueButton getInstance() {
-        return BigBlueButtonHolder.instance;
+		log.info("[WebConference@BigBlueButton] Adding web hook");
+		String webhookURL = source + appAddress + "/webhook";
+		instance.addWebHook(webhookURL, event -> {
+			if (event.isRight()) {
+				log.info("[WebConference] Web hook added : " + webhookURL);
+			} else {
+				log.error("[WebConference] Failed to add web hook", event.left().getValue());
+			}
+		});
+		return instance;
     }
 
-    public void setSource(String source) {
+	public void setSource(String source) {
         this.source = source;
     }
 
-    public String getSource() {
+    @Override
+	public String getSource() {
         return this.source;
     }
 
-    public void setHost(Vertx vertx, String host) {
+	public void setHost(Vertx vertx, String host) {
         this.host = host;
         try {
             URI uri = new URI(host);
@@ -67,18 +87,18 @@ public class BigBlueButton {
         }
     }
 
-    public void setApiEndpoint(String apiEndpoint) {
+	public void setApiEndpoint(String apiEndpoint) {
         this.apiEndpoint = apiEndpoint;
     }
 
-    public void setSecret(String secret) {
+	public void setSecret(String secret) {
         this.secret = secret;
     }
 
     private String checksum(String value) {
-        try {
+        try( Formatter formatter = new Formatter() ) {
             byte[] bytes = MessageDigest.getInstance("SHA-1").digest(value.getBytes());
-            Formatter formatter = new Formatter();
+            
             for (byte b : bytes) {
                 formatter.format("%02x", b);
             }
@@ -115,7 +135,8 @@ public class BigBlueButton {
         return encodedName;
     }
 
-    public String getRedirectURL(String sessionID, String userDisplayName, String password) {
+    @Override
+	public String getRedirectURL(String sessionID, String userDisplayName, String password) {
         String encodedName = encodeParams(userDisplayName);
         String parameters = "fullName=" + encodedName + "&meetingID=" + sessionID + "&password=" + password;
         String checksum = checksum(Actions.JOIN + parameters + this.secret);
@@ -123,7 +144,8 @@ public class BigBlueButton {
         return url;
     }
 
-    public void create(String name, String meetingID, String moderatorPW, String attendeePW, String structure, String locale, Handler<Either<String, String>> handler) {
+    @Override
+	public void create(String name, String meetingID, String moderatorPW, String attendeePW, String structure, String locale, Handler<Either<String, String>> handler) {
         String encodedName = encodeParams(name);
         String parameters = "name=" + encodedName + "&meetingID=" + meetingID + "&moderatorPW=" + moderatorPW + "&attendeePW=" + attendeePW;
         String checksum = checksum(Actions.CREATE + parameters + this.secret);
@@ -167,7 +189,8 @@ public class BigBlueButton {
         request.end();
     }
 
-    public void end(String meetingId, String moderatorPW, Handler<Either<String, Boolean>> handler) {
+    @Override
+	public void end(String meetingId, String moderatorPW, Handler<Either<String, Boolean>> handler) {
         String parameters = "meetingID=" + meetingId + "&password=" + moderatorPW;
         String checksum = checksum(Actions.END + parameters + this.secret);
         parameters = parameters + "&checksum=" + checksum;
@@ -205,7 +228,8 @@ public class BigBlueButton {
         request.end();
     }
 
-    public void isMeetingRunning(String meetingId, Handler<Either<String, Boolean>> handler) {
+    @Override
+	public void isMeetingRunning(String meetingId, Handler<Either<String, Boolean>> handler) {
         String parameters = "meetingID=" + meetingId;
         String checksum = checksum(Actions.IS_MEETING_RUNNING + parameters + this.secret);
         parameters = parameters + "&checksum=" + checksum;
@@ -244,14 +268,8 @@ public class BigBlueButton {
         request.end();
     }
 
-    private static class BigBlueButtonHolder {
-        private static final BigBlueButton instance = new BigBlueButton();
-
-        private BigBlueButtonHolder() {
-        }
-    }
-
-    public void addWebHook(String webhook, Handler<Either<String, String>> handler) {
+    @Override
+	public void addWebHook(String webhook, Handler<Either<String, String>> handler) {
         String parameter = "callbackURL=" + this.encodeParams(webhook);
         String checksum = checksum(Actions.CREATE_HOOK + parameter + this.secret);
         String url = this.host + this.apiEndpoint + "/" + Actions.CREATE_HOOK + "?" + parameter + "&checksum=" + checksum;

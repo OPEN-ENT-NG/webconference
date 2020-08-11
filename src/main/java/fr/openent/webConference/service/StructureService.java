@@ -12,4 +12,6 @@ public interface StructureService {
     void retrieveActiveUsers(String id, Handler<Either<String, JsonArray>> handler);
 
     void getPlatformUAIs(Handler<Either<String, JsonArray>> handler);
+    
+    void getUserStructures( String id, Handler<Either<String, JsonArray>> handler );
 }
