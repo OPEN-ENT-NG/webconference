@@ -13,3 +13,4 @@ src/main/resources/public/js
 src/main/resources/public/template/entcore
 rev-manifest.json
 /.idea
+gradle*
