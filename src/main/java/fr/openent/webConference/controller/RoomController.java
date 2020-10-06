@@ -24,6 +24,7 @@ import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.controller.ControllerHelper;
+import org.entcore.common.events.EventHelper;
 import org.entcore.common.events.EventStore;
 import org.entcore.common.http.filter.ResourceFilter;
 import org.entcore.common.user.UserInfos;
@@ -35,16 +36,19 @@ import static org.entcore.common.http.response.DefaultResponseHandler.arrayRespo
 import static org.entcore.common.http.response.DefaultResponseHandler.defaultResponseHandler;
 
 public class RoomController extends ControllerHelper {
+    static final String RESOURCE_NAME = "room";
     private EventBus eb;
     private RoomService roomService;
     private SessionService sessionService = new DefaultSessionService();
     private StructureService structureService = new DefaultStructureService();
     private EventStore eventStore;
+    private final EventHelper eventHelper;
 
     public RoomController(EventBus eb, JsonObject config, EventStore eventStore) {
         this.eb = eb;
         this.eventStore = eventStore;
         roomService = new DefaultRoomService();
+        this.eventHelper = new EventHelper(eventStore);
     }
 
     @Get("/rooms")
@@ -58,7 +62,8 @@ public class RoomController extends ControllerHelper {
     @ApiDoc("Create a room")
     public void create(HttpServerRequest request) {
         String referer = request.headers().contains("referer") ? request.getHeader("referer") : request.scheme() + "://" + getHost(request) + "/webconference";
-        RequestUtils.bodyToJson(request, pathPrefix + "room", room -> UserUtils.getUserInfos(eb, request, user -> roomService.create(referer, room, user, defaultResponseHandler(request))));
+        final Handler<Either<String, JsonObject>> handler = eventHelper.onCreateResource(request, RESOURCE_NAME, defaultResponseHandler(request));
+        RequestUtils.bodyToJson(request, pathPrefix + "room", room -> UserUtils.getUserInfos(eb, request, user -> roomService.create(referer, room, user, handler)));
     }
 
     @Put("/rooms/:id")
