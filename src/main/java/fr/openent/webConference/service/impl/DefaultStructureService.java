@@ -77,16 +77,4 @@ public class DefaultStructureService implements StructureService {
             }
         }));
     }
-    
-    @Override
-    public void getUserStructures( String id, Handler<Either<String, JsonArray>> handler ) {
-    	String neoQuery="MATCH (u:User) WHERE u.id = {id} RETURN u.structures as structures";
-        Neo4j.getInstance().execute(neoQuery, new JsonObject().put("id", id), Neo4jResult.validUniqueResultHandler(result->{
-        	if( result.isRight() ) {
-        		handler.handle( new Either.Right<String, JsonArray>(result.right().getValue().getJsonArray("structures") ) );
-        	} else {
-        		handler.handle( new Either.Left<String, JsonArray>(result.left().getValue()) );
-        	}
-        }));
-    }
 }

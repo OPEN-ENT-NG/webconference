@@ -1,14 +1,13 @@
 package fr.openent.webConference.tiers;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.entcore.common.user.UserInfos;
 import org.entcore.common.user.UserUtils;
 
 import fr.openent.webConference.bigbluebutton.BigBlueButton;
-import fr.openent.webConference.service.StructureService;
-import fr.openent.webConference.service.impl.DefaultStructureService;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
@@ -26,7 +25,6 @@ public class RoomProviderPool {
 	
 	private Vertx vertx;
 	private EventBus eb;
-    private StructureService structureService = new DefaultStructureService();
     
 	/**
 	 * Map of <domain, RoomProvider> or <structure.externalId, RoomProvider>
@@ -139,18 +137,15 @@ public class RoomProviderPool {
     /** Retrieve the roomProvider for this User, or null if none can be found. */
     private Future<RoomProvider> getInstanceFromUser( final UserInfos user ) {
     	Future<RoomProvider> roomProvider = Future.future();
-		structureService.getUserStructures(user.getUserId(), handler -> {
-    		RoomProvider instance = null;
-			if( handler.isRight() ) {
-				JsonArray structures = handler.right().getValue();
-				for( int i=0; structures!=null && i<structures.size(); i++ ) {
-					instance = roomProviders.get( structures.getString(i) );
-					if( instance!= null )
-						break;
-				}
+		List<String> structures = user.getStructures();
+		for( int i=0; structures!=null && i<structures.size(); i++ ) {
+			RoomProvider instance = roomProviders.get( structures.get(i) );
+			if( instance != null ) {
+				roomProvider.complete( instance );
+				return roomProvider;
 			}
-			roomProvider.complete( instance );
-		});
+		}
+		roomProvider.complete( null );
 		return roomProvider;
     }
     
