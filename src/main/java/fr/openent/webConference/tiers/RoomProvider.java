@@ -10,6 +10,8 @@ public interface RoomProvider {
 	void create(String name, String meetingID, String moderatorPW, String attendeePW, String structure, String locale,
 			Handler<Either<String, String>> handler);
 
+	void join(String url, Handler<Either<String, String>> handler);
+
 	void end(String meetingId, String moderatorPW, Handler<Either<String, Boolean>> handler);
 
 	void isMeetingRunning(String meetingId, Handler<Either<String, Boolean>> handler);

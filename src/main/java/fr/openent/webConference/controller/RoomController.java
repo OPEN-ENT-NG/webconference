@@ -129,17 +129,28 @@ public class RoomController extends ControllerHelper {
         }
     }
 
-    private void joinAsAttendee(JsonObject room, UserInfos user, final RoomProvider instance, Handler<Either<String, String>> handler) {
+    private void joinAsAttendee(JsonObject room, UserInfos user, String locale, final RoomProvider instance, Handler<Either<String, String>> handler) {
         String activeSessionId = room.getString("active_session");
         if (activeSessionId != null) {
         	instance.isMeetingRunning(activeSessionId, evt -> {
                 if (evt.isLeft()) handler.handle(new Either.Left<>(evt.left().getValue()));
                 else {
                     Boolean isRunning = evt.right().getValue();
-                    if (isRunning) handler.handle(new Either.Right<>(instance.getRedirectURL(activeSessionId, user.getUsername(), room.getString("attendee_pw"))));
+                    if (isRunning) {
+                        String url = instance.getRedirectURL(activeSessionId, user.getUsername(), room.getString("attendee_pw"));
+                        instance.join(url, canJoinEvent -> {
+                            if (canJoinEvent.isLeft()) {
+                                log.error("[WebConference@RoomController] Meeting joining checking failed.");
+                                handler.handle(new Either.Left<>(canJoinEvent.left().getValue()));
+                                return;
+                            }
+
+                            handler.handle(new Either.Right<>(url));
+                        });
+                    }
                     else {
                         room.remove("active_session");
-                        joinAsAttendee(room, user, instance, handler);
+                        joinAsAttendee(room, user, locale, instance, handler);
                     }
                 }
             });
@@ -165,14 +176,25 @@ public class RoomController extends ControllerHelper {
                 	renderError(request);
                     return;
                 }
-                
+
                 JsonObject room = event.right().getValue();
                 Handler<Either<String, String>> joiningHandler = evt -> {
                     if (evt.isLeft()) {
                         log.error("[WebConference@BigBlueButton] Failed to join room", evt.left().getValue());
-                        if (ErrorCode.TOO_MANY_SESSIONS.code().equals(evt.left().getValue()))
-                            tooManySessions(request, room);
-                        else renderError(request);
+                        ErrorCode code = ErrorCode.get(evt.left().getValue());
+                        switch (code) {
+                            case TOO_MANY_SESSIONS_PER_STRUCTURE:
+                                tooManySessionsPerStructure(request, room);
+                                break;
+                            case TOO_MANY_USERS:
+                                renderView(request, null, ErrorCode.TOO_MANY_USERS.code() + ".html", null);
+                                break;
+                            case TOO_MANY_SESSIONS:
+                                renderView(request, null, ErrorCode.TOO_MANY_SESSIONS.code() + ".html", null);
+                                break;
+                            default:
+                                renderError(request);
+                        }
                     } else {
                         String redirect = evt.right().getValue();
                         if (!"".equals(redirect)) {
@@ -189,19 +211,19 @@ public class RoomController extends ControllerHelper {
 
                 if (user.getUserId().equals(room.getString("owner")))
                     joinAsModerator(room, user, I18n.acceptLanguage(request), instance, joiningHandler);
-                else joinAsAttendee(room, user, instance, joiningHandler);
+                else joinAsAttendee(room, user, I18n.acceptLanguage(request), instance, joiningHandler);
             });
         }));
     }
 
-    private void tooManySessions(HttpServerRequest request, JsonObject room) {
+    private void tooManySessionsPerStructure(HttpServerRequest request, JsonObject room) {
         structureService.retrieveActiveUsers(room.getString("structure", ""), evt -> {
             if (evt.isLeft()) {
                 log.error("[WebConference@RoomController] failed to retrieve structure active users for structure " + room.getString("structure", "<no structure identifier>"), evt.left().getValue());
                 renderError(request);
             } else {
                 JsonArray users = evt.right().getValue();
-                renderView(request, new JsonObject().put("users", users), ErrorCode.TOO_MANY_SESSIONS.code() + ".html", null);
+                renderView(request, new JsonObject().put("users", users), ErrorCode.TOO_MANY_SESSIONS_PER_STRUCTURE.code() + ".html", null);
             }
         });
     }

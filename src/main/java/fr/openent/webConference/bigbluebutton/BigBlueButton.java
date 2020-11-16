@@ -160,13 +160,21 @@ public class BigBlueButton implements RoomProvider {
 
                     if (!"SUCCESS".equals(returnCode) || response.statusCode() != 200) {
                         String messageKey = path.evaluate("/response/messageKey", res.getDocumentElement());
-                        if (ErrorCode.TOO_MANY_SESSIONS.code().equals(messageKey)) {
-                            handler.handle(new Either.Left<>(ErrorCode.TOO_MANY_SESSIONS.code()));
-                            return;
+                        ErrorCode code = ErrorCode.get(messageKey);
+                        switch (code) {
+                            case TOO_MANY_SESSIONS_PER_STRUCTURE:
+                                handler.handle(new Either.Left<>(ErrorCode.TOO_MANY_SESSIONS_PER_STRUCTURE.code()));
+                                return;
+                            case TOO_MANY_USERS:
+                                handler.handle(new Either.Left<>(ErrorCode.TOO_MANY_USERS.code()));
+                                return;
+                            case TOO_MANY_SESSIONS:
+                                handler.handle(new Either.Left<>(ErrorCode.TOO_MANY_SESSIONS.code()));
+                                return;
+                            default:
+                                handler.handle(new Either.Left<>("[WebConference@BigBlueButton] Failed to create meeting"));
+                                return;
                         }
-
-                        handler.handle(new Either.Left<>("[WebConference@BigBlueButton] Failed to create meeting"));
-                        return;
                     }
 
                     String internalId = path.evaluate("/response/internalMeetingID", res.getDocumentElement());
@@ -186,6 +194,53 @@ public class BigBlueButton implements RoomProvider {
         request.putHeader("Client-Server", this.source);
         request.putHeader("Client-Structure", structure);
         request.putHeader("Client-Locale", locale);
+        request.end();
+    }
+
+    @Override
+    public void join(String url, Handler<Either<String, String>> handler) {
+        HttpClientRequest request = httpClient.getAbs(url, response -> {
+            response.bodyHandler(body -> {
+                try {
+                    if (response.statusCode() != 302) {
+                        Document res = parseResponse(body);
+                        XPathFactory xpf = XPathFactory.newInstance();
+                        XPath path = xpf.newXPath();
+                        String returnCode = path.evaluate("/response/returncode", res.getDocumentElement());
+
+                        if (!"FOUND".equals(returnCode)) {
+                            String messageKey = path.evaluate("/response/messageKey", res.getDocumentElement());
+                            ErrorCode code = ErrorCode.get(messageKey);
+                            switch (code) {
+                                case TOO_MANY_SESSIONS_PER_STRUCTURE:
+                                    handler.handle(new Either.Left<>(ErrorCode.TOO_MANY_SESSIONS_PER_STRUCTURE.code()));
+                                    return;
+                                case TOO_MANY_USERS:
+                                    handler.handle(new Either.Left<>(ErrorCode.TOO_MANY_USERS.code()));
+                                    return;
+                                case TOO_MANY_SESSIONS:
+                                    handler.handle(new Either.Left<>(ErrorCode.TOO_MANY_SESSIONS.code()));
+                                    return;
+                                default:
+                                    handler.handle(new Either.Left<>("[WebConference@BigBlueButton] Failed to check meeting joining"));
+                                    return;
+                            }
+                        }
+
+                        log.error("[WebConference@BigBlueButton] Error in format joining check response");
+                        handler.handle(new Either.Left<>("Error response format is not valid"));
+                    }
+                    handler.handle(new Either.Right<>("Redirection found."));
+                } catch (XPathExpressionException | NullPointerException e) {
+                    log.error("[WebConference@BigBlueButton] Failed to parse joining check response", e);
+                    handler.handle(new Either.Left<>(e.toString()));
+                }
+            });
+            response.exceptionHandler(throwable -> {
+                log.error("[WebConference@BigBlueButton] Failed to check meeting joining. An error is catch by exception handler", throwable);
+                handler.handle(new Either.Left<>(throwable.toString()));
+            });
+        });
         request.end();
     }
 
