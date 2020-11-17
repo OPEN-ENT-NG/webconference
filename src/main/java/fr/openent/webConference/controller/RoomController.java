@@ -249,16 +249,22 @@ public class RoomController extends ControllerHelper {
 
             String activeSession = room.getString("active_session");
             String moderatorPW = room.getString("moderator_pw");
-            RoomProviderPool.getSingleton().getInstance(request).setHandler( ar -> {
+
+            if (activeSession == null) {
+                noContent(request);
+                return;
+            }
+
+            RoomProviderPool.getSingleton().getInstance(request).setHandler(ar -> {
                 RoomProvider instance = ar.result();
-                if( instance==null ) {
-                	log.error("[WebConference@RoomController] Failed to get a video provider instance.");
-                	renderError(request);
+                if (instance == null) {
+                    log.error("[WebConference@RoomController] Failed to get a video provider instance.");
+                    renderError(request);
                     return;
                 }
-                
+
                 instance.end(activeSession, moderatorPW, endEvt -> {
-	                if (endEvt.isLeft()) {
+                    if (endEvt.isLeft()) {
 	                    log.error("[WebConference@RoomController] Failed to end session " + activeSession);
 	                    renderError(request);
 	                } else {
