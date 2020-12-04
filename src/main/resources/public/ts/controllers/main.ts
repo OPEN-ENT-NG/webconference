@@ -60,7 +60,7 @@ function transformStructuresToMap(): Map<string, string> {
 
 export const mainController = ng.controller('MainController',
 	['$scope', 'route', 'RoomService', function ($scope, route, RoomService) {
-		if (window.error && window.error === 'tooManyRooms') {
+		if (window.error && window.error === 'tooManyRoomsPerStructure') {
 			idiom.addBundlePromise('/userbook/i18n').then($scope.$apply);
 			model.me.workflow.load(['conversation', 'zimbra']);
 		}
@@ -99,10 +99,22 @@ export const mainController = ng.controller('MainController',
 			$scope.safeApply();
 		};
 
-		vm.startCurrentRoom = () => {
+		vm.startCurrentRoom = async () => {
 			vm.selectedRoom.sessions++;
-			window.open(vm.selectedRoom.link);
-			vm.selectedRoom.active_session = '';
+			let result = window.open(vm.selectedRoom.link);
+			result.window.onload = function () {
+				if (result.error) {
+					vm.selectedRoom.active_session = null;
+					switch (result.error) {
+						case "tooManyRoomsPerStructure": break;
+						case "tooManyUsers": break;
+						case "tooManyRooms": break;
+						default: notify.error(idiom.translate('webconference.room.end.error')); break;
+					}
+				}
+				$scope.safeApply();
+			};
+            vm.selectedRoom.active_session = '';
 			$scope.safeApply();
 		};
 
@@ -114,6 +126,7 @@ export const mainController = ng.controller('MainController',
 				delete vm.selectedRoom.active_session;
 				$scope.safeApply();
 			} catch (e) {
+				notify.error(idiom.translate('webconference.room.end.error'));
 				console.error(`Failed to end meeting ${vm.selectedRoom.id}`, vm.selectedRoom);
 				throw e;
 			}
@@ -127,7 +140,7 @@ export const mainController = ng.controller('MainController',
 		vm.openRoomCreation = () => {
 			vm.room = initEmptyRoom();
 			openLightbox();
-		}
+		};
 
 
 		vm.updateRoom = async (room) => {

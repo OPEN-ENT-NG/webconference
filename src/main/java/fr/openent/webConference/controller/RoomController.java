@@ -31,8 +31,8 @@ import org.entcore.common.user.UserInfos;
 import org.entcore.common.user.UserUtils;
 
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 
-import static org.entcore.common.http.response.DefaultResponseHandler.arrayResponseHandler;
 import static org.entcore.common.http.response.DefaultResponseHandler.defaultResponseHandler;
 
 public class RoomController extends ControllerHelper {
@@ -54,7 +54,46 @@ public class RoomController extends ControllerHelper {
     @Get("/rooms")
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void list(HttpServerRequest request) {
-        UserUtils.getUserInfos(eb, request, user -> roomService.list(user, arrayResponseHandler(request)));
+        UserUtils.getUserInfos(eb, request, user -> roomService.list(user, event -> {
+            if (event.isLeft()) {
+                renderError(request);
+                return;
+            }
+
+            RoomProviderPool.getSingleton().getInstance(request, user).setHandler(ar -> {
+                RoomProvider instance = ar.result();
+                if (instance == null) {
+                    log.error("[WebConference@RoomController] Failed to get a video provider instance.");
+                    renderError(request);
+                    return;
+                }
+
+                AtomicInteger counter = new AtomicInteger();
+                JsonArray rooms = event.right().getValue();
+                for (int i = 0; i < rooms.size(); i++) {
+                    if (rooms.getJsonObject(i).containsKey("active_session") && rooms.getJsonObject(i).getString("active_session") != null) {
+                        counter.getAndIncrement();
+                        int finalI = i;
+                        instance.isMeetingRunning(rooms.getJsonObject(i).getString("active_session"), evt -> {
+                            if (evt.isLeft()) {
+                                log.error("[WebConference@RoomController] Failed to check meeting running for each room.");
+                                renderError(request);
+                            } else if (!evt.right().getValue()) {
+                                rooms.getJsonObject(finalI).remove("active_session");
+                            }
+                            counter.getAndDecrement();
+                            if (counter.get() <= 0) {
+                                renderJson(request, rooms);
+                            }
+                        });
+                    }
+                }
+
+                if (counter.get() <= 0) {
+                    renderJson(request, rooms);
+                }
+            });
+        }));
     }
 
     @Post("/rooms")
