@@ -18,9 +18,9 @@ interface ViewModel {
 
 	hasWorkflowMessagerie(): boolean
 
-	createRoom(room: IRoom)
+	createRoom(room: IRoom, isPublic: boolean)
 
-	updateRoom(room: IRoom)
+	updateRoom(room: IRoom, isPublic: boolean)
 
 	deleteRoom(room: IRoom)
 
@@ -89,8 +89,8 @@ export const mainController = ng.controller('MainController',
 			vm.selectedRoom = vm.rooms[0];
 		});
 
-		vm.createRoom = async (room: IRoom) => {
-			const newRoom = await RoomService.create(room);
+		vm.createRoom = async (room: IRoom, isPublic: boolean) => {
+			const newRoom = await RoomService.create(room, isPublic);
 			vm.rooms = [...vm.rooms, newRoom];
 			vm.room = initEmptyRoom();
 			if (vm.rooms.length === 1) vm.selectedRoom = vm.rooms[0];
@@ -143,13 +143,14 @@ export const mainController = ng.controller('MainController',
 		};
 
 
-		vm.updateRoom = async (room) => {
-			const {name, id, structure} = await RoomService.update(room);
+		vm.updateRoom = async (room, isPublic: boolean) => {
+			const {name, id, structure, public_link} = await RoomService.update(room, isPublic);
 			vm.room = initEmptyRoom();
 			vm.rooms.forEach(aRoom => {
 				if (aRoom.id === id) {
 					aRoom.name = name;
 					aRoom.structure = structure;
+					aRoom.public_link = public_link;
 				}
 			});
 			closeLightbox();

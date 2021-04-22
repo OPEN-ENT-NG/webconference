@@ -18,7 +18,7 @@ public class DefaultRoomService implements RoomService {
 
     @Override
     public void list(UserInfos user, Handler<Either<String, JsonArray>> handler) {
-        String query = "SELECT id, name, sessions, link, active_session, structure FROM " + WebConference.DB_SCHEMA + ".room WHERE owner = ? ORDER BY name";
+        String query = "SELECT id, name, sessions, link, public_link, active_session, structure FROM " + WebConference.DB_SCHEMA + ".room WHERE owner = ? ORDER BY name";
         JsonArray params = new JsonArray().add(user.getUserId());
         Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(handler));
     }
@@ -52,12 +52,13 @@ public class DefaultRoomService implements RoomService {
     }
 
     @Override
-    public void create(String referer, JsonObject room, UserInfos user, Handler<Either<String, JsonObject>> handler) {
+    public void create(String referer, JsonObject room, boolean isPublic, UserInfos user, Handler<Either<String, JsonObject>> handler) {
         String id = UUID.randomUUID().toString();
         String moderatorPW = UUID.randomUUID().toString();
         String attendeePW = UUID.randomUUID().toString();
         String link = referer + "/rooms/" + id + "/join";
-        String query = "INSERT INTO " + WebConference.DB_SCHEMA + ".room(id, name, owner, moderator_pw, attendee_pw, link, structure) VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING *;";
+        String public_link = isPublic ? (WebConference.webconfConfig.getJsonObject("bigbluebutton").getString("host") + "/public/meetings/" + id) : null;
+        String query = "INSERT INTO " + WebConference.DB_SCHEMA + ".room(id, name, owner, moderator_pw, attendee_pw, link, public_link, structure) VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING *;";
         JsonArray params = new JsonArray()
                 .add(id)
                 .add(room.getString("name", ""))
@@ -65,17 +66,20 @@ public class DefaultRoomService implements RoomService {
                 .add(moderatorPW)
                 .add(attendeePW)
                 .add(link)
+                .add(public_link)
                 .add(room.getString("structure", ""));
 
         Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
     }
 
     @Override
-    public void update(String id, JsonObject room, Handler<Either<String, JsonObject>> handler) {
-        String query = "UPDATE " + WebConference.DB_SCHEMA + ".room SET name=?, structure = ? WHERE id = ? RETURNING *;";
+    public void update(String id, JsonObject room, boolean isPublic, Handler<Either<String, JsonObject>> handler) {
+        String public_link = isPublic ? (WebConference.webconfConfig.getJsonObject("bigbluebutton").getString("host") + "/public/meetings/" + id) : null;
+        String query = "UPDATE " + WebConference.DB_SCHEMA + ".room SET name = ?, structure = ?, public_link = ? WHERE id = ? RETURNING *;";
         JsonArray params = new JsonArray()
                 .add(room.getString("name"))
                 .add(room.getString("structure"))
+                .add(public_link)
                 .add(id);
 
         Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));

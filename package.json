@@ -37,6 +37,6 @@
     "clipboard": "^2.0.4"
   },
   "devDependencies": {
-     "@types/jquery": "^2.0.34"
+    "@types/jquery": "^2.0.34"
   }
 }

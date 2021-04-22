@@ -5,9 +5,9 @@ import {IRoom} from '../interfaces'
 export interface RoomService {
     list(): Promise<IRoom[]>;
 
-    create(room: IRoom): Promise<IRoom>;
+    create(room: IRoom, isPublic: boolean): Promise<IRoom>;
 
-    update(room: IRoom): Promise<IRoom>;
+    update(room: IRoom, isPublic: boolean): Promise<IRoom>;
 
     delete(room: IRoom): Promise<IRoom>;
 
@@ -20,13 +20,13 @@ export const RoomService = ng.service('RoomService', (): RoomService => ({
         return data;
     },
 
-    async create(room): Promise<IRoom> {
-        const {data} = await http.post(`/${appPrefix}/rooms`, room);
+    async create(room, isPublic): Promise<IRoom> {
+        const {data} = await http.post(`/${appPrefix}/rooms/${isPublic}`, room);
         return data;
     },
 
-    async update({name, id, structure}): Promise<IRoom> {
-        const {data} = await http.put(`/${appPrefix}/rooms/${id}`, {name, structure});
+    async update({name, id, structure}, isPublic): Promise<IRoom> {
+        const {data} = await http.put(`/${appPrefix}/rooms/${id}/${isPublic}`, {name, structure});
         return data;
     },
 
