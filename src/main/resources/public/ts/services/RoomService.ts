@@ -5,8 +5,8 @@ import {Room, Rooms} from '../interfaces'
 export interface RoomService {
     list(): Promise<Rooms>;
     get(room: Room): Promise<Room>;
-    create(room: Room): Promise<Room>;
-    update(room: Room): Promise<Room>;
+    create(room: Room, isPublic: boolean): Promise<Room>;
+    update(room: Room, isPublic: boolean): Promise<Room>;
     delete(room: Room): Promise<Room>;
     end(room: Room): Promise<void>;
     isMeetingRunning(room: Room): Promise<boolean>;
@@ -26,13 +26,13 @@ export const roomService: RoomService = {
         return data;
     },
 
-    async create(room): Promise<Room> {
-        const {data} = await http.post(`/${appPrefix}/rooms`, room);
+    async create(room, isPublic): Promise<Room> {
+        const {data} = await http.post(`/${appPrefix}/rooms/${isPublic}`, room);
         return data;
     },
 
-    async update({name, id, structure}): Promise<Room> {
-        const {data} = await http.put(`/${appPrefix}/rooms/${id}`, {name, structure});
+    async update({name, id, structure}, isPublic): Promise<Room> {
+        const {data} = await http.put(`/${appPrefix}/rooms/${id}/${isPublic}`, {name, structure});
         return data;
     },
 

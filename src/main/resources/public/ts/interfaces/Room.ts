@@ -6,6 +6,7 @@ export interface IRoom {
     id?: string
     name: string
     link?: string
+    public_link?: string
     sessions?: number
     active_session?: string
     structure: string
@@ -22,6 +23,7 @@ export class Room implements Shareable, IRoom  {
     id?: string;
     name: string;
     link?: string;
+    public_link?: string;
     sessions?: number;
     active_session?: string;
     structure: string;
@@ -33,6 +35,7 @@ export class Room implements Shareable, IRoom  {
         this.id = '';
         this.name = '';
         this.link = null;
+        this.public_link = null;
         this.sessions = null;
         this.active_session = null;
         this.structure = structure ? structure : null;
@@ -46,6 +49,7 @@ export class Room implements Shareable, IRoom  {
             id: this.id,
             name: this.name,
             link: this.link,
+            public_link: this.public_link,
             sessions: this.sessions,
             active_session: this.active_session,
             structure: this.structure,

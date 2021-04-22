@@ -3,6 +3,7 @@ package fr.openent.webConference;
 import fr.openent.webConference.controller.*;
 import fr.openent.webConference.tiers.RoomProviderPool;
 import io.vertx.core.eventbus.EventBus;
+import io.vertx.core.json.JsonObject;
 import org.entcore.common.events.EventStore;
 import org.entcore.common.events.EventStoreFactory;
 import org.entcore.common.http.BaseServer;
@@ -30,11 +31,14 @@ public class WebConference extends BaseServer {
 	public static final String CONTRIB_SHARING_BEHAVIOUR = "fr-openent-webConference-controller-RoomController|initContribSharingRight";
 	public static final String MANAGER_SHARING_BEHAVIOUR = "fr-openent-webConference-controller-RoomController|initManagerSharingRight";
 
+	public static JsonObject webconfConfig;
 
 	@Override
 	public void start() throws Exception {
 		super.start();
 		EventBus eb = getEventBus(vertx);
+		webconfConfig = config;
+
 		EventStore eventStore = EventStoreFactory.getFactory().getEventStore(WebConference.class.getSimpleName());
 
 		DB_SCHEMA = "webconference";

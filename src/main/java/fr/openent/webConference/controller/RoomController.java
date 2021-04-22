@@ -130,22 +130,24 @@ public class RoomController extends ControllerHelper {
         roomService.get(id, defaultResponseHandler(request));
     }
 
-    @Post("/rooms")
+    @Post("/rooms/:isPublic")
     @SecuredAction(WebConference.CREATE_WORKFLOW)
     @ApiDoc("Create a room")
     public void create(HttpServerRequest request) {
+        boolean isPublic = Boolean.parseBoolean(request.getParam("isPublic"));
         String referer = request.headers().contains("referer") ? request.getHeader("referer") : request.scheme() + "://" + getHost(request) + "/webconference";
         final Handler<Either<String, JsonObject>> handler = eventHelper.onCreateResource(request, RESOURCE_NAME, defaultResponseHandler(request));
-        RequestUtils.bodyToJson(request, pathPrefix + "room", room -> UserUtils.getUserInfos(eb, request, user -> roomService.create(referer, room, user, handler)));
+        RequestUtils.bodyToJson(request, pathPrefix + "room", room -> UserUtils.getUserInfos(eb, request, user -> roomService.create(referer, room, isPublic, user, handler)));
     }
 
-    @Put("/rooms/:id")
+    @Put("/rooms/:id/:isPublic")
     @SecuredAction(value = WebConference.MANAGER_SHARING_RIGHT, type = ActionType.RESOURCE)
     @ResourceFilter(RoomFilter.class)
     @ApiDoc("Upate given room")
     public void update(HttpServerRequest request) {
         String id = request.getParam("id");
-        RequestUtils.bodyToJson(request, pathPrefix + "room", room -> roomService.update(id, room, defaultResponseHandler(request)));
+        boolean isPublic = Boolean.parseBoolean(request.getParam("isPublic"));
+        RequestUtils.bodyToJson(request, pathPrefix + "room", room -> roomService.update(id, room, isPublic, defaultResponseHandler(request)));
     }
 
     @Delete("/rooms/:id")
@@ -203,7 +205,7 @@ public class RoomController extends ControllerHelper {
 
                     room.remove("opener");
                     room.put("opener", user.getUsername());
-                    roomService.update(room.getString("id"), room, updateRoomEvent -> {
+                    roomService.update(room.getString("id"), room, room.getString("public_link").equals("null"), updateRoomEvent -> {
                         if (updateRoomEvent.isLeft()) {
                             log.error("[WebConference@joinAsModerator] Failed to update room opener for room : " + room.getString("id"));
                             handler.handle(new Either.Left<>(updateRoomEvent.left().toString()));
@@ -387,7 +389,7 @@ public class RoomController extends ControllerHelper {
 	                        }
 	                        else {
                                 room.remove("opener");
-                                roomService.update(room.getString("id"), room, updateRoomEvent -> {
+                                roomService.update(room.getString("id"), room, room.getString("public_link").equals("null"), updateRoomEvent -> {
                                     if (updateRoomEvent.isLeft()) {
                                         log.error("[WebConference@end] Failed to update room opener for room : " + room.getString("id"));
                                         renderError(request);
@@ -694,7 +696,7 @@ public class RoomController extends ControllerHelper {
                 }
 
                 room.put("collab", isShared);
-                roomService.update(roomId, room, updateEvent -> {
+                roomService.update(roomId, room, room.getString("public_link").equals("null"), updateEvent -> {
                     if (updateEvent.isLeft()) {
                         log.error("[WebConference@updateRoomCollabProp] Fail to update room : " + updateEvent.left().getValue());
                     }

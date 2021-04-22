@@ -51,8 +51,8 @@ interface ViewModel {
 
 	openRoomUpdate(room: Room);
 	openRoomCreation();
-	createRoom(room: Room);
-	updateRoom(room: Room);
+	createRoom(room: Room, isPublic: boolean);
+	updateRoom(room: Room, isPublic: boolean);
 	deleteRoom(room: Room);
 	sendInvitation(room: Room);
 	startCurrentRoom();
@@ -244,8 +244,8 @@ export const mainController = ng.controller('MainController',
 			vm.openRoomLightbox();
 		};
 
-		vm.createRoom = async (room: Room) => {
-			const { id } = await RoomService.create(room);
+		vm.createRoom = async (room: Room, isPublic: boolean) => {
+			const { id } = await RoomService.create(room, isPublic);
 			await vm.rooms.sync();
 			vm.room = initEmptyRoom();
 			vm.selectedRoom = vm.rooms.all[vm.rooms.all.map(r => r.id).indexOf(id)];
@@ -254,13 +254,14 @@ export const mainController = ng.controller('MainController',
 			$scope.safeApply();
 		};
 
-		vm.updateRoom = async (room) => {
-			const { name, id, structure } = await RoomService.update(room);
+		vm.updateRoom = async (room, isPublic: boolean) => {
+			const { name, id, structure, public_link } = await RoomService.update(room, isPublic);
 			vm.room = initEmptyRoom();
 			vm.rooms.all.forEach(aRoom => {
 				if (aRoom.id === id) {
 					aRoom.name = name;
 					aRoom.structure = structure;
+					aRoom.public_link = public_link;
 				}
 			});
 			vm.closeRoomLightbox();

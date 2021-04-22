@@ -16,7 +16,7 @@
                     </button>
                 </div>
             </div>
-            <div class="zero twelve-mobile url-container top-spacing-twice bottom-spacing-three">
+            <div class="zero-desktop twelve-mobile url-container top-spacing-twice bottom-spacing-three">
                 <div ng-show="!!vm.selectedRoom.opener && vm.hasActiveSession(vm.selectedRoom)">
                     <em class="metadata">
                         <em class="metadata">
@@ -29,14 +29,28 @@
                         <i18n>webconference.attendee.invite</i18n>
                     </em>
                 </label>
-                <div class="input-url nine cell seven-mobile">
-                    <input type="text" ng-model="vm.selectedRoom.link" readonly>
+                <div class="top-spacing-three">
+                    <div class="twelve-mobile url-container"  ng-if="!!vm.selectedRoom.public_link">
+                        <div class="input-url seven-mobile cell">
+                            <i18n class="bold cell">webconference.public.link</i18n>
+                            <input type="text" ng-model="vm.selectedRoom.public_link" readonly>
+                        </div>
+                        <a class="clipboard-link-field" data-clipboard-text="[[vm.selectedRoom.public_link]]">
+                            <i class="copy"></i>
+                            <i18n>copy.link</i18n>
+                        </a>
+                    </div>
+                    <div class="twelve-mobile url-container">
+                        <div class="input-url seven-mobile cell">
+                            <i18n class="bold cell">webconference.ent.link</i18n>
+                            <input type="text" ng-model="vm.selectedRoom.link" readonly>
+                        </div>
+                        <a class="clipboard-link-field" data-clipboard-text="[[vm.selectedRoom.link]]">
+                            <i class="copy"></i>
+                            <i18n>copy.link</i18n>
+                        </a>
+                    </div>
                 </div>
-                <a class="clipboard-link-field"
-                    data-clipboard-text="[[vm.selectedRoom.link]]">
-                    <i class="copy"></i>
-                    <i18n>copy.link</i18n>
-                </a>
             </div>
             <div class="twelve">
                 <div ng-show="vm.structures.length > 1 && vm.selectedRoom.structure">
@@ -58,15 +72,28 @@
                         <i18n>webconference.attendee.invite</i18n>
                     </div>
                 </label>
-                <div class="twelve url-container zero-mobile">
-                    <div class="input-url nine cell">
-                        <input type="text" ng-model="vm.selectedRoom.link" readonly>
+                <div class="top-spacing-three">
+                    <div class="twelve url-container zero-mobile" ng-if="!!vm.selectedRoom.public_link">
+                        <i18n class="bold one cell">webconference.public.link</i18n>
+                        <div class="input-url nine cell">
+                            <input type="text" ng-model="vm.selectedRoom.public_link" readonly>
+                        </div>
+                        <a class="clipboard-link-field" data-clipboard-text="[[vm.selectedRoom.public_link]]">
+                            <i class="copy"></i>
+                            <i18n>copy.link</i18n>
+                        </a>
                     </div>
-                    <i class="sharing right-magnet" ng-if="vm.selectedRoom.collab" title="Salle partagée"></i>
-                    <a class="clipboard-link-field" data-clipboard-text="[[vm.selectedRoom.link]]">
-                       <i class="copy"></i>
-                        <i18n>copy.link</i18n>
-                    </a>
+                    <div class="twelve url-container zero-mobile">
+                        <i18n class="bold one cell">webconference.ent.link</i18n>
+                        <div class="input-url nine cell">
+                            <input type="text" ng-model="vm.selectedRoom.link" readonly>
+                        </div>
+                        <i class="sharing right-magnet" ng-if="vm.selectedRoom.collab" title="Salle partagée"></i>
+                        <a class="clipboard-link-field" data-clipboard-text="[[vm.selectedRoom.link]]">
+                           <i class="copy"></i>
+                            <i18n>copy.link</i18n>
+                        </a>
+                    </div>
                 </div>
                 <div class="zero twelve-mobile flex-space">
                     <div class="twelve">

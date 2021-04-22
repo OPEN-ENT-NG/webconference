@@ -13,9 +13,9 @@ public interface RoomService {
 
     void get(String id, Handler<Either<String, JsonObject>> handler);
 
-    void create(String referer, JsonObject room, UserInfos user, Handler<Either<String, JsonObject>> handler);
+    void create(String referer, JsonObject room, boolean isPublic, UserInfos user, Handler<Either<String, JsonObject>> handler);
 
-    void update(String id, JsonObject room, Handler<Either<String, JsonObject>> handler);
+    void update(String id, JsonObject room, boolean isPublic, Handler<Either<String, JsonObject>> handler);
 
     void delete(String id, Handler<Either<String, JsonObject>> handler);
 
