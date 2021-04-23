@@ -28,7 +28,7 @@ public class WebConference extends BaseServer {
 
 		EventStore eventStore = EventStoreFactory.getFactory().getEventStore(WebConference.class.getSimpleName());
 
-		addController(new WebConferenceController(eventStore));
+		addController(new WebConferenceController(config, eventStore));
 		addController(new RoomController(eb, config, eventStore));
 		addController(new WebHookController());
 		addController(new SynchroController());

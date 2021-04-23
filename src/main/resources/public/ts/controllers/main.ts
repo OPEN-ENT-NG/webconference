@@ -1,6 +1,7 @@
-import {idiom, model, ng, template, notify} from 'entcore';
+import {idiom, model, ng, template, notify, appPrefix} from 'entcore';
 import {IRoom, IStructure} from '../interfaces';
 import * as Clipboard from 'clipboard';
+import http from "axios";
 
 declare const window: any;
 
@@ -10,6 +11,7 @@ interface ViewModel {
 	rooms: IRoom[]
 	room: IRoom
 	selectedRoom: IRoom
+	allowPublicLink: boolean
 	lightbox: {
 		show: boolean
 	}
@@ -71,6 +73,7 @@ export const mainController = ng.controller('MainController',
 		vm.lightbox = {
 			show: false
 		};
+		vm.allowPublicLink = false;
 
 		vm.hasWorkflowZimbra = function () {
 			return model.me.hasWorkflow('fr.openent.zimbra.controllers.ZimbraController|view');
@@ -89,7 +92,7 @@ export const mainController = ng.controller('MainController',
 			vm.selectedRoom = vm.rooms[0];
 		});
 
-		vm.createRoom = async (room: IRoom, isPublic: boolean) => {
+		vm.createRoom = async (room: IRoom, isPublic: boolean = false) => {
 			const newRoom = await RoomService.create(room, isPublic);
 			vm.rooms = [...vm.rooms, newRoom];
 			vm.room = initEmptyRoom();
@@ -143,7 +146,7 @@ export const mainController = ng.controller('MainController',
 		};
 
 
-		vm.updateRoom = async (room, isPublic: boolean) => {
+		vm.updateRoom = async (room, isPublic: boolean = false) => {
 			const {name, id, structure, public_link} = await RoomService.update(room, isPublic);
 			vm.room = initEmptyRoom();
 			vm.rooms.forEach(aRoom => {
@@ -172,6 +175,14 @@ export const mainController = ng.controller('MainController',
 				$scope.$apply();
 			}
 		};
+
+		const checkAllowPublicLink = async function () {
+			const { data } = await http.get(`/${appPrefix}/allowsPublic`);
+			vm.allowPublicLink = data["allow_public_link"];
+		}
+		checkAllowPublicLink().then(() => {
+			$scope.safeApply();
+		});
 
 		vm.room = initEmptyRoom();
 		loadRooms().then(() => {
