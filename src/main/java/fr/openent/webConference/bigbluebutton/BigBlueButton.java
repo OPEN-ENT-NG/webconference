@@ -146,7 +146,7 @@ public class BigBlueButton implements RoomProvider {
     }
 
     @Override
-	public void create(String name, String meetingID, String moderatorPW, String attendeePW, String structure, String locale, Handler<Either<String, String>> handler) {
+	public void create(String name, String meetingID, String roomID, String moderatorPW, String attendeePW, String structure, String locale, Handler<Either<String, String>> handler) {
         String encodedName = encodeParams(name);
         String parameters = "name=" + encodedName + "&meetingID=" + meetingID + "&moderatorPW=" + moderatorPW + "&attendeePW=" + attendeePW;
         String checksum = checksum(Actions.CREATE + parameters + this.secret);
@@ -197,6 +197,7 @@ public class BigBlueButton implements RoomProvider {
         request.putHeader("Client-Server", this.source);
         request.putHeader("Client-Structure", structure);
         request.putHeader("Client-Locale", locale);
+        request.putHeader("Client-Room", roomID);
         request.end();
     }
 

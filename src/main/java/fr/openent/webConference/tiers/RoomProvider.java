@@ -8,7 +8,7 @@ public interface RoomProvider {
 
 	String getSource();
 
-	void create(String name, String meetingID, String moderatorPW, String attendeePW, String structure, String locale,
+	void create(String name, String meetingID, String roomID, String moderatorPW, String attendeePW, String structure, String locale,
 			Handler<Either<String, String>> handler);
 
 	void join(String url, Handler<Either<String, String>> handler);

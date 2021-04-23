@@ -188,7 +188,7 @@ public class RoomController extends ControllerHelper {
         }
         else {
             String sessionId = UUID.randomUUID().toString();
-            instance.create(room.getString("name"), sessionId, room.getString("moderator_pw"), room.getString("attendee_pw"), room.getString("uai", ""), locale, creationEvent -> {
+            instance.create(room.getString("name"), room.getString("id"), sessionId, room.getString("moderator_pw"), room.getString("attendee_pw"), room.getString("uai", ""), locale, creationEvent -> {
                 if (creationEvent.isLeft()) {
                     log.error("[WebConference@joinAsModerator] Failed to join room. Session creation failed.");
                     handler.handle(new Either.Left<>(creationEvent.left().getValue()));
