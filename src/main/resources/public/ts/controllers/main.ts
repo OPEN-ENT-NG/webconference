@@ -1,8 +1,8 @@
-import {idiom, model, ng, template, notify, Behaviours} from 'entcore';
+import {idiom, model, ng, template, notify, Behaviours, appPrefix} from 'entcore';
 import {IStructure, Room, Rooms} from '../interfaces';
 import * as Clipboard from 'clipboard';
 import {roomService} from "../services";
-import {Mix} from "entcore-toolkit";
+import http from "axios";
 
 declare const window: any;
 
@@ -14,6 +14,7 @@ interface ViewModel {
 	selectedRoom: Room;
 	roomToShare: Room;
 	roomToInvit: Room;
+	allowPublicLink: boolean
 	meetingInfo: {
 		running: boolean,
 		participantCount: number,
@@ -101,6 +102,7 @@ export const mainController = ng.controller('MainController',
 		vm.selectedRoom = new Room();
 		vm.roomToShare = new Room();
 		vm.roomToInvit = new Room();
+		vm.allowPublicLink = false;
 		vm.meetingInfo = {running: false, participantCount: null, moderatorCount: null};
 		vm.lightbox = {
 			room: false,
@@ -122,12 +124,10 @@ export const mainController = ng.controller('MainController',
 				template.open('toaster', 'toaster');
 				$scope.safeApply();
 				let clipboard = new Clipboard('.clipboard-link-field');
-
 				clipboard.on('success', function(e) {
 					e.clearSelection();
 					notify.info('copy.link.success');
 				});
-
 				clipboard.on('error', function(e) {
 					notify.error('copy.link.error');
 				});
@@ -244,7 +244,7 @@ export const mainController = ng.controller('MainController',
 			vm.openRoomLightbox();
 		};
 
-		vm.createRoom = async (room: Room, isPublic: boolean) => {
+		vm.createRoom = async (room: Room, isPublic: boolean = false) => {
 			const { id } = await RoomService.create(room, isPublic);
 			await vm.rooms.sync();
 			vm.room = initEmptyRoom();
@@ -403,4 +403,13 @@ export const mainController = ng.controller('MainController',
 				$scope.$apply();
 			}
 		};
+
+		const checkAllowPublicLink = async function () {
+			const { data } = await http.get(`/${appPrefix}/allowsPublic`);
+			vm.allowPublicLink = data["allow_public_link"];
+		}
+
+		checkAllowPublicLink().then(() => {
+			$scope.safeApply();
+		});
 	}]);

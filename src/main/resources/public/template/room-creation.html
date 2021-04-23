@@ -19,7 +19,7 @@
             <input type="text" class="twelve" id="room-name" ng-model="vm.room.name" maxlength="50">
         </div>
     </div>
-    <div class="row">
+    <div class="row" ng-if="vm.config.allowPublicLink">
         <label for="room-public-link" class="cell twelve">
             <input type="checkbox" class="twelve" id="room-public-link" ng-model="vm.generate_public_link" ng-checked="!!vm.room.public_link">
             <i18n>webconference.room.generate.public.link</i18n>
@@ -27,10 +27,10 @@
     </div>
     <div class="row">
         <div class="right-magnet">
-            <button ng-click="vm.createRoom(vm.room)" ng-if="!vm.room.id">
+            <button ng-click="vm.createRoom(vm.room, vm.generate_public_link)" ng-if="!vm.room.id">
                 <i18n>webconference.create</i18n>
             </button>
-            <button ng-click="vm.updateRoom(vm.room)" ng-if="vm.room.id">
+            <button ng-click="vm.updateRoom(vm.room, vm.generate_public_link)" ng-if="vm.room.id">
                 <i18n>webconference.update</i18n>
             </button>
         </div>

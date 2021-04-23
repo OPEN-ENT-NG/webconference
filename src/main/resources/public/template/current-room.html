@@ -30,7 +30,7 @@
                     </em>
                 </label>
                 <div class="top-spacing-three">
-                    <div class="twelve-mobile url-container"  ng-if="!!vm.selectedRoom.public_link">
+                    <div class="twelve-mobile url-container"  ng-if="!!vm.selectedRoom.public_link && vm.config.allowPublicLink">
                         <div class="input-url seven-mobile cell">
                             <i18n class="bold cell">webconference.public.link</i18n>
                             <input type="text" ng-model="vm.selectedRoom.public_link" readonly>
@@ -73,7 +73,7 @@
                     </div>
                 </label>
                 <div class="top-spacing-three">
-                    <div class="twelve url-container zero-mobile" ng-if="!!vm.selectedRoom.public_link">
+                    <div class="twelve url-container zero-mobile" ng-if="!!vm.selectedRoom.public_link && vm.allowPublicLink">
                         <i18n class="bold one cell">webconference.public.link</i18n>
                         <div class="input-url nine cell">
                             <input type="text" ng-model="vm.selectedRoom.public_link" readonly>
