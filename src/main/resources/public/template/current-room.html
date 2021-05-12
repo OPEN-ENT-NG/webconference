@@ -40,10 +40,10 @@
                             <i18n>copy.link</i18n>
                         </a>
                     </div>
-                    <div class="info vertical-spacing-four">
+                    <div class="info vertical-spacing-four" ng-if="!!vm.selectedRoom.public_link && vm.allowPublicLink">
                         <i18n>webconference.public.link.explanation</i18n>
                     </div>
-                    <div class="twelve-mobile url-container"  ng-if="!!vm.selectedRoom.public_link && vm.allowPublicLink">
+                    <div class="twelve-mobile url-container" ng-if="!!vm.selectedRoom.public_link && vm.allowPublicLink">
                         <div class="input-url seven-mobile cell">
                             <i18n class="bold cell">webconference.public.link</i18n>
                             <input type="text" ng-model="vm.selectedRoom.public_link" readonly>
@@ -86,7 +86,7 @@
                             <i18n>copy.link</i18n>
                         </a>
                     </div>
-                    <div class="zero-mobile info vertical-spacing-four">
+                    <div class="zero-mobile info vertical-spacing-four" ng-if="!!vm.selectedRoom.public_link && vm.allowPublicLink">
                         <i18n>webconference.public.link.explanation</i18n>
                     </div>
                     <div class="twelve url-container zero-mobile" ng-if="!!vm.selectedRoom.public_link && vm.allowPublicLink">
