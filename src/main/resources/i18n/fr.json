@@ -29,7 +29,7 @@
   "webconference.room.end.error": "Une erreur est survenue lors de la fermeture de la salle. Veuillez rafraichir la page et réessayer.",
   "webconference.room.join.opened": "Une session est déjà en cours pour la salle que vous souhaitez ouvrir.",
   "webconference.public.link" : "Lien public : ",
-  "webconference.public.link.explanation": "Le lien public permet de se connecter sur une salle ouverte sans passer par le portail ENT.",
+  "webconference.public.link.explanation": "En utilisant le lien public, les utilisateurs pourront accéder directement à la salle sans avoir à se connecter à l'ENT au préalable.",
   "webconference.ent.link" : "Lien via l'ENT : ",
   "copy.link": "Copier le lien",
   "copy.link.success": "Le lien est copié dans le presse-papier.",
