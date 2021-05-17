@@ -33,9 +33,6 @@
                             <i18n>copy.link</i18n>
                         </a>
                     </div>
-                    <div class="info vertical-spacing-four" ng-if="!!vm.selectedRoom.public_link && vm.allowPublicLink">
-                        <i18n>webconference.public.link.explanation</i18n>
-                    </div>
                     <div class="twelve-mobile url-container" ng-if="!!vm.selectedRoom.public_link && vm.allowPublicLink">
                         <div class="input-url seven-mobile cell">
                             <i18n class="bold cell">webconference.public.link</i18n>
@@ -45,6 +42,9 @@
                             <i class="copy"></i>
                             <i18n>copy.link</i18n>
                         </a>
+                    </div>
+                    <div class="info vertical-spacing-four" ng-if="!!vm.selectedRoom.public_link && vm.allowPublicLink">
+                        <i18n>webconference.public.link.explanation</i18n>
                     </div>
                 </div>
             </div>
@@ -70,9 +70,6 @@
                             <i18n>copy.link</i18n>
                         </a>
                     </div>
-                    <div class="zero-mobile info vertical-spacing-four" ng-if="!!vm.selectedRoom.public_link && vm.allowPublicLink">
-                        <i18n>webconference.public.link.explanation</i18n>
-                    </div>
                     <div class="twelve url-container zero-mobile" ng-if="!!vm.selectedRoom.public_link && vm.allowPublicLink">
                         <i18n class="bold one cell">webconference.public.link</i18n>
                         <div class="input-url nine cell">
@@ -82,6 +79,9 @@
                             <i class="copy"></i>
                             <i18n>copy.link</i18n>
                         </a>
+                    </div>
+                    <div class="zero-mobile info vertical-spacing-four" ng-if="!!vm.selectedRoom.public_link && vm.allowPublicLink">
+                        <i18n>webconference.public.link.explanation</i18n>
                     </div>
                 </div>
                 <div class="right-magnet button zero block-mobile bottom-spacing">

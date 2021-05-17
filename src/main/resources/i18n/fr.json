@@ -16,7 +16,7 @@
   "webconference.waiting.message": "Oups ! La salle que vous tentez de rejoindre n'est pas encore ouverte.",
   "webconference.waiting.refresh": "Actualiser",
   "webconference.room.end.error": "Une erreur est survenue lors de la fermeture de la salle. Veuillez rafraichir la page et réessayer.",
-  "webconference.public.link.explanation": "Le lien public permet de se connecter sur une salle ouverte sans passer par le portail ENT.",
+  "webconference.public.link.explanation": "En utilisant le lien public, les utilisateurs pourront accéder directement à la salle sans avoir à se connecter à l'ENT au préalable.",
   "webconference.public.link" : "Lien public : ",
   "webconference.ent.link" : "Lien via l'ENT : ",
   "copy.link": "Copier le lien",
