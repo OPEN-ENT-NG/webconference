@@ -14,11 +14,9 @@ import org.entcore.common.events.EventStore;
 import org.entcore.common.http.filter.ResourceFilter;
 
 public class WebConferenceController extends ControllerHelper {
-    private JsonObject config;
     private EventStore eventStore;
 
-    public WebConferenceController(JsonObject config, EventStore eventStore) {
-        this.config = config;
+    public WebConferenceController(EventStore eventStore) {
         this.eventStore = eventStore;
     }
 
@@ -34,7 +32,7 @@ public class WebConferenceController extends ControllerHelper {
     @ApiDoc("Check if module allows public links")
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void get(HttpServerRequest request) {
-        JsonObject allow_public_link = new JsonObject().put("allow_public_link", config.getValue("allow-public-link", false));
+        JsonObject allow_public_link = new JsonObject().put("allow_public_link", WebConference.webconfConfig.getValue("allow-public-link", false));
         Renders.renderJson(request, allow_public_link, 200);
     }
 }
