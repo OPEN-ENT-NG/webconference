@@ -18,13 +18,14 @@ public class WebConference extends BaseServer {
 
 	public static final String DB_SCHEMA = "webconference";
 
-	public static JsonObject webconfConfig;
+	public static String publicUrl;
 	
 	@Override
 	public void start() throws Exception {
 		super.start();
 		EventBus eb = getEventBus(vertx);
-		webconfConfig = config;
+
+		publicUrl = config.getJsonObject("bigbluebutton").getString("host") + "/public/rooms/";
 
 		EventStore eventStore = EventStoreFactory.getFactory().getEventStore(WebConference.class.getSimpleName());
 
@@ -34,6 +35,5 @@ public class WebConference extends BaseServer {
 		addController(new SynchroController());
 		
 		RoomProviderPool.getSingleton().init(vertx, eb, config);
-
 	}
 }

@@ -57,7 +57,7 @@ public class DefaultRoomService implements RoomService {
         String moderatorPW = UUID.randomUUID().toString();
         String attendeePW = UUID.randomUUID().toString();
         String link = referer + "/rooms/" + id + "/join";
-        String public_link = isPublic ? (WebConference.webconfConfig.getJsonObject("bigbluebutton").getString("host") + "/public/rooms/" + id) : null;
+        String public_link = isPublic ? (WebConference.publicUrl + id) : null;
         String query = "INSERT INTO " + WebConference.DB_SCHEMA + ".room(id, name, owner, moderator_pw, attendee_pw, link, public_link, structure) VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING *;";
         JsonArray params = new JsonArray()
                 .add(id)
@@ -74,7 +74,7 @@ public class DefaultRoomService implements RoomService {
 
     @Override
     public void update(String id, JsonObject room, boolean isPublic, Handler<Either<String, JsonObject>> handler) {
-        String public_link = isPublic ? (WebConference.webconfConfig.getJsonObject("bigbluebutton").getString("host") + "/public/meetings/" + id) : null;
+        String public_link = isPublic ? (WebConference.publicUrl + id) : null;
         String query = "UPDATE " + WebConference.DB_SCHEMA + ".room SET name = ?, structure = ?, public_link = ? WHERE id = ? RETURNING *;";
         JsonArray params = new JsonArray()
                 .add(room.getString("name"))
