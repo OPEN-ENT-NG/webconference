@@ -1,11 +1,11 @@
 <div class="cards-view twelve">
-    <div class="row" ng-show="vm.rooms && vm.rooms.length > 0">
+    <div class="row" ng-show="vm.rooms && vm.rooms.all.length > 0">
         <div ng-include="'/webconference/public/template/current-room.html'"></div>
         <div class="grid">
             <div class="flex-card card cell center-component f-row flex-row horizontal-spacing twelve-mobile"
                  ng-click="vm.selectedRoom = room"
                  ng-class="vm.selectedRoom == room ? 'active' : ''"
-                 ng-repeat="room in vm.rooms|orderBy:'name'">
+                 ng-repeat="room in vm.rooms.all|orderBy:'name'">
                 <div class="icon vertical-spacing-twice center-component">
                     <div class="img-container center-component room-image"
                          ng-class="{green: vm.hasActiveSession(room), red: !vm.hasActiveSession(room)}">
@@ -15,27 +15,16 @@
                 </div>
                 <div class="title align-start center-component flex-row vertical-spacing-twice">
                     <h4>[[room.name]]</h4>
-                    <em class="metadata" ng-show="vm.structures.length > 1 && room.structure">[[vm.structureMap.get(room.structure)
-                        || '']]</em>
-                </div>
-                <div class="dots-menu center-component">
-                    <dots-menu>
-                        <opt ng-click="vm.openRoomUpdate(room)">
-                            <i18n>webconference.update</i18n>
-                        </opt>
-                        <opt ng-click="vm.deleteRoom(room)">
-                            <i18n>webconference.delete</i18n>
-                        </opt>
-                    </dots-menu>
+                    <em class="metadata" ng-show="vm.structures.length > 1 && room.structure">[[vm.structureMap.get(room.structure) || '']]</em>
                 </div>
             </div>
         </div>
     </div>
-    <div class="row center-component flex row top-spacing-ten" ng-show="vm.rooms && vm.rooms.length === 0">
+    <div class="row center-component flex row top-spacing-ten" ng-show="vm.rooms && vm.rooms.all.length === 0">
         <h4>
             <i18n>webconference.rooms.empty</i18n>
         </h4>
-        <button ng-click="vm.lightbox.show = true;" class="vertical-spacing-six">
+        <button ng-click="vm.openRoomLightbox()" class="vertical-spacing-six">
             <i18n>webconferences.room.create</i18n>
         </button>
     </div>

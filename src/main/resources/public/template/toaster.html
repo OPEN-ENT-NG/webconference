@@ -1,0 +1,15 @@
+<section class="toggle-buttons" ng-if="vm.rooms && vm.rooms.all.length > 0 && vm.hasShareRightManager(vm.selectedRoom)">
+    <div class="toggle">
+        <div class="row">
+            <button ng-click="vm.openRoomUpdate(vm.selectedRoom)" class="cell">
+                <i18n>webconference.update</i18n>
+            </button>
+            <button ng-click="vm.openSharingLightbox(vm.selectedRoom)" class="cell">
+                <i18n>webconference.share</i18n>
+            </button>
+            <button ng-click="vm.deleteRoom(vm.selectedRoom)" class="cell">
+                <i18n>webconference.delete</i18n>
+            </button>
+        </div>
+    </div>
+</section>

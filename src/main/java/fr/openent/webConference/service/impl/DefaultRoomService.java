@@ -11,16 +11,31 @@ import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 import org.entcore.common.user.UserInfos;
 
+import java.util.List;
 import java.util.UUID;
 
 public class DefaultRoomService implements RoomService {
     private StructureService structureService = new DefaultStructureService();
 
     @Override
-    public void list(UserInfos user, Handler<Either<String, JsonArray>> handler) {
-        String query = "SELECT id, name, sessions, link, active_session, structure FROM " + WebConference.DB_SCHEMA + ".room WHERE owner = ? ORDER BY name";
-        JsonArray params = new JsonArray().add(user.getUserId());
-        Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(handler));
+    public void list(List<String> groupsAndUserIds, UserInfos user, Handler<Either<String, JsonArray>> handler) {
+        StringBuilder query = new StringBuilder();
+        JsonArray params = new JsonArray();
+
+        query.append("SELECT r.id, name, sessions, link, active_session, structure, owner AS owner_id FROM ").append(WebConference.ROOM_TABLE).append(" r ")
+                .append("LEFT JOIN ").append(WebConference.ROOM_SHARES_TABLE).append(" rs ON r.id = rs.resource_id ")
+                .append("LEFT JOIN ").append(WebConference.MEMBERS_TABLE).append(" m ON (m.id = rs.member_id AND m.group_id IS NOT NULL) ")
+                .append("WHERE (rs.member_id IN ").append(Sql.listPrepared(groupsAndUserIds)).append(" AND rs.action IN (?, ?)) ")
+                .append("OR r.owner = ? ")
+                .append("GROUP BY r.id ")
+                .append("ORDER BY r.name;");
+
+        for (String groupOrUser : groupsAndUserIds) {
+            params.add(groupOrUser);
+        }
+        params.add(WebConference.MANAGER_SHARING_BEHAVIOUR).add(WebConference.CONTRIB_SHARING_BEHAVIOUR).add(user.getUserId());
+
+        Sql.getInstance().prepared(query.toString(), params, SqlResult.validResultHandler(handler));
     }
 
     @Override
@@ -96,5 +111,30 @@ public class DefaultRoomService implements RoomService {
                 .add(id);
 
         Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(evt -> this.get(id, handler)));
+    }
+
+    @Override
+    public void getSharedWithMe(String roomId, UserInfos user, Handler<Either<String, JsonArray>> handler) {
+        String query = "SELECT * FROM " + WebConference.ROOM_SHARES_TABLE + " WHERE resource_id = ? AND member_id = ?;";
+        JsonArray params = new JsonArray().add(roomId).add(user.getUserId());
+        Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(handler));
+    }
+
+    @Override
+    public void getUsersShared(String roomId, Handler<Either<String, JsonArray>> handler) {
+        String query = "SELECT member_id FROM " + WebConference.ROOM_SHARES_TABLE + " WHERE resource_id = ? AND action IN (?,?);";
+        JsonArray params = new JsonArray().add(roomId).add(WebConference.MANAGER_SHARING_BEHAVIOUR).add(WebConference.CONTRIB_SHARING_BEHAVIOUR);
+        Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(handler));
+    }
+
+    @Override
+    public void getAllMyRoomRights(List<String> groupsAndUserIds, Handler<Either<String, JsonArray>> handler) {
+        String query = "SELECT resource_id, action FROM " + WebConference.ROOM_SHARES_TABLE +
+                " WHERE member_id IN " + Sql.listPrepared(groupsAndUserIds) + " AND action IN (?,?);";
+        JsonArray params = new JsonArray()
+                .addAll(new fr.wseduc.webutils.collections.JsonArray(groupsAndUserIds))
+                .add(WebConference.CONTRIB_SHARING_BEHAVIOUR)
+                .add(WebConference.MANAGER_SHARING_BEHAVIOUR);
+        Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(handler));
     }
 }

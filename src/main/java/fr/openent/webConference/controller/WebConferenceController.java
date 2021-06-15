@@ -17,7 +17,7 @@ public class WebConferenceController extends ControllerHelper {
     }
 
     @Get("")
-    @SecuredAction(WebConference.view)
+    @SecuredAction(WebConference.VIEW_WORKFLOW)
     @ApiDoc("Render default view")
     public void view(HttpServerRequest request) {
         renderView(request);

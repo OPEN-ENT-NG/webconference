@@ -1,40 +1,39 @@
-import {idiom, model, ng, template, notify} from 'entcore';
-import {IRoom, IStructure} from '../interfaces';
+import {idiom, model, ng, template, notify, Behaviours} from 'entcore';
+import {IRoom, IStructure, Room, Rooms} from '../interfaces';
 import * as Clipboard from 'clipboard';
+import {Mix} from "entcore-toolkit";
 
 declare const window: any;
 
 interface ViewModel {
-	structures: Array<IStructure>
-	structureMap: Map<String, String>
-	rooms: IRoom[]
-	room: IRoom
-	selectedRoom: IRoom
+	structures: Array<IStructure>;
+	structureMap: Map<String, String>;
+	rooms: Rooms;
+	room: Room;
+	selectedRoom: Room;
+	roomToShare: Room;
 	lightbox: {
-		show: boolean
-	}
+		room: boolean,
+		sharing: boolean
+	};
 
-	hasWorkflowZimbra(): boolean
-
-	hasWorkflowMessagerie(): boolean
-
-	createRoom(room: IRoom)
-
-	updateRoom(room: IRoom)
-
-	deleteRoom(room: IRoom)
-
-	openRoomUpdate(room: IRoom)
-
-	openRoomCreation()
-
-	startCurrentRoom()
-
-	endCurrentRoom()
-
-	hasActiveSession(room: IRoom)
-
-	refresh()
+	hasWorkflowZimbra(): boolean;
+	hasWorkflowMessagerie(): boolean;
+	hasShareRightManager(room : Room): boolean;
+	hasShareRightContrib(room : Room): boolean;
+	openRoomLightbox(): void;
+	closeRoomLightbox(): void;
+	openSharingLightbox(room: Room): void;
+	closeSharingLightbox(): void;
+	createRoom(room: Room);
+	updateRoom(room: Room);
+	deleteRoom(room: Room);
+	openRoomUpdate(room: Room);
+	openRoomCreation();
+	startCurrentRoom();
+	endCurrentRoom();
+	hasActiveSession(room: Room);
+	refresh();
 }
 
 function processStructures(): Array<IStructure> {
@@ -68,8 +67,12 @@ export const mainController = ng.controller('MainController',
 		const vm: ViewModel = this;
 		vm.structures = processStructures();
 		vm.structureMap = transformStructuresToMap();
+		vm.rooms = new Rooms();
+		vm.selectedRoom = new Room();
+		vm.roomToShare = new Room();
 		vm.lightbox = {
-			show: false
+			room: false,
+			sharing: false
 		};
 
 		vm.hasWorkflowZimbra = function () {
@@ -80,21 +83,55 @@ export const mainController = ng.controller('MainController',
 			return model.me.hasWorkflow('org.entcore.conversation.controllers.ConversationController|view');
 		};
 
-		const openLightbox = () => vm.lightbox.show = true;
-		const closeLightbox = () => vm.lightbox.show = false;
-		const initEmptyRoom = () => ({name: '', structure: vm.structures[0].id});
+		vm.hasShareRightManager = (room : Room) => {
+			return room.owner_id === model.me.userId || room.myRights.includes(Behaviours.applicationsBehaviours['web-conference'].rights.resources.manager.right);
+		};
 
-		const loadRooms = () => RoomService.list().then(rooms => {
-			vm.rooms = rooms;
-			vm.selectedRoom = vm.rooms[0];
+		vm.hasShareRightContrib = (room : Room) => {
+			return room.owner_id === model.me.userId || room.myRights.includes(Behaviours.applicationsBehaviours['web-conference'].rights.resources.contrib.right);
+		};
+
+		vm.openRoomLightbox = () => {
+			template.open('lightbox', 'room-creation');
+			vm.lightbox.room = true;
+		}
+		vm.closeRoomLightbox = () => {
+			template.close('lightbox');
+			vm.lightbox.room = false;
+		}
+		vm.openSharingLightbox = (room: Room) => {
+			vm.roomToShare = room;
+			vm.roomToShare.generateShareRights();
+			template.open('lightbox', 'room-sharing');
+			vm.lightbox.sharing = true;
+		}
+		vm.closeSharingLightbox = () => {
+			template.close('lightbox');
+			vm.lightbox.sharing = false;
+		}
+		const initEmptyRoom = () => (new Room(vm.structures[0].id));
+
+		const setResourceRights = () => RoomService.getAllMyRoomRights().then(dataRigths => {
+			let ids = vm.rooms.all.map(room => room.id);
+			for (let i = 0; i < ids.length; i++) {
+				let roomId = ids[i];
+				let rights = dataRigths.filter(right => right.resource_id === roomId).map(right => right.action);
+				vm.rooms.all.filter(room => room.id === roomId)[0].myRights = rights;
+			}
 		});
 
-		vm.createRoom = async (room: IRoom) => {
+		const loadRooms = () => RoomService.list().then(rooms => {
+			vm.rooms.all = Mix.castArrayAs(Room, rooms);
+			vm.selectedRoom = vm.rooms.all[0];
+			setResourceRights().then();
+		});
+
+		vm.createRoom = async (room: Room) => {
 			const newRoom = await RoomService.create(room);
-			vm.rooms = [...vm.rooms, newRoom];
+			vm.rooms.all = [...vm.rooms.all, newRoom];
 			vm.room = initEmptyRoom();
-			if (vm.rooms.length === 1) vm.selectedRoom = vm.rooms[0];
-			closeLightbox();
+			if (vm.rooms.all.length === 1) vm.selectedRoom = vm.rooms.all[0];
+			vm.closeRoomLightbox();
 
 			$scope.safeApply();
 		};
@@ -133,33 +170,33 @@ export const mainController = ng.controller('MainController',
 		};
 
 		vm.openRoomUpdate = (room) => {
-			vm.room = {...room};
-			openLightbox();
+			vm.room = room;
+			vm.openRoomLightbox();
 		};
 
 		vm.openRoomCreation = () => {
 			vm.room = initEmptyRoom();
-			openLightbox();
+			vm.openRoomLightbox();
 		};
 
 
 		vm.updateRoom = async (room) => {
 			const {name, id, structure} = await RoomService.update(room);
 			vm.room = initEmptyRoom();
-			vm.rooms.forEach(aRoom => {
+			vm.rooms.all.forEach(aRoom => {
 				if (aRoom.id === id) {
 					aRoom.name = name;
 					aRoom.structure = structure;
 				}
 			});
-			closeLightbox();
+			vm.closeRoomLightbox();
 			$scope.safeApply();
 		};
 
 		vm.deleteRoom = async (room) => {
 			await RoomService.delete(room);
-			vm.rooms = vm.rooms.filter(aRoom => room.id !== aRoom.id);
-			if (vm.selectedRoom.id === room.id) vm.selectedRoom = vm.rooms[0];
+			vm.rooms.all = vm.rooms.all.filter(aRoom => room.id !== aRoom.id);
+			if (vm.selectedRoom.id === room.id) vm.selectedRoom = vm.rooms.all[0];
 			$scope.safeApply();
 		};
 

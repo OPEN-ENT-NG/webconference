@@ -21,11 +21,10 @@
                 <i18n>webconferences.room.create</i18n>
             </button>
         </div>
-        <lightbox show="vm.lightbox.show" on-close="vm.lightbox.show = false;">
-            <div ng-include="'/webconference/public/template/room-creation.html'"></div>
-        </lightbox>
     </div>
     <container template="main"></container>
+    <container template='lightbox'></container>
+    <div ng-include="'webconference/public/template/toaster.html'"></div>
 </portal>
 </body>
 

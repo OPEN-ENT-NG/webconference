@@ -17,6 +17,7 @@ import fr.wseduc.security.ActionType;
 import fr.wseduc.security.SecuredAction;
 import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.I18n;
+import fr.wseduc.webutils.http.Renders;
 import fr.wseduc.webutils.request.RequestUtils;
 import io.vertx.core.Handler;
 import io.vertx.core.eventbus.EventBus;
@@ -30,9 +31,12 @@ import org.entcore.common.http.filter.ResourceFilter;
 import org.entcore.common.user.UserInfos;
 import org.entcore.common.user.UserUtils;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static org.entcore.common.http.response.DefaultResponseHandler.arrayResponseHandler;
 import static org.entcore.common.http.response.DefaultResponseHandler.defaultResponseHandler;
 
 public class RoomController extends ControllerHelper {
@@ -51,53 +55,74 @@ public class RoomController extends ControllerHelper {
         this.eventHelper = new EventHelper(eventStore);
     }
 
+    @SecuredAction(value = WebConference.CONTRIB_SHARING_RIGHT, type = ActionType.RESOURCE)
+    public void initContribSharingRight(final HttpServerRequest request) {
+    }
+
+    @SecuredAction(value = WebConference.MANAGER_SHARING_RIGHT, type = ActionType.RESOURCE)
+    public void initManagerSharingRight(final HttpServerRequest request) {
+    }
+
     @Get("/rooms")
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void list(HttpServerRequest request) {
-        UserUtils.getUserInfos(eb, request, user -> roomService.list(user, event -> {
-            if (event.isLeft()) {
-                renderError(request);
-                return;
-            }
-
-            RoomProviderPool.getSingleton().getInstance(request, user).setHandler(ar -> {
-                RoomProvider instance = ar.result();
-                if (instance == null) {
-                    log.error("[WebConference@RoomController] Failed to get a video provider instance.");
-                    renderError(request);
-                    return;
+        UserUtils.getUserInfos(eb, request, user -> {
+            if (user != null) {
+                final List<String> groupsAndUserIds = new ArrayList<>();
+                groupsAndUserIds.add(user.getUserId());
+                if (user.getGroupsIds() != null) {
+                    groupsAndUserIds.addAll(user.getGroupsIds());
                 }
 
-                AtomicInteger counter = new AtomicInteger();
-                JsonArray rooms = event.right().getValue();
-                for (int i = 0; i < rooms.size(); i++) {
-                    if (rooms.getJsonObject(i).containsKey("active_session") && rooms.getJsonObject(i).getString("active_session") != null) {
-                        counter.getAndIncrement();
-                        int finalI = i;
-                        instance.isMeetingRunning(rooms.getJsonObject(i).getString("active_session"), evt -> {
-                            if (evt.isLeft()) {
-                                log.error("[WebConference@RoomController] Failed to check meeting running for each room.");
-                                renderError(request);
-                            } else if (!evt.right().getValue()) {
-                                rooms.getJsonObject(finalI).remove("active_session");
-                            }
-                            counter.getAndDecrement();
-                            if (counter.get() <= 0) {
-                                renderJson(request, rooms);
-                            }
-                        });
+                roomService.list(groupsAndUserIds, user, event -> {
+                    if (event.isLeft()) {
+                        renderError(request);
+                        return;
                     }
-                }
 
-                if (counter.get() <= 0) {
-                    renderJson(request, rooms);
-                }
-            });
-        }));
+                    RoomProviderPool.getSingleton().getInstance(request, user).setHandler(ar -> {
+                        RoomProvider instance = ar.result();
+                        if (instance == null) {
+                            log.error("[WebConference@RoomController] Failed to get a video provider instance.");
+                            renderError(request);
+                            return;
+                        }
+
+                        AtomicInteger counter = new AtomicInteger();
+                        JsonArray rooms = event.right().getValue();
+                        for (int i = 0; i < rooms.size(); i++) {
+                            if (rooms.getJsonObject(i).containsKey("active_session") && rooms.getJsonObject(i).getString("active_session") != null) {
+                                counter.getAndIncrement();
+                                int finalI = i;
+                                instance.isMeetingRunning(rooms.getJsonObject(i).getString("active_session"), evt -> {
+                                    if (evt.isLeft()) {
+                                        log.error("[WebConference@RoomController] Failed to check meeting running for each room.");
+                                        renderError(request);
+                                    } else if (!evt.right().getValue()) {
+                                        rooms.getJsonObject(finalI).remove("active_session");
+                                    }
+                                    counter.getAndDecrement();
+                                    if (counter.get() <= 0) {
+                                        renderJson(request, rooms);
+                                    }
+                                });
+                            }
+                        }
+
+                        if (counter.get() <= 0) {
+                            renderJson(request, rooms);
+                        }
+                    });
+                });
+            } else {
+                log.error("User not found in session.");
+                Renders.unauthorized(request);
+            }
+        });
     }
 
     @Post("/rooms")
-    @SecuredAction(WebConference.create)
+    @SecuredAction(WebConference.CREATE_WORKFLOW)
     @ApiDoc("Create a room")
     public void create(HttpServerRequest request) {
         String referer = request.headers().contains("referer") ? request.getHeader("referer") : request.scheme() + "://" + getHost(request) + "/webconference";
@@ -106,7 +131,7 @@ public class RoomController extends ControllerHelper {
     }
 
     @Put("/rooms/:id")
-    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @SecuredAction(value = WebConference.MANAGER_SHARING_RIGHT, type = ActionType.RESOURCE)
     @ResourceFilter(RoomFilter.class)
     @ApiDoc("Upate given room")
     public void update(HttpServerRequest request) {
@@ -115,7 +140,7 @@ public class RoomController extends ControllerHelper {
     }
 
     @Delete("/rooms/:id")
-    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @SecuredAction(value = WebConference.MANAGER_SHARING_RIGHT, type = ActionType.RESOURCE)
     @ResourceFilter(RoomFilter.class)
     @ApiDoc("Delete given room")
     public void delete(HttpServerRequest request) {
@@ -253,9 +278,24 @@ public class RoomController extends ControllerHelper {
                     }
                 };
 
-                if (user.getUserId().equals(room.getString("owner")))
-                    joinAsModerator(room, user, I18n.acceptLanguage(request), instance, joiningHandler);
-                else joinAsAttendee(room, user, I18n.acceptLanguage(request), instance, joiningHandler);
+                String roomId = room.getString("id");
+                roomService.getUsersShared(roomId, usersShared -> {
+                    if( usersShared.isLeft()) {
+                        log.error("[WebConference@RoomController] Failed to get users with shared rights on room " + roomId);
+                        renderError(request);
+                        return;
+                    }
+
+                    JsonArray authorizedUsers = new JsonArray();
+                    for (int i = 0; i < usersShared.right().getValue().size(); i++) {
+                        authorizedUsers.add(usersShared.right().getValue().getJsonObject(i).getString("member_id"));
+                    }
+
+                    String userId = user.getUserId();
+                    if (userId.equals(room.getString("owner")) || authorizedUsers.contains(userId))
+                        joinAsModerator(room, user, I18n.acceptLanguage(request), instance, joiningHandler);
+                    else joinAsAttendee(room, user, I18n.acceptLanguage(request), instance, joiningHandler);
+                });
             });
         }));
     }
@@ -273,7 +313,7 @@ public class RoomController extends ControllerHelper {
     }
 
     @Get("/rooms/:id/end")
-    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @SecuredAction(value = WebConference.CONTRIB_SHARING_RIGHT, type = ActionType.RESOURCE)
     @ResourceFilter(RoomFilter.class)
     @ApiDoc("Close meeting room")
     public void end(HttpServerRequest request) {
@@ -323,6 +363,89 @@ public class RoomController extends ControllerHelper {
 	                }
 	            });
            	});
+        });
+    }
+
+
+    @Get("/rooms/rights/all")
+    @ApiDoc("Get my rights for all the rooms")
+    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    public void getAllMyRoomRights(HttpServerRequest request) {
+        UserUtils.getUserInfos(eb, request, user -> {
+            if (user != null) {
+                List<String> groupsAndUserIds = new ArrayList();
+                groupsAndUserIds.add(user.getUserId());
+                if (user.getGroupsIds() != null) {
+                    groupsAndUserIds.addAll(user.getGroupsIds());
+                }
+                roomService.getAllMyRoomRights(groupsAndUserIds, arrayResponseHandler(request));
+            } else {
+                log.error("User not found in session.");
+                Renders.unauthorized(request);
+            }
+        });
+    }
+
+    // Sharing functions
+
+    @Override
+    @Get("/share/json/:id")
+    @ApiDoc("List rights for a given room")
+    @ResourceFilter(RoomFilter.class)
+    @SecuredAction(value = WebConference.MANAGER_SHARING_RIGHT, type = ActionType.RESOURCE)
+    public void shareJson(final HttpServerRequest request) {
+        super.shareJson(request, false);
+    }
+
+    @Put("/share/json/:id")
+    @ApiDoc("Add rights for a given room")
+    @ResourceFilter(RoomFilter.class)
+    @SecuredAction(value = WebConference.MANAGER_SHARING_RIGHT, type = ActionType.RESOURCE)
+    public void shareSubmit(final HttpServerRequest request) {
+        super.shareJsonSubmit(request, null, false);
+    }
+
+    @Put("/share/resource/:id")
+    @ApiDoc("Add rights for a given room")
+    @ResourceFilter(RoomFilter.class)
+    @SecuredAction(value = WebConference.MANAGER_SHARING_RIGHT, type = ActionType.RESOURCE)
+    public void shareResource(final HttpServerRequest request) {
+        RequestUtils.bodyToJson(request, pathPrefix + "share", share -> {
+            UserUtils.getUserInfos(eb, request, user -> {
+                if (user != null) {
+                    final String roomId = request.params().get("id");
+
+                    // Fix bug auto-unsharing
+                    roomService.getSharedWithMe(roomId, user, event -> {
+                        if (event.isRight() && event.right().getValue() != null) {
+                            JsonArray rights = event.right().getValue();
+                            String id = user.getUserId();
+                            share.getJsonObject("users").put(id, new JsonArray());
+
+                            for (int i = 0; i < rights.size(); i++) {
+                                JsonObject right = rights.getJsonObject(i);
+                                share.getJsonObject("users").getJsonArray(id).add(right.getString("action"));
+                            }
+
+                            // Classic sharing stuff (putting or removing ids from form_shares table accordingly)
+                            this.getShareService().share(user.getUserId(), roomId, share, r -> {
+                                if (r.isRight()) {
+                                    this.doShareSucceed(request, roomId, user, share, r.right().getValue(), false);
+                                } else {
+                                    JsonObject error = (new JsonObject()).put("error", r.left().getValue());
+                                    Renders.renderJson(request, error, 400);
+                                }
+                            });
+                        }
+                        else {
+                            log.error("[WebConference@getSharedWithMe] Fail to get user's shared rights");
+                        }
+                    });
+                } else {
+                    log.error("User not found in session.");
+                    unauthorized(request);
+                }
+            });
         });
     }
 }
