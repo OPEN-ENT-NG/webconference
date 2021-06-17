@@ -1,3 +1,14 @@
+@font-face {
+  font-family: 'material-icons';
+  src: url('/webConference/public/font/material-design/fonts/materialdesignicons-webfont.eot');
+  src: url('/webConference/public/font/material-design/fonts/materialdesignicons-webfont.eot') format('embedded-opentype'),
+  url('/webConference/public/font/material-design/fonts/materialdesignicons-webfont.woff2') format('woff2'),
+  url('/webConference/public/font/material-design/fonts/materialdesignicons-webfont.woff2') format('woff'),
+  url('/webConference/public/font/material-design/fonts/materialdesignicons-webfont.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
 .wc {
   .header {
     display: flex;
@@ -75,6 +86,17 @@
   }
   button {
     margin: 1px; // separate buttons
+  }
+  i.sharing {
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
+    font-size: 20px;
+  }
+  i.sharing::before {
+    font-family: 'material-icons';
+    content: "\F497";
+    color: #5b6472;
   }
 }
 

@@ -37,6 +37,7 @@
     "clipboard": "^2.0.4"
   },
   "devDependencies": {
+    "@mdi/font": "^4.4.95",
     "@types/jquery": "^2.0.34"
   }
 }

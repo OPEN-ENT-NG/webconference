@@ -17,6 +17,7 @@
                     <h4>[[room.name]]</h4>
                     <em class="metadata" ng-show="vm.structures.length > 1 && room.structure">[[vm.structureMap.get(room.structure) || '']]</em>
                 </div>
+                <i class="sharing" ng-if="room.collab" title="Salle partagée"></i>
             </div>
         </div>
     </div>

@@ -33,6 +33,7 @@ import org.entcore.common.user.UserUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -414,6 +415,16 @@ public class RoomController extends ControllerHelper {
             UserUtils.getUserInfos(eb, request, user -> {
                 if (user != null) {
                     final String roomId = request.params().get("id");
+                    Map<String, Object> idUsers = share.getJsonObject("users").getMap();
+                    Map<String, Object> idGroups = share.getJsonObject("groups").getMap();
+                    Map<String, Object> idBookmarks = share.getJsonObject("bookmarks").getMap();
+
+                    // Update 'collab' property as needed
+                    List<Map<String, Object>> idsObjects = new ArrayList<>();
+                    idsObjects.add(idUsers);
+                    idsObjects.add(idGroups);
+                    idsObjects.add(idBookmarks);
+                    updateRoomCollabProp(roomId, user, idsObjects);
 
                     // Fix bug auto-unsharing
                     roomService.getSharedWithMe(roomId, user, event -> {
@@ -446,6 +457,50 @@ public class RoomController extends ControllerHelper {
                     unauthorized(request);
                 }
             });
+        });
+    }
+
+    private void updateRoomCollabProp(String roomId, UserInfos user, List<Map<String, Object>> idsObjects) {
+        roomService.get(roomId, getEvent -> {
+            if (getEvent.isRight()) {
+                JsonObject room = getEvent.right().getValue();
+
+                boolean isShared = false;
+                int i = 0;
+                while (!isShared && i < idsObjects.size()) { // Iterate over "users", "groups", "bookmarks"
+                    int j = 0;
+                    Map<String, Object> o = idsObjects.get(i);
+                    List<Object> values = new ArrayList<Object>(o.values());
+
+                    while (!isShared && j < values.size()) { // Iterate over each pair id-actions
+                        List<String> actions = (ArrayList)(values.get(j));
+
+                        int k = 0;
+                        while (!isShared && k < actions.size()) { // Iterate over each action for an id
+                            if (actions.get(k).equals(WebConference.CONTRIB_SHARING_BEHAVIOUR) ||
+                                    actions.get(k).equals(WebConference.MANAGER_SHARING_BEHAVIOUR)) {
+                                isShared = true;
+                            }
+                            k++;
+                        }
+                        j++;
+                    }
+                    i++;
+                }
+
+                if (!isShared && !room.getString("owner_id").equals(user.getUserId())) {
+                    isShared = true;
+                }
+
+                room.put("collab", isShared);
+                roomService.update(roomId, room, updateEvent -> {
+                    if (updateEvent.isLeft()) {
+                        log.error("[WebConference@updateRoomCollabProp] Fail to update room : " + updateEvent.left().getValue());
+                    }
+                });
+            } else {
+                log.error("[WebConference@updateRoomCollabProp] Fail to get room : " + getEvent.left().getValue());
+            }
         });
     }
 }

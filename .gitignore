@@ -14,3 +14,4 @@ src/main/resources/public/template/entcore
 rev-manifest.json
 /.idea
 gradle*
+/src/main/resources/public/font/

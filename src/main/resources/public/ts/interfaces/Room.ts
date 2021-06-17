@@ -8,6 +8,7 @@ export interface IRoom {
     active_session?: string
     structure: string
     owner_id?: string
+    collab?: boolean
 }
 
 export class Room implements Shareable, IRoom  {
@@ -23,6 +24,7 @@ export class Room implements Shareable, IRoom  {
     active_session?: string;
     structure: string;
     owner_id?: string;
+    collab?: boolean
 
     constructor(structure?: string) {
         this.id = null;
@@ -32,6 +34,7 @@ export class Room implements Shareable, IRoom  {
         this.active_session = null;
         this.structure = structure ? structure : null;
         this.owner_id = null;
+        this.collab = false;
     }
 
     toJson() : Object {
@@ -42,7 +45,8 @@ export class Room implements Shareable, IRoom  {
             sessions: this.sessions,
             active_session: this.active_session,
             structure: this.structure,
-            owner_id: this.owner_id
+            owner_id: this.owner_id,
+            collab: this.collab
         }
     }
 

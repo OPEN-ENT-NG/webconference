@@ -1,3 +1,6 @@
+ALTER TABLE webconference.room
+    ADD COLUMN collab boolean DEFAULT FALSE;
+
 CREATE TABLE webconference.users (
 	id          VARCHAR(36) NOT NULL PRIMARY KEY,
 	username    VARCHAR

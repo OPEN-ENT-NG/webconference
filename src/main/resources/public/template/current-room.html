@@ -47,8 +47,7 @@
                         <input type="text" ng-model="vm.selectedRoom.link" readonly>
                     </div>
 
-                    <a class="clipboard-link-field"
-                       data-clipboard-text="[[vm.selectedRoom.link]]">
+                    <a class="clipboard-link-field" data-clipboard-text="[[vm.selectedRoom.link]]">
                        <i class="copy"></i>
                         <i18n>copy.link</i18n>
                     </a>
@@ -64,6 +63,7 @@
                     </button>
                 </div>
             </div>
+            <i class="sharing" ng-if="vm.selectedRoom.collab" title="Salle partagée"></i>
         </div>
     </div>
 </div>
