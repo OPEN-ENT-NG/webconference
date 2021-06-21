@@ -38,7 +38,7 @@ public class DefaultStructureService implements StructureService {
 
     @Override
     public void retrieveActiveUsers(String id, Handler<Either<String, JsonArray>> handler) {
-        String query = "SELECT owner, name FROM " + WebConference.DB_SCHEMA + ".room WHERE structure = ? AND active_session IS NOT NULL;";
+        String query = "SELECT owner, name FROM " + WebConference.ROOM_TABLE + " WHERE structure = ? AND active_session IS NOT NULL;";
         JsonArray params = new JsonArray().add(id);
         Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(evt -> {
             if (evt.isLeft()) {

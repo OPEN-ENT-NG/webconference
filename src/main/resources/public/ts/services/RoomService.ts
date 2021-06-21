@@ -11,7 +11,7 @@ export interface RoomService {
     getAllMyRoomRights(): Promise<any>;
 }
 
-export const RoomService = ng.service('RoomService', (): RoomService => ({
+export const roomService: RoomService = {
     async list(): Promise<Rooms> {
         const {data} = await http.get(`/${appPrefix}/rooms`);
         return data;
@@ -41,4 +41,6 @@ export const RoomService = ng.service('RoomService', (): RoomService => ({
         const {data} = await http.get(`/${appPrefix}/rooms/rights/all`);
         return data;
     }
-}));
+};
+
+export const RoomService = ng.service('RoomService', (): RoomService => roomService);

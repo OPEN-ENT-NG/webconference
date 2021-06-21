@@ -1,7 +1,6 @@
 import {idiom, model, ng, template, notify, Behaviours} from 'entcore';
 import {IRoom, IStructure, Room, Rooms} from '../interfaces';
 import * as Clipboard from 'clipboard';
-import {Mix} from "entcore-toolkit";
 
 declare const window: any;
 
@@ -111,20 +110,10 @@ export const mainController = ng.controller('MainController',
 		}
 		const initEmptyRoom = () => (new Room(vm.structures[0].id));
 
-		const setResourceRights = () => RoomService.getAllMyRoomRights().then(dataRigths => {
-			let ids = vm.rooms.all.map(room => room.id);
-			for (let i = 0; i < ids.length; i++) {
-				let roomId = ids[i];
-				let rights = dataRigths.filter(right => right.resource_id === roomId).map(right => right.action);
-				vm.rooms.all.filter(room => room.id === roomId)[0].myRights = rights;
-			}
-		});
-
-		const loadRooms = () => RoomService.list().then(rooms => {
-			vm.rooms.all = Mix.castArrayAs(Room, rooms);
+		const loadRooms = async () => {
+			await vm.rooms.sync();
 			vm.selectedRoom = vm.rooms.all[0];
-			setResourceRights().then();
-		});
+		};
 
 		vm.createRoom = async (room: Room) => {
 			const newRoom = await RoomService.create(room);
@@ -152,6 +141,7 @@ export const mainController = ng.controller('MainController',
 				$scope.safeApply();
 			};
             vm.selectedRoom.active_session = '';
+			vm.selectedRoom.opener = model.me.username;
 			$scope.safeApply();
 		};
 
@@ -211,6 +201,7 @@ export const mainController = ng.controller('MainController',
 
 		vm.room = initEmptyRoom();
 		loadRooms().then(() => {
+			template.open('toaster', 'toaster');
 			$scope.safeApply();
 			let clipboard = new Clipboard('.clipboard-link-field');
 			

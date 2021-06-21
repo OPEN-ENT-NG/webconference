@@ -1,9 +1,6 @@
 package fr.openent.webConference;
 
-import fr.openent.webConference.controller.RoomController;
-import fr.openent.webConference.controller.SynchroController;
-import fr.openent.webConference.controller.WebConferenceController;
-import fr.openent.webConference.controller.WebHookController;
+import fr.openent.webConference.controller.*;
 import fr.openent.webConference.tiers.RoomProviderPool;
 import io.vertx.core.eventbus.EventBus;
 import org.entcore.common.events.EventStore;

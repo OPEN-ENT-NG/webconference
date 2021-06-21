@@ -1,7 +1,9 @@
 import {Rights, Shareable} from "entcore";
+import {roomService} from "../services";
+import {Mix} from "entcore-toolkit";
 
 export interface IRoom {
-    id?: number
+    id?: string
     name: string
     link?: string
     sessions?: number
@@ -15,9 +17,9 @@ export class Room implements Shareable, IRoom  {
     shared: any;
     owner: { userId: string; displayName: string };
     myRights: any;
-    _id: number;
+    _id: string;
 
-    id?: number;
+    id?: string;
     name: string;
     link?: string;
     sessions?: number;
@@ -25,9 +27,10 @@ export class Room implements Shareable, IRoom  {
     structure: string;
     owner_id?: string;
     collab?: boolean
+    opener?: string;
 
     constructor(structure?: string) {
-        this.id = null;
+        this.id = '';
         this.name = '';
         this.link = null;
         this.sessions = null;
@@ -35,6 +38,7 @@ export class Room implements Shareable, IRoom  {
         this.structure = structure ? structure : null;
         this.owner_id = null;
         this.collab = false;
+        this.opener = '';
     }
 
     toJson() : Object {
@@ -46,7 +50,8 @@ export class Room implements Shareable, IRoom  {
             active_session: this.active_session,
             structure: this.structure,
             owner_id: this.owner_id,
-            collab: this.collab
+            collab: this.collab,
+            opener: this.opener
         }
     }
 
@@ -59,4 +64,26 @@ export class Room implements Shareable, IRoom  {
 
 export class Rooms {
     all: Room[];
+
+    sync = async () : Promise<void> => {
+        this.all = [];
+        try {
+            let rooms: any = await roomService.list();
+            this.all = Mix.castArrayAs(Room, rooms);
+            await this.setResourceRights();
+        } catch (e) {
+            // notify.error(idiom.translate('formulaire.error.form.sync'));
+            throw e;
+        }
+    };
+
+    setResourceRights = async () : Promise<void> => {
+        let dataRigths = await roomService.getAllMyRoomRights();
+        let ids = this.all.map(room => room.id);
+        for (let i = 0; i < ids.length; i++) {
+            let roomId = ids[i];
+            let rights = dataRigths.filter(right => right.resource_id === roomId).map(right => right.action);
+            this.all.filter(room => room.id === roomId)[0].myRights = rights;
+        }
+    };
 }

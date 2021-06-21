@@ -22,7 +22,8 @@ public class DefaultRoomService implements RoomService {
         StringBuilder query = new StringBuilder();
         JsonArray params = new JsonArray();
 
-        query.append("SELECT r.id, name, sessions, link, active_session, structure, owner AS owner_id, collab FROM ").append(WebConference.ROOM_TABLE).append(" r ")
+        query.append("SELECT r.id, name, sessions, link, active_session, structure, owner AS owner_id, collab, opener ")
+                .append("FROM ").append(WebConference.ROOM_TABLE).append(" r ")
                 .append("LEFT JOIN ").append(WebConference.ROOM_SHARES_TABLE).append(" rs ON r.id = rs.resource_id ")
                 .append("LEFT JOIN ").append(WebConference.MEMBERS_TABLE).append(" m ON (m.id = rs.member_id AND m.group_id IS NOT NULL) ")
                 .append("WHERE (rs.member_id IN ").append(Sql.listPrepared(groupsAndUserIds)).append(" AND rs.action IN (?, ?)) ")
@@ -40,7 +41,8 @@ public class DefaultRoomService implements RoomService {
 
     @Override
     public void get(String id, Handler<Either<String, JsonObject>> handler) {
-        String query = "SELECT id, name, moderator_pw, attendee_pw, active_session, owner, structure, collab FROM " + WebConference.DB_SCHEMA + ".room WHERE id = ?;";
+        String query = "SELECT id, name, moderator_pw, attendee_pw, active_session, owner, structure, collab, opener " +
+                "FROM " + WebConference.ROOM_TABLE + " WHERE id = ?;";
         JsonArray params = new JsonArray().add(id);
         Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(evt -> {
             if (evt.isLeft()) {
@@ -58,7 +60,8 @@ public class DefaultRoomService implements RoomService {
             structureService.retrieveUAI(structure, uai -> {
                 if (uai.isLeft()) {
                     handler.handle(uai.left());
-                } else {
+                }
+                else {
                     room.put("uai", uai.right().getValue().getString("uai"));
                     handler.handle(new Either.Right<>(room));
                 }
@@ -72,7 +75,7 @@ public class DefaultRoomService implements RoomService {
         String moderatorPW = UUID.randomUUID().toString();
         String attendeePW = UUID.randomUUID().toString();
         String link = referer + "/rooms/" + id + "/join";
-        String query = "INSERT INTO " + WebConference.DB_SCHEMA + ".room (id, name, owner, moderator_pw, attendee_pw, link, structure) VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING *;";
+        String query = "INSERT INTO " + WebConference.ROOM_TABLE + " (id, name, owner, moderator_pw, attendee_pw, link, structure) VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING *;";
         JsonArray params = new JsonArray()
                 .add(id)
                 .add(room.getString("name", ""))
@@ -87,11 +90,12 @@ public class DefaultRoomService implements RoomService {
 
     @Override
     public void update(String id, JsonObject room, Handler<Either<String, JsonObject>> handler) {
-        String query = "UPDATE " + WebConference.DB_SCHEMA + ".room SET name=?, structure = ?, collab = ? WHERE id = ? RETURNING *;";
+        String query = "UPDATE " + WebConference.ROOM_TABLE + " SET name = ?, structure = ?, collab = ?, opener = ? WHERE id = ? RETURNING *;";
         JsonArray params = new JsonArray()
                 .add(room.getString("name"))
                 .add(room.getString("structure"))
                 .add(room.getBoolean("collab", false))
+                .add(room.getString("opener", null))
                 .add(id);
 
         Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
@@ -99,14 +103,14 @@ public class DefaultRoomService implements RoomService {
 
     @Override
     public void delete(String id, Handler<Either<String, JsonObject>> handler) {
-        String query = "DELETE FROM " + WebConference.DB_SCHEMA + ".room WHERE id = ?;";
+        String query = "DELETE FROM " + WebConference.ROOM_TABLE + " WHERE id = ?;";
         JsonArray params = new JsonArray().add(id);
         Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
     }
 
     @Override
     public void setStructure(String id, String structureId, Handler<Either<String, JsonObject>> handler) {
-        String query = "UPDATE " + WebConference.DB_SCHEMA + ".room SET structure = ? WHERE id = ? RETURNING *";
+        String query = "UPDATE " + WebConference.ROOM_TABLE + " SET structure = ? WHERE id = ? RETURNING *";
         JsonArray params = new JsonArray()
                 .add(structureId)
                 .add(id);
