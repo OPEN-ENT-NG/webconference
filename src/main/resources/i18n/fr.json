@@ -19,6 +19,7 @@
   "webconference.waiting.message": "Oups ! La salle que vous tentez de rejoindre n'est pas encore ouverte.",
   "webconference.waiting.refresh": "Actualiser",
   "webconference.room.end.error": "Une erreur est survenue lors de la fermeture de la salle. Veuillez rafraichir la page et réessayer.",
+  "webconference.room.join.opened": "Une session est déjà en cours pour la salle que vous souhaitez ouvrir.",
   "copy.link": "Copier le lien",
   "copy.link.success": "Le lien est copié dans le presse-papier.",
   "copy.link.error": "Une erreur est survenue lors de la copie du lien.",  

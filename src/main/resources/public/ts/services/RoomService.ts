@@ -4,6 +4,7 @@ import {Room, Rooms} from '../interfaces'
 
 export interface RoomService {
     list(): Promise<Rooms>;
+    get(room: Room): Promise<Room>;
     create(room: Room): Promise<Room>;
     update(room: Room): Promise<Room>;
     delete(room: Room): Promise<Room>;
@@ -14,6 +15,11 @@ export interface RoomService {
 export const roomService: RoomService = {
     async list(): Promise<Rooms> {
         const {data} = await http.get(`/${appPrefix}/rooms`);
+        return data;
+    },
+
+    async get({id}): Promise<Room> {
+        const {data} = await http.get(`/${appPrefix}/rooms/${id}`);
         return data;
     },
 

@@ -1,6 +1,8 @@
 import {idiom, model, ng, template, notify, Behaviours} from 'entcore';
 import {IRoom, IStructure, Room, Rooms} from '../interfaces';
 import * as Clipboard from 'clipboard';
+import {roomService} from "../services";
+import {Mix} from "entcore-toolkit";
 
 declare const window: any;
 
@@ -126,23 +128,41 @@ export const mainController = ng.controller('MainController',
 		};
 
 		vm.startCurrentRoom = async () => {
-			vm.selectedRoom.sessions++;
-			let result = window.open(vm.selectedRoom.link);
-			result.window.onload = function () {
-				if (result.error) {
-					vm.selectedRoom.active_session = null;
-					switch (result.error) {
-						case "tooManyRoomsPerStructure": break;
-						case "tooManyUsers": break;
-						case "tooManyRooms": break;
-						default: notify.error(idiom.translate('webconference.room.end.error')); break;
-					}
+			let roomData: any = Mix.castAs(Room, await roomService.get(vm.selectedRoom));
+			for (let key in roomData) {
+				if (!!roomData[key]) {
+					vm.selectedRoom[key] = roomData[key];
 				}
+			}
+
+			if (!!roomData.opener) {
+				let tempId = vm.selectedRoom.id;
+				notify.info(idiom.translate('webconference.room.join.opened'));
+				window.setTimeout(async function () {
+					await vm.rooms.sync();
+					vm.selectedRoom = vm.rooms.all.filter(r => r.id === tempId)[0];
+					$scope.safeApply();
+				}, 1000);
+			}
+			else {
+				vm.selectedRoom.sessions++;
+				let result = window.open(vm.selectedRoom.link);
+				result.window.onload = function () {
+					if (result.error) {
+						vm.selectedRoom.active_session = null;
+						switch (result.error) {
+							case "tooManyRoomsPerStructure": break;
+							case "tooManyUsers": break;
+							case "tooManyRooms": break;
+							default: notify.error(idiom.translate('webconference.room.end.error')); break;
+						}
+					}
+					$scope.safeApply();
+				};
+				vm.selectedRoom.active_session = '';
+				vm.selectedRoom.opener = model.me.username;
 				$scope.safeApply();
-			};
-            vm.selectedRoom.active_session = '';
-			vm.selectedRoom.opener = model.me.username;
-			$scope.safeApply();
+			}
 		};
 
 		vm.hasActiveSession = (room) => room && 'active_session' in room && room.active_session !== null;

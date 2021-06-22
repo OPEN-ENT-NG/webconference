@@ -32,13 +32,6 @@
                 </a>
             </div>
             <div class="twelve">
-                <div ng-show="!!vm.selectedRoom.opener && vm.hasActiveSession(vm.selectedRoom)">
-                    <em class="metadata">
-                        <em class="metadata zero-mobile">
-                            <i18n>webconference.opened.by</i18n> : [[vm.selectedRoom.opener]]
-                        </em>
-                    </em>
-                </div>
                 <div ng-show="vm.structures.length > 1 && vm.selectedRoom.structure">
                     <em class="metadata">
                         <em class="metadata zero-mobile">
@@ -46,10 +39,17 @@
                         </em>
                     </em>
                 </div>
-                <label class="row zero-mobile">
-                    <em>
-                        <i18n>webconference.attendee.invite</i18n>
+                <div ng-show="!!vm.selectedRoom.opener && vm.hasActiveSession(vm.selectedRoom)">
+                    <em class="metadata">
+                        <em class="metadata zero-mobile">
+                            <i18n>webconference.opened.by</i18n> : [[vm.selectedRoom.opener]]
+                        </em>
                     </em>
+                </div>
+                <label class="row zero-mobile">
+                    <div class="top-spacing-twice">
+                        <i18n>webconference.attendee.invite</i18n>
+                    </div>
                 </label>
                 <div class="twelve url-container zero-mobile">
                     <div class="input-url nine cell">

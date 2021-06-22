@@ -122,6 +122,14 @@ public class RoomController extends ControllerHelper {
         });
     }
 
+    @Get("/rooms/:id")
+    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @ApiDoc("Get given room")
+    public void get(HttpServerRequest request) {
+        String id = request.getParam("id");
+        roomService.get(id, defaultResponseHandler(request));
+    }
+
     @Post("/rooms")
     @SecuredAction(WebConference.CREATE_WORKFLOW)
     @ApiDoc("Create a room")
