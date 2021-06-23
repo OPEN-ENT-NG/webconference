@@ -17,6 +17,13 @@
                 </div>
             </div>
             <div class="zero twelve-mobile url-container top-spacing-twice bottom-spacing-three">
+                <div ng-show="!!vm.selectedRoom.opener && vm.hasActiveSession(vm.selectedRoom)">
+                    <em class="metadata">
+                        <em class="metadata">
+                            <i18n>webconference.opened.by</i18n> : [[vm.selectedRoom.opener]]
+                        </em>
+                    </em>
+                </div>
                 <label class="row">
                     <em>
                         <i18n>webconference.attendee.invite</i18n>
@@ -55,24 +62,28 @@
                     <div class="input-url nine cell">
                         <input type="text" ng-model="vm.selectedRoom.link" readonly>
                     </div>
-
+                    <i class="sharing right-magnet" ng-if="vm.selectedRoom.collab" title="Salle partagée"></i>
                     <a class="clipboard-link-field" data-clipboard-text="[[vm.selectedRoom.link]]">
                        <i class="copy"></i>
                         <i18n>copy.link</i18n>
                     </a>
                 </div>
-                <div class="right-magnet button zero block-mobile">
-                    <button ng-click="vm.startCurrentRoom()">
-                        <i18n ng-show="!vm.hasActiveSession(vm.selectedRoom)">webconference.room.start</i18n>
-                        <i18n ng-show="vm.hasActiveSession(vm.selectedRoom)">webconference.room.join</i18n>
-                    </button>
-                    <button style="margin-left: 5px" ng-click="vm.endCurrentRoom()" class="cancel"
-                            ng-show="vm.hasActiveSession(vm.selectedRoom)">
-                        <i18n>webconference.room.end</i18n>
-                    </button>
+                <div class="zero twelve-mobile flex-space">
+                    <div class="twelve">
+                        <div class="button flex-center bottom-spacing-twice">
+                            <button ng-click="vm.startCurrentRoom()">
+                                <i18n ng-show="!vm.hasActiveSession(vm.selectedRoom)">webconference.room.start</i18n>
+                                <i18n ng-show="vm.hasActiveSession(vm.selectedRoom)">webconference.room.join</i18n>
+                            </button>
+                            <button style="margin-left: 5px" ng-click="vm.endCurrentRoom()" class="cancel"
+                                    ng-show="vm.hasActiveSession(vm.selectedRoom)">
+                                <i18n>webconference.room.end</i18n>
+                            </button>
+                        </div>
+                    </div>
+                    <i class="sharing right-magnet" ng-if="vm.selectedRoom.collab" title="Salle partagée"></i>
                 </div>
             </div>
-            <i class="sharing" ng-if="vm.selectedRoom.collab" title="Salle partagée"></i>
         </div>
     </div>
 </div>

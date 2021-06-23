@@ -88,15 +88,14 @@
     margin: 1px; // separate buttons
   }
   i.sharing {
-    position: absolute;
-    right: 20px;
-    bottom: 20px;
-    font-size: 20px;
+    margin: auto 0 20px 0;
   }
   i.sharing::before {
     font-family: 'material-icons';
     content: "\F497";
     color: #5b6472;
+    font-size: 20px;
+    vertical-align: top;
   }
 }
 
@@ -120,11 +119,19 @@
     width: auto;
     display: inline-block;
   }
+  .flex-center {
+    display: flex;
+    justify-content: center;
+  }
+  .flex-space {
+    display: flex;
+    justify-content: space-between;
+  }
 }
 
 @media screen and (max-width: $fat-mobile) {
   .grid {
-    grid-template-columns: repeat(1, 1fr)!important;
+    grid-template-columns: repeat(1, 1fr) !important;
   }
   dots-menu.right {
     .options{
