@@ -1,10 +1,10 @@
 @font-face {
   font-family: 'material-icons';
-  src: url('/webConference/public/font/material-design/fonts/materialdesignicons-webfont.eot');
-  src: url('/webConference/public/font/material-design/fonts/materialdesignicons-webfont.eot') format('embedded-opentype'),
-  url('/webConference/public/font/material-design/fonts/materialdesignicons-webfont.woff2') format('woff2'),
-  url('/webConference/public/font/material-design/fonts/materialdesignicons-webfont.woff2') format('woff'),
-  url('/webConference/public/font/material-design/fonts/materialdesignicons-webfont.ttf') format('truetype');
+  src: url('/webconference/public/font/material-design/fonts/materialdesignicons-webfont.eot');
+  src: url('/webconference/public/font/material-design/fonts/materialdesignicons-webfont.eot') format('embedded-opentype'),
+  url('/webconference/public/font/material-design/fonts/materialdesignicons-webfont.woff2') format('woff2'),
+  url('/webconference/public/font/material-design/fonts/materialdesignicons-webfont.woff2') format('woff'),
+  url('/webconference/public/font/material-design/fonts/materialdesignicons-webfont.ttf') format('truetype');
   font-weight: normal;
   font-style: normal;
 }
@@ -96,6 +96,13 @@
     color: #5b6472;
     font-size: 20px;
     vertical-align: top;
+  }
+
+  lightbox {
+    .action-buttons {
+      margin-top: 10px;
+      float: right;
+    }
   }
 }
 

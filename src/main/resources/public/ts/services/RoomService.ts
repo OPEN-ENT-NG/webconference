@@ -9,6 +9,7 @@ export interface RoomService {
     update(room: Room): Promise<Room>;
     delete(room: Room): Promise<Room>;
     end(room: Room): Promise<void>;
+    sendInvitation(room: Room, mail: {}): Promise<void>;
     getAllMyRoomRights(): Promise<any>;
 }
 
@@ -40,6 +41,11 @@ export const roomService: RoomService = {
 
     async end({id}): Promise<void> {
         await http.get(`/${appPrefix}/rooms/${id}/end`);
+        return;
+    },
+
+    async sendInvitation({id}, mail: {}) : Promise<void> {
+        await http.post(`/${appPrefix}/rooms/${id}/invitation`, mail);
         return;
     },
 

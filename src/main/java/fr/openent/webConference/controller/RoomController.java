@@ -37,6 +37,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 import static org.entcore.common.http.response.DefaultResponseHandler.arrayResponseHandler;
 import static org.entcore.common.http.response.DefaultResponseHandler.defaultResponseHandler;
 
@@ -49,7 +50,7 @@ public class RoomController extends ControllerHelper {
     private EventStore eventStore;
     private final EventHelper eventHelper;
 
-    public RoomController(EventBus eb, JsonObject config, EventStore eventStore) {
+    public RoomController(EventBus eb, EventStore eventStore) {
         this.eb = eb;
         this.eventStore = eventStore;
         roomService = new DefaultRoomService();
@@ -394,6 +395,40 @@ public class RoomController extends ControllerHelper {
 	                }
 	            });
            	});
+        });
+    }
+
+    @Post("/rooms/:id/invitation")
+    @ApiDoc("Send an invitation by mail to all the wanted users")
+    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    public void sendInvitation(HttpServerRequest request) {
+        RequestUtils.bodyToJson(request, mail -> {
+            UserUtils.getUserInfos(eb, request, user -> {
+                if (user != null) {
+                    JsonObject message = new JsonObject()
+                            .put("subject", mail.getString("subject"))
+                            .put("body", mail.getString("body"))
+                            .put("to", mail.getJsonArray("invitees"));
+
+                    JsonObject action = new JsonObject()
+                            .put("action", "send")
+                            .put("userId", user.getUserId())
+                            .put("username", user.getUsername())
+                            .put("message", message);
+
+                    // Send mail via Conversation app
+                    eb.request("org.entcore.conversation", action, handlerToAsyncHandler(messageEvent -> {
+                        if (!"ok".equals(messageEvent.body().getString("status"))) {
+                            log.error("[WebConference@sendInvitation] Failed to send invitation", messageEvent.body().getString("error"));
+                            renderError(request);
+                        }
+                        Renders.renderJson(request, messageEvent.body(), 200);
+                    }));
+                } else {
+                    log.error("User not found in session.");
+                    Renders.unauthorized(request);
+                }
+            });
         });
     }
 

@@ -1,5 +1,5 @@
-import {idiom, model, ng, template, notify, Behaviours} from 'entcore';
-import {IRoom, IStructure, Room, Rooms} from '../interfaces';
+import {idiom, model, ng, template, notify, Behaviours, http} from 'entcore';
+import {IStructure, Room, Rooms} from '../interfaces';
 import * as Clipboard from 'clipboard';
 import {roomService} from "../services";
 import {Mix} from "entcore-toolkit";
@@ -13,28 +13,44 @@ interface ViewModel {
 	room: Room;
 	selectedRoom: Room;
 	roomToShare: Room;
+	roomToInvit: Room;
 	lightbox: {
 		room: boolean,
-		sharing: boolean
+		sharing: boolean,
+		invitation: boolean
+	};
+	mail: {
+		link: string,
+		subject: string,
+		body: string,
+		invitees: string[]
 	};
 
 	hasWorkflowZimbra(): boolean;
 	hasWorkflowMessagerie(): boolean;
 	hasShareRightManager(room : Room): boolean;
 	hasShareRightContrib(room : Room): boolean;
+
 	openRoomLightbox(): void;
 	closeRoomLightbox(): void;
 	openSharingLightbox(room: Room): void;
 	closeSharingLightbox(): void;
+	openInvitationLightbox(): void;
+	closeInvitationLightbox(): void;
+
+	openRoomUpdate(room: Room);
+	openRoomCreation();
 	createRoom(room: Room);
 	updateRoom(room: Room);
 	deleteRoom(room: Room);
-	openRoomUpdate(room: Room);
-	openRoomCreation();
+	sendInvitation(room: Room);
 	startCurrentRoom();
 	endCurrentRoom();
+
+	updateInvitees(data: any[]): Promise<void>;
 	hasActiveSession(room: Room);
 	refresh();
+
 }
 
 function processStructures(): Array<IStructure> {
@@ -71,10 +87,39 @@ export const mainController = ng.controller('MainController',
 		vm.rooms = new Rooms();
 		vm.selectedRoom = new Room();
 		vm.roomToShare = new Room();
+		vm.roomToInvit = new Room();
 		vm.lightbox = {
 			room: false,
-			sharing: false
+			sharing: false,
+			invitation: false
 		};
+		vm.mail = {
+			link: "",
+			subject: "",
+			body: "",
+			invitees: []
+		};
+
+		const init = async () => {
+			vm.room = initEmptyRoom();
+			loadRooms().then(() => {
+				template.open('toaster', 'toaster');
+				$scope.safeApply();
+				let clipboard = new Clipboard('.clipboard-link-field');
+
+				clipboard.on('success', function(e) {
+					e.clearSelection();
+					notify.info('copy.link.success');
+				});
+
+				clipboard.on('error', function(e) {
+					notify.error('copy.link.error');
+				});
+			});
+			template.open('main', 'main');
+		}
+
+		// Rights functions
 
 		vm.hasWorkflowZimbra = function () {
 			return model.me.hasWorkflow('fr.openent.zimbra.controllers.ZimbraController|view');
@@ -90,31 +135,73 @@ export const mainController = ng.controller('MainController',
 
 		vm.hasShareRightContrib = (room : Room) => {
 			return room.owner_id === model.me.userId || room.myRights.includes(Behaviours.applicationsBehaviours['web-conference'].rights.resources.contrib.right);
-		};
+		}
+
+		// Lightbox functions
 
 		vm.openRoomLightbox = () => {
 			template.open('lightbox', 'room-creation');
 			vm.lightbox.room = true;
-		}
+		};
+
 		vm.closeRoomLightbox = () => {
 			template.close('lightbox');
 			vm.lightbox.room = false;
-		}
+		};
+
 		vm.openSharingLightbox = (room: Room) => {
 			vm.roomToShare = room;
 			vm.roomToShare.generateShareRights();
 			template.open('lightbox', 'room-sharing');
 			vm.lightbox.sharing = true;
-		}
+		};
+
 		vm.closeSharingLightbox = () => {
 			template.close('lightbox');
 			vm.lightbox.sharing = false;
-		}
+		};
+
+		vm.openInvitationLightbox = () => {
+			initMail();
+			vm.roomToInvit = vm.selectedRoom;
+			vm.roomToInvit.generateShareRights();
+			template.open('lightbox', 'room-invitation');
+			vm.lightbox.invitation = true;
+			// Set CSS to show text on editor
+			window.setTimeout(async function () {
+				document.getElementsByClassName('edumedia')[0].remove();
+				let toolbar = document.getElementsByTagName('editor-toolbar')[0] as HTMLElement;
+				let editor = document.getElementsByTagName('editor')[0] as HTMLElement;
+				let text = document.getElementsByClassName('drawing-zone')[0] as HTMLElement;
+				editor.style.setProperty('padding-top', `${toolbar.offsetHeight.toString()}px`, "important");
+				text.style.setProperty('min-height', `150px`, "important");
+			}, 500);
+			$scope.safeApply();
+
+		};
+
+		vm.closeInvitationLightbox = () => {
+			template.close('lightbox');
+			vm.lightbox.invitation = false;
+		};
+
+		// Other functions
+
 		const initEmptyRoom = () => (new Room(vm.structures[0].id));
 
 		const loadRooms = async () => {
 			await vm.rooms.sync();
 			vm.selectedRoom = vm.rooms.all[0];
+		};
+
+		vm.openRoomUpdate = (room) => {
+			vm.room = room;
+			vm.openRoomLightbox();
+		};
+
+		vm.openRoomCreation = () => {
+			vm.room = initEmptyRoom();
+			vm.openRoomLightbox();
 		};
 
 		vm.createRoom = async (room: Room) => {
@@ -125,6 +212,44 @@ export const mainController = ng.controller('MainController',
 			vm.closeRoomLightbox();
 
 			$scope.safeApply();
+		};
+
+		vm.updateRoom = async (room) => {
+			const {name, id, structure} = await RoomService.update(room);
+			vm.room = initEmptyRoom();
+			vm.rooms.all.forEach(aRoom => {
+				if (aRoom.id === id) {
+					aRoom.name = name;
+					aRoom.structure = structure;
+				}
+			});
+			vm.closeRoomLightbox();
+			$scope.safeApply();
+		};
+
+		vm.deleteRoom = async (room) => {
+			await RoomService.delete(room);
+			vm.rooms.all = vm.rooms.all.filter(aRoom => room.id !== aRoom.id);
+			if (vm.selectedRoom.id === room.id) vm.selectedRoom = vm.rooms.all[0];
+			$scope.safeApply();
+		};
+
+		vm.sendInvitation = async (room) => {
+			if (!!!vm.mail.invitees || vm.mail.invitees.length <= 0) {
+				notify.error(idiom.translate('webconference.invitation.error.invitees'));
+			}
+			else if (!!!vm.mail.subject) {
+				notify.error(idiom.translate('webconference.invitation.error.subject'));
+			}
+			else if (!!!vm.mail.body || !vm.mail.body.includes(vm.mail.link)) {
+				notify.error(idiom.translate('webconference.invitation.error.link'));
+			}
+			else {
+				await roomService.sendInvitation(room, vm.mail);
+				notify.success(idiom.translate('webconference.invitation.success'));
+				initMail();
+				vm.closeInvitationLightbox();
+			}
 		};
 
 		vm.startCurrentRoom = async () => {
@@ -165,8 +290,6 @@ export const mainController = ng.controller('MainController',
 			}
 		};
 
-		vm.hasActiveSession = (room) => room && 'active_session' in room && room.active_session !== null;
-
 		vm.endCurrentRoom = async () => {
 			try {
 				await RoomService.end(vm.selectedRoom);
@@ -179,35 +302,37 @@ export const mainController = ng.controller('MainController',
 			}
 		};
 
-		vm.openRoomUpdate = (room) => {
-			vm.room = room;
-			vm.openRoomLightbox();
-		};
-
-		vm.openRoomCreation = () => {
-			vm.room = initEmptyRoom();
-			vm.openRoomLightbox();
-		};
-
-
-		vm.updateRoom = async (room) => {
-			const {name, id, structure} = await RoomService.update(room);
-			vm.room = initEmptyRoom();
-			vm.rooms.all.forEach(aRoom => {
-				if (aRoom.id === id) {
-					aRoom.name = name;
-					aRoom.structure = structure;
+		vm.updateInvitees = async (data) : Promise<void> => {
+			for (let item of data) {
+				if (item.type == 'sharebookmark') {
+					vm.mail.invitees = vm.mail.invitees.concat(item.users.map(item => item.id));
+					vm.mail.invitees = vm.mail.invitees.concat(item.groups.map(item => item.id));
 				}
-			});
-			vm.closeRoomLightbox();
-			$scope.safeApply();
+				else {
+					vm.mail.invitees.push(item.id);
+				}
+			}
 		};
 
-		vm.deleteRoom = async (room) => {
-			await RoomService.delete(room);
-			vm.rooms.all = vm.rooms.all.filter(aRoom => room.id !== aRoom.id);
-			if (vm.selectedRoom.id === room.id) vm.selectedRoom = vm.rooms.all[0];
-			$scope.safeApply();
+		const initMail = () : void => {
+			vm.mail.link = `${window.location.origin}${window.location.pathname}/rooms/${vm.selectedRoom.id}/join`;
+			vm.mail.subject = idiom.translate('webconference.invitation.default.subject');
+			vm.mail.body = getI18nWithParams('webconference.invitation.default.body', [vm.mail.link, vm.mail.link]);
+			vm.mail.invitees = [];
+		};
+
+		init();
+
+		// Utils
+
+		vm.hasActiveSession = (room) => room && 'active_session' in room && room.active_session !== null;
+
+		const getI18nWithParams = (key: string, params: string[]) : string => {
+			let finalI18n = idiom.translate(key);
+			for (let i = 0; i < params.length; i++) {
+				finalI18n = finalI18n.replace(`{${i}}`, params[i]);
+			}
+			return finalI18n;
 		};
 
 		vm.refresh = () => document.location.reload();
@@ -218,21 +343,4 @@ export const mainController = ng.controller('MainController',
 				$scope.$apply();
 			}
 		};
-
-		vm.room = initEmptyRoom();
-		loadRooms().then(() => {
-			template.open('toaster', 'toaster');
-			$scope.safeApply();
-			let clipboard = new Clipboard('.clipboard-link-field');
-			
-			clipboard.on('success', function(e) {
-				e.clearSelection();
-				notify.info('copy.link.success');
-			});
-			
-			clipboard.on('error', function(e) {
-				notify.error('copy.link.error');
-			});
-		});
-		template.open('main', 'main');
 	}]);

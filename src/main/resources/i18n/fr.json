@@ -5,8 +5,11 @@
   "webconference.room.generate.public.link": "Générer un lien public",
   "webconference.create": "Créer",
   "webconference.update": "Modifier",
+  "webconference.cancel": "Annuler",
+  "webconference.send": "Envoyer",
   "webconference.delete": "Supprimer",
   "webconference.share": "Partager",
+  "webconference.invitation": "Envoyer une invitation",
   "webconference.contrib": "Modération",
   "webconference.manager": "Gestion",
   "webconference.sessions": "session(s)",
@@ -33,5 +36,17 @@
   "webconference.tooManyUsers.message": "Oups ! Votre établissement ne peut accueillir plus d'utilisateurs.",
   "webconference.tooManyUsers.description": "Il semblerait que trop d'utilisateurs soient connectés en simultané. Essayez de revenir plus tard.",
   "webconference.tooManyRooms.message": "Oups ! Votre établissement ne peut accueillir plus de salles.",
-  "webconference.tooManyRooms.description": "Il semblerait que trop de salles soient ouvertes en simultané. Essayez de revenir plus tard."
+  "webconference.tooManyRooms.description": "Il semblerait que trop de salles soient ouvertes en simultané. Essayez de revenir plus tard.",
+
+  "webconference.invitation.title": "Envoyer une invitation",
+  "webconference.invitation.cc.label": "Destinataires : ",
+  "webconference.invitation.subject.label": "Objet de l'invitation : ",
+  "webconference.invitation.subject.placeholder": "Titre de l'invitation",
+  "webconference.invitation.default.subject": "Invitation à une salle de visio-conférence",
+  "webconference.invitation.default.body": "<div>Bonjour,</br></br>Vous êtes invité à participer à une visio-conférence.</br>Voici le lien d'accès à la salle : <a href='{0}'>{1}</a></br></br>L'ouverture de la salle se fera quelques minutes avant la réunion.</br></br>Cordialement.</div>",
+  "webconference.invitation.link.label" : "Lien d'accès à la salle : ",
+  "webconference.invitation.error.invitees": "Il semble que vous n'ayez sélectionné aucun destinaire !",
+  "webconference.invitation.error.subject": "Il semble que votre invitation n'est pas d'objet !",
+  "webconference.invitation.error.link": "Il semble que votre invitation ne contienne pas le lien de la salle !",
+  "webconference.invitation.success": "Votre invitation a bien été envoyée !"
 }

@@ -52,15 +52,15 @@ public class WebConference extends BaseServer {
 		roomConf.setTable("room");
 		roomConf.setShareTable("room_shares");
 
-		RoomController roomController = new RoomController(eb, config, eventStore);
+		RoomController roomController = new RoomController(eb, eventStore);
 		roomController.setShareService(new SqlShareService(DB_SCHEMA, "room_shares", eb, securedActions, null));
 		roomController.setCrudService(new SqlCrudService(DB_SCHEMA, "room", "room_shares"));
 
 
-		addController(new WebConferenceController(eventStore));
 		addController(roomController);
-		addController(new WebHookController());
 		addController(new SynchroController());
+		addController(new WebConferenceController(eventStore));
+		addController(new WebHookController());
 		
 		RoomProviderPool.getSingleton().init(vertx, eb, config);
 	}

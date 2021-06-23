@@ -1,0 +1,20 @@
+<lightbox show="vm.lightbox.invitation" on-close="vm.closeInvitationLightbox()">
+    <h2><i18n>webconference.invitation.title</i18n></h2>
+    <div>
+        <div style="margin-top:5%">
+            <search-invitees resources="vm.roomToInvit" on-change="vm.updateInvitees(data)"></search-invitees>
+            <label style="display: flex;">
+                <i18n style="font-weight: bold">webconference.invitation.subject.label</i18n>
+                <input type="text" class="eight" ng-model="vm.mail.subject" i18n-placeholder="webconference.invitation.subject.placeholder"/>
+            </label>
+            <editor ng-model="vm.mail.body"></editor>
+        </div>
+        <div style="margin-bottom:5%">
+            <i18n>webconference.invitation.link.label</i18n><a href="[[vm.mail.link]]">[[vm.mail.link]]</a>
+        </div>
+        <div class="action-buttons">
+            <button class="cell cancel" ng-click="vm.closeInvitationLightbox()"><i18n>webconference.cancel</i18n></button>
+            <button class="cell" ng-click="vm.sendInvitation(vm.selectedRoom)"><i18n>webconference.send</i18n></button>
+        </div>
+    </div>
+</lightbox>
