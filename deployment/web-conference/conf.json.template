@@ -16,9 +16,9 @@
         "mode" : "${mode}",
         "entcore.port" : 8009,
         "bigbluebutton": {
-            "host": "",
-            "api_endpoint": "",
-            "secret": ""
+            "host": "${webConferenceBBBHost}",
+            "api_endpoint": "${webConferenceBBBAPIEndpoint}",
+            "secret": "${webConferenceBBBSecret}"
         }
       }
     }
