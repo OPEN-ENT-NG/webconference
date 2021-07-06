@@ -43,6 +43,7 @@ import static org.entcore.common.http.response.DefaultResponseHandler.defaultRes
 
 public class RoomController extends ControllerHelper {
     static final String RESOURCE_NAME = "room";
+    private static final String ROOM_MODULE = "WebConference-Room";
     private EventBus eb;
     private RoomService roomService;
     private SessionService sessionService = new DefaultSessionService();
@@ -212,7 +213,10 @@ public class RoomController extends ControllerHelper {
                         }
 
                         handler.handle(new Either.Right<>(instance.getRedirectURL(sessionId, user.getUsername(), room.getString("moderator_pw"))));
-                        eventStore.createAndStoreEvent(Event.ROOM_CREATION.name(), user);
+						if (Boolean.TRUE.equals(config.getBoolean("enable-old-events", true))) {
+							eventStore.createAndStoreEvent(Event.ROOM_CREATION.name(), user);
+						}
+						eventStore.createAndStoreEvent(Event.CREATE.name(), user, new JsonObject().put("resource-type", ROOM_MODULE).put("override-module", ROOM_MODULE));
                     });
                 });
             });
@@ -293,7 +297,10 @@ public class RoomController extends ControllerHelper {
                             request.response().putHeader("Location", evt.right().getValue());
                             request.response().putHeader("Client-Server", instance.getSource());
                             request.response().end();
-                            eventStore.createAndStoreEvent(Event.ROOM_ACCESS.name(), user);
+                            if (Boolean.TRUE.equals(config.getBoolean("enable-old-events", true))) {
+                                eventStore.createAndStoreEvent(Event.ROOM_ACCESS.name(), user);
+                            }
+                            eventStore.createAndStoreEvent(Event.ACCESS.name(), request, new JsonObject().put("override-module", ROOM_MODULE));
                         } else {
                             renderView(request, null, "waiting.html", null);
                         }
