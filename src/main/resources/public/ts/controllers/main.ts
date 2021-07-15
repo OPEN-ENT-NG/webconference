@@ -253,6 +253,7 @@ export const mainController = ng.controller('MainController',
 		};
 
 		vm.startCurrentRoom = async () => {
+			let wasDisplayActive = vm.hasActiveSession(vm.selectedRoom);
 			let roomData: any = Mix.castAs(Room, await roomService.get(vm.selectedRoom));
 			for (let key in roomData) {
 				if (!!roomData[key]) {
@@ -260,7 +261,7 @@ export const mainController = ng.controller('MainController',
 				}
 			}
 
-			if (!!roomData.opener) {
+			if (!wasDisplayActive && vm.hasActiveSession(vm.selectedRoom)) {
 				let tempId = vm.selectedRoom.id;
 				notify.info(idiom.translate('webconference.room.join.opened'));
 				window.setTimeout(async function () {
@@ -294,6 +295,7 @@ export const mainController = ng.controller('MainController',
 			try {
 				await RoomService.end(vm.selectedRoom);
 				delete vm.selectedRoom.active_session;
+				delete vm.selectedRoom.opener;
 				$scope.safeApply();
 			} catch (e) {
 				notify.error(idiom.translate('webconference.room.end.error'));
