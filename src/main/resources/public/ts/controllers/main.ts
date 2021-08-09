@@ -38,6 +38,7 @@ interface ViewModel {
 	openInvitationLightbox(): void;
 	closeInvitationLightbox(): void;
 
+	clickRoom(room: Room);
 	openRoomUpdate(room: Room);
 	openRoomCreation();
 	createRoom(room: Room);
@@ -130,11 +131,11 @@ export const mainController = ng.controller('MainController',
 		};
 
 		vm.hasShareRightManager = (room : Room) => {
-			return room.owner_id === model.me.userId || room.myRights.includes(Behaviours.applicationsBehaviours['web-conference'].rights.resources.manager.right);
+			return room.owner_id === model.me.userId || (room.myRights && room.myRights.includes(Behaviours.applicationsBehaviours['web-conference'].rights.resources.manager.right));
 		};
 
 		vm.hasShareRightContrib = (room : Room) => {
-			return room.owner_id === model.me.userId || room.myRights.includes(Behaviours.applicationsBehaviours['web-conference'].rights.resources.contrib.right);
+			return room.owner_id === model.me.userId || (room.myRights && room.myRights.includes(Behaviours.applicationsBehaviours['web-conference'].rights.resources.contrib.right));
 		}
 
 		// Lightbox functions
@@ -195,8 +196,17 @@ export const mainController = ng.controller('MainController',
 
 		const loadRooms = async () => {
 			await vm.rooms.sync();
-			vm.selectedRoom = vm.rooms.all[0];
 		};
+
+		vm.clickRoom = (room) => {
+			if (vm.selectedRoom.id === room.id) {
+				vm.selectedRoom = new Room();
+			}
+			else {
+				vm.selectedRoom = room;
+			}
+			$scope.safeApply();
+		}
 
 		vm.openRoomUpdate = (room) => {
 			vm.room = room;
@@ -212,7 +222,7 @@ export const mainController = ng.controller('MainController',
 			const { id } = await RoomService.create(room);
 			await vm.rooms.sync();
 			vm.room = initEmptyRoom();
-			if (vm.rooms.all.length === 1) vm.selectedRoom = vm.rooms.all[vm.rooms.all.map(r => r.id).indexOf(id)];
+			vm.selectedRoom = vm.rooms.all[vm.rooms.all.map(r => r.id).indexOf(id)];
 			vm.closeRoomLightbox();
 
 			$scope.safeApply();
@@ -234,7 +244,7 @@ export const mainController = ng.controller('MainController',
 		vm.deleteRoom = async (room) => {
 			await RoomService.delete(room);
 			vm.rooms.all = vm.rooms.all.filter(aRoom => room.id !== aRoom.id);
-			if (vm.selectedRoom.id === room.id) vm.selectedRoom = vm.rooms.all[0];
+			vm.selectedRoom = new Room();
 			$scope.safeApply();
 		};
 
