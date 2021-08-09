@@ -17,7 +17,8 @@ interface ViewModel {
 	lightbox: {
 		room: boolean,
 		sharing: boolean,
-		invitation: boolean
+		invitation: boolean,
+		delete: boolean
 	};
 	mail: {
 		link: string,
@@ -37,6 +38,8 @@ interface ViewModel {
 	closeSharingLightbox(): void;
 	openInvitationLightbox(): void;
 	closeInvitationLightbox(): void;
+	openDeleteLightbox(room: Room): void;
+	closeDeleteLightbox(): void;
 
 	openRoomUpdate(room: Room);
 	openRoomCreation();
@@ -91,7 +94,8 @@ export const mainController = ng.controller('MainController',
 		vm.lightbox = {
 			room: false,
 			sharing: false,
-			invitation: false
+			invitation: false,
+			delete: false
 		};
 		vm.mail = {
 			link: "",
@@ -130,11 +134,11 @@ export const mainController = ng.controller('MainController',
 		};
 
 		vm.hasShareRightManager = (room : Room) => {
-			return room.owner_id === model.me.userId || room.myRights.includes(Behaviours.applicationsBehaviours['web-conference'].rights.resources.manager.right);
+			return room.owner_id === model.me.userId || (room.myRights && room.myRights.includes(Behaviours.applicationsBehaviours['web-conference'].rights.resources.manager.right));
 		};
 
 		vm.hasShareRightContrib = (room : Room) => {
-			return room.owner_id === model.me.userId || room.myRights.includes(Behaviours.applicationsBehaviours['web-conference'].rights.resources.contrib.right);
+			return room.owner_id === model.me.userId || (room.myRights && room.myRights.includes(Behaviours.applicationsBehaviours['web-conference'].rights.resources.contrib.right));
 		}
 
 		// Lightbox functions
@@ -189,6 +193,16 @@ export const mainController = ng.controller('MainController',
 			vm.lightbox.invitation = false;
 		};
 
+		vm.openDeleteLightbox = (room) => {
+			template.open('lightbox', 'room-delete');
+			vm.lightbox.delete = true;
+		};
+
+		vm.closeDeleteLightbox = () => {
+			template.close('lightbox');
+			vm.lightbox.delete = false;
+		};
+
 		// Other functions
 
 		const initEmptyRoom = () => (new Room(vm.structures[0].id));
@@ -212,7 +226,7 @@ export const mainController = ng.controller('MainController',
 			const { id } = await RoomService.create(room);
 			await vm.rooms.sync();
 			vm.room = initEmptyRoom();
-			if (vm.rooms.all.length === 1) vm.selectedRoom = vm.rooms.all[vm.rooms.all.map(r => r.id).indexOf(id)];
+			vm.selectedRoom = vm.rooms.all[vm.rooms.all.map(r => r.id).indexOf(id)];
 			vm.closeRoomLightbox();
 
 			$scope.safeApply();
@@ -235,6 +249,7 @@ export const mainController = ng.controller('MainController',
 			await RoomService.delete(room);
 			vm.rooms.all = vm.rooms.all.filter(aRoom => room.id !== aRoom.id);
 			if (vm.selectedRoom.id === room.id) vm.selectedRoom = vm.rooms.all[0];
+			vm.closeDeleteLightbox();
 			$scope.safeApply();
 		};
 
