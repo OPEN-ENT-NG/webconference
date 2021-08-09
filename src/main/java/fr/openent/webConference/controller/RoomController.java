@@ -545,12 +545,12 @@ public class RoomController extends ControllerHelper {
                     List<Object> values = new ArrayList<Object>(o.values());
 
                     while (!isShared && j < values.size()) { // Iterate over each pair id-actions
-                        List<String> actions = (ArrayList)(values.get(j));
+                        JsonArray actions = (JsonArray)(values.get(j));
 
                         int k = 0;
                         while (!isShared && k < actions.size()) { // Iterate over each action for an id
-                            if (actions.get(k).equals(WebConference.CONTRIB_SHARING_BEHAVIOUR) ||
-                                    actions.get(k).equals(WebConference.MANAGER_SHARING_BEHAVIOUR)) {
+                            if (actions.getString(k).equals(WebConference.CONTRIB_SHARING_BEHAVIOUR) ||
+                                    actions.getString(k).equals(WebConference.MANAGER_SHARING_BEHAVIOUR)) {
                                 isShared = true;
                             }
                             k++;
@@ -560,7 +560,7 @@ public class RoomController extends ControllerHelper {
                     i++;
                 }
 
-                if (!isShared && !room.getString("owner_id").equals(user.getUserId())) {
+                if (!isShared && !room.getString("owner").equals(user.getUserId())) {
                     isShared = true;
                 }
 

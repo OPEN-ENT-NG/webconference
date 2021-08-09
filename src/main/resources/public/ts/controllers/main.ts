@@ -159,6 +159,10 @@ export const mainController = ng.controller('MainController',
 		vm.closeSharingLightbox = () => {
 			template.close('lightbox');
 			vm.lightbox.sharing = false;
+			window.setTimeout(async function () {
+				await vm.rooms.sync();
+				$scope.safeApply();
+			}, 100);
 		};
 
 		vm.openInvitationLightbox = () => {
@@ -205,17 +209,17 @@ export const mainController = ng.controller('MainController',
 		};
 
 		vm.createRoom = async (room: Room) => {
-			const newRoom = await RoomService.create(room);
-			vm.rooms.all = [...vm.rooms.all, newRoom];
+			const { id } = await RoomService.create(room);
+			await vm.rooms.sync();
 			vm.room = initEmptyRoom();
-			if (vm.rooms.all.length === 1) vm.selectedRoom = vm.rooms.all[0];
+			if (vm.rooms.all.length === 1) vm.selectedRoom = vm.rooms.all[vm.rooms.all.map(r => r.id).indexOf(id)];
 			vm.closeRoomLightbox();
 
 			$scope.safeApply();
 		};
 
 		vm.updateRoom = async (room) => {
-			const {name, id, structure} = await RoomService.update(room);
+			const { name, id, structure } = await RoomService.update(room);
 			vm.room = initEmptyRoom();
 			vm.rooms.all.forEach(aRoom => {
 				if (aRoom.id === id) {
