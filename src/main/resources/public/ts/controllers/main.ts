@@ -17,7 +17,8 @@ interface ViewModel {
 	lightbox: {
 		room: boolean,
 		sharing: boolean,
-		invitation: boolean
+		invitation: boolean,
+		delete: boolean
 	};
 	mail: {
 		link: string,
@@ -37,6 +38,8 @@ interface ViewModel {
 	closeSharingLightbox(): void;
 	openInvitationLightbox(): void;
 	closeInvitationLightbox(): void;
+	openDeleteLightbox(room: Room): void;
+	closeDeleteLightbox(): void;
 
 	clickRoom(room: Room);
 	openRoomUpdate(room: Room);
@@ -92,7 +95,8 @@ export const mainController = ng.controller('MainController',
 		vm.lightbox = {
 			room: false,
 			sharing: false,
-			invitation: false
+			invitation: false,
+			delete: false
 		};
 		vm.mail = {
 			link: "",
@@ -190,6 +194,16 @@ export const mainController = ng.controller('MainController',
 			vm.lightbox.invitation = false;
 		};
 
+		vm.openDeleteLightbox = (room) => {
+			template.open('lightbox', 'room-delete');
+			vm.lightbox.delete = true;
+		};
+
+		vm.closeDeleteLightbox = () => {
+			template.close('lightbox');
+			vm.lightbox.delete = false;
+		};
+
 		// Other functions
 
 		const initEmptyRoom = () => (new Room(vm.structures[0].id));
@@ -245,6 +259,7 @@ export const mainController = ng.controller('MainController',
 			await RoomService.delete(room);
 			vm.rooms.all = vm.rooms.all.filter(aRoom => room.id !== aRoom.id);
 			vm.selectedRoom = new Room();
+			vm.closeDeleteLightbox();
 			$scope.safeApply();
 		};
 

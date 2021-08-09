@@ -1,0 +1,10 @@
+<lightbox show="vm.lightbox.delete" on-close="vm.closeDeleteLightbox()">
+    <h2><i18n>webconference.delete</i18n></h2>
+    <div>
+        <i18n>webconference.room.delete.confirmation</i18n>
+    </div>
+    <div class="right-magnet">
+        <button class="cell cancel" ng-click="vm.closeDeleteLightbox()"><i18n>webconference.cancel</i18n></button>
+        <button class="cell" ng-click="vm.deleteRoom(vm.selectedRoom)"><i18n>webconference.delete</i18n></button>
+    </div>
+</lightbox>
