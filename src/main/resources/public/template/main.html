@@ -4,7 +4,7 @@
         <div class="grid">
             <div class="flex-card card cell center-component f-row flex-row horizontal-spacing twelve-mobile"
                  ng-click="vm.clickRoom(room)"
-                 ng-class="vm.selectedRoom == room ? 'active' : ''"
+                 ng-class="vm.selectedRoom.id == room.id ? 'active' : ''"
                  ng-repeat="room in vm.rooms.all|orderBy:'name'">
                 <div class="icon vertical-spacing-twice center-component">
                     <div class="img-container center-component room-image"
