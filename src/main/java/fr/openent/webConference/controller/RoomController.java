@@ -542,19 +542,22 @@ public class RoomController extends ControllerHelper {
                 while (!isShared && i < idsObjects.size()) { // Iterate over "users", "groups", "bookmarks"
                     int j = 0;
                     Map<String, Object> o = idsObjects.get(i);
-                    List<Object> values = new ArrayList<Object>(o.values());
+                    List<Object> values = new ArrayList<>(o.values());
 
                     while (!isShared && j < values.size()) { // Iterate over each pair id-actions
-                        JsonArray actions = (JsonArray)(values.get(j));
+                        if (values.get(j) instanceof List) {
+                            List<String> actions = (ArrayList)(values.get(j));
 
-                        int k = 0;
-                        while (!isShared && k < actions.size()) { // Iterate over each action for an id
-                            if (actions.getString(k).equals(WebConference.CONTRIB_SHARING_BEHAVIOUR) ||
-                                    actions.getString(k).equals(WebConference.MANAGER_SHARING_BEHAVIOUR)) {
-                                isShared = true;
+                            int k = 0;
+                            while (!isShared && k < actions.size()) { // Iterate over each action for an id
+                                if (actions.get(k).equals(WebConference.CONTRIB_SHARING_BEHAVIOUR) ||
+                                        actions.get(k).equals(WebConference.MANAGER_SHARING_BEHAVIOUR)) {
+                                    isShared = true;
+                                }
+                                k++;
                             }
-                            k++;
                         }
+
                         j++;
                     }
                     i++;
