@@ -7,10 +7,14 @@
     },
     "structure": {
       "type": "string"
+    },
+    "public": {
+      "type": "boolean"
     }
   },
   "required": [
     "name",
-    "structure"
+    "structure",
+    "public"
   ]
 }

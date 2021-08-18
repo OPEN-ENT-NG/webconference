@@ -1,6 +1,10 @@
 package fr.openent.webConference;
 
-import fr.openent.webConference.controller.*;
+import fr.openent.webConference.config.PublicConf;
+import fr.openent.webConference.controller.RoomController;
+import fr.openent.webConference.controller.SynchroController;
+import fr.openent.webConference.controller.WebConferenceController;
+import fr.openent.webConference.controller.WebHookController;
 import fr.openent.webConference.tiers.RoomProviderPool;
 import io.vertx.core.eventbus.EventBus;
 import org.entcore.common.events.EventStore;
@@ -12,7 +16,7 @@ import org.entcore.common.sql.SqlConf;
 import org.entcore.common.sql.SqlConfs;
 
 public class WebConference extends BaseServer {
-
+	public static final PublicConf publicConf = new PublicConf();
 	public static String DB_SCHEMA;
 	public static String GROUPS_TABLE;
 	public static String MEMBERS_TABLE;
@@ -56,12 +60,14 @@ public class WebConference extends BaseServer {
 		roomController.setShareService(new SqlShareService(DB_SCHEMA, "room_shares", eb, securedActions, null));
 		roomController.setCrudService(new SqlCrudService(DB_SCHEMA, "room", "room_shares"));
 
+		publicConf.allowed(config.getBoolean("allow-public-link", Boolean.TRUE))
+				.setHost(config.getJsonObject("bigbluebutton").getString("host"));
 
 		addController(roomController);
 		addController(new SynchroController());
 		addController(new WebConferenceController(eventStore));
 		addController(new WebHookController());
-		
+
 		RoomProviderPool.getSingleton().init(vertx, eb, config);
 	}
 }

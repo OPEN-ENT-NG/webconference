@@ -29,8 +29,13 @@ export const roomService: RoomService = {
         return data;
     },
 
-    async update({name, id, structure}): Promise<Room> {
-        const {data} = await http.put(`/${appPrefix}/rooms/${id}`, {name, structure});
+    async update(room): Promise<Room> {
+        const body = {
+            name: room.name,
+            structure: room.structure,
+            public: room.public
+        }
+        const {data} = await http.put(`/${appPrefix}/rooms/${room.id}`, body);
         return data;
     },
 

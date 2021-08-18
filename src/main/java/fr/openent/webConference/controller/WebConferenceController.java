@@ -6,6 +6,7 @@ import fr.wseduc.rs.ApiDoc;
 import fr.wseduc.rs.Get;
 import fr.wseduc.security.SecuredAction;
 import io.vertx.core.http.HttpServerRequest;
+import io.vertx.core.json.JsonObject;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.events.EventStore;
 
@@ -20,7 +21,8 @@ public class WebConferenceController extends ControllerHelper {
     @SecuredAction(WebConference.VIEW_WORKFLOW)
     @ApiDoc("Render default view")
     public void view(HttpServerRequest request) {
-        renderView(request);
+        JsonObject params = new JsonObject().put("allowPublic", WebConference.publicConf.allowed());
+        renderView(request, params);
         eventStore.createAndStoreEvent(Event.ACCESS.name(), request);
     }
 }

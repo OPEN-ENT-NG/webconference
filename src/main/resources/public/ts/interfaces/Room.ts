@@ -11,6 +11,8 @@ export interface IRoom {
     structure: string
     owner_id?: string
     collab?: boolean
+    public: boolean
+    public_link: string
 }
 
 export class Room implements Shareable, IRoom  {
@@ -28,6 +30,8 @@ export class Room implements Shareable, IRoom  {
     owner_id?: string;
     collab?: boolean
     opener?: string;
+    public: boolean;
+    public_link: string
 
     constructor(structure?: string) {
         this.id = '';
@@ -39,6 +43,8 @@ export class Room implements Shareable, IRoom  {
         this.owner_id = null;
         this.collab = false;
         this.opener = '';
+        this.public = false;
+        this.public_link = '';
     }
 
     toJson() : Object {
@@ -51,7 +57,9 @@ export class Room implements Shareable, IRoom  {
             structure: this.structure,
             owner_id: this.owner_id,
             collab: this.collab,
-            opener: this.opener
+            opener: this.opener,
+            public: this.public,
+            public_link: this.public_link
         }
     }
 
@@ -70,6 +78,7 @@ export class Rooms {
         try {
             let rooms: any = await roomService.list();
             this.all = Mix.castArrayAs(Room, rooms);
+            this.all.map(room => room.public = room.public_link !== null);
             await this.setResourceRights();
         } catch (e) {
             // notify.error(idiom.translate('formulaire.error.form.sync'));
