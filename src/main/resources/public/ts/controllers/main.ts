@@ -1,4 +1,4 @@
-import {idiom, model, ng, template, notify, Behaviours, http} from 'entcore';
+import {idiom, model, ng, template, notify, Behaviours} from 'entcore';
 import {IStructure, Room, Rooms} from '../interfaces';
 import * as Clipboard from 'clipboard';
 import {roomService} from "../services";
@@ -14,8 +14,14 @@ interface ViewModel {
 	selectedRoom: Room;
 	roomToShare: Room;
 	roomToInvit: Room;
+	meetingInfo: {
+		running: boolean,
+		participantCount: number,
+		moderatorCount: number
+	};
 	lightbox: {
 		room: boolean,
+		end: boolean,
 		sharing: boolean,
 		invitation: boolean,
 		delete: boolean
@@ -34,6 +40,8 @@ interface ViewModel {
 
 	openRoomLightbox(): void;
 	closeRoomLightbox(): void;
+	openEndLightbox(room: Room): void;
+	closeEndLightbox(): void;
 	openSharingLightbox(room: Room): void;
 	closeSharingLightbox(): void;
 	openInvitationLightbox(): void;
@@ -48,10 +56,12 @@ interface ViewModel {
 	deleteRoom(room: Room);
 	sendInvitation(room: Room);
 	startCurrentRoom();
+	checkEndCurrentRoom(room: Room);
 	endCurrentRoom();
 
 	updateInvitees(data: any[]): Promise<void>;
-	hasActiveSession(room: Room);
+	hasActiveSession(room: Room): boolean;
+	isRunning(room: Room): Promise<boolean>;
 	refresh();
 
 }
@@ -91,8 +101,10 @@ export const mainController = ng.controller('MainController',
 		vm.selectedRoom = new Room();
 		vm.roomToShare = new Room();
 		vm.roomToInvit = new Room();
+		vm.meetingInfo = {running: false, participantCount: null, moderatorCount: null};
 		vm.lightbox = {
 			room: false,
+			end: false,
 			sharing: false,
 			invitation: false,
 			delete: false
@@ -151,6 +163,16 @@ export const mainController = ng.controller('MainController',
 		vm.closeRoomLightbox = () => {
 			template.close('lightbox');
 			vm.lightbox.room = false;
+		};
+
+		vm.openEndLightbox = async (room: Room) => {
+			template.open('lightbox', 'room-end');
+			vm.lightbox.end = true;
+		};
+
+		vm.closeEndLightbox = () => {
+			template.close('lightbox');
+			vm.lightbox.end = false;
 		};
 
 		vm.openSharingLightbox = (room: Room) => {
@@ -272,15 +294,8 @@ export const mainController = ng.controller('MainController',
 		};
 
 		vm.startCurrentRoom = async () => {
-			let wasDisplayActive = vm.hasActiveSession(vm.selectedRoom);
-			let roomData: any = Mix.castAs(Room, await roomService.get(vm.selectedRoom));
-			for (let key in roomData) {
-				if (!!roomData[key]) {
-					vm.selectedRoom[key] = roomData[key];
-				}
-			}
-
-			if (!wasDisplayActive && vm.hasActiveSession(vm.selectedRoom)) {
+			let isRunning = await vm.isRunning(vm.selectedRoom);
+			if (isRunning && !vm.hasActiveSession(vm.selectedRoom)) {
 				let tempId = vm.selectedRoom.id;
 				notify.info(idiom.translate('webconference.room.join.opened'));
 				window.setTimeout(async function () {
@@ -310,11 +325,29 @@ export const mainController = ng.controller('MainController',
 			}
 		};
 
+		vm.checkEndCurrentRoom = async (room) => {
+			let isRunning = await vm.isRunning(vm.selectedRoom);
+			if (!isRunning) {
+				let tempId = vm.selectedRoom.id;
+				notify.info(idiom.translate('webconference.room.end.ended'));
+				window.setTimeout(async function () {
+					await vm.rooms.sync();
+					vm.selectedRoom = vm.rooms.all.filter(r => r.id === tempId)[0];
+					$scope.safeApply();
+				}, 1000);
+			}
+			else {
+				vm.meetingInfo = await RoomService.getMeetingInfo(room);
+				vm.openEndLightbox(room);
+			}
+		}
+
 		vm.endCurrentRoom = async () => {
 			try {
 				await RoomService.end(vm.selectedRoom);
 				delete vm.selectedRoom.active_session;
 				delete vm.selectedRoom.opener;
+				vm.closeEndLightbox();
 				$scope.safeApply();
 			} catch (e) {
 				notify.error(idiom.translate('webconference.room.end.error'));
@@ -338,7 +371,7 @@ export const mainController = ng.controller('MainController',
 		const initMail = () : void => {
 			vm.mail.link = `${window.location.origin}${window.location.pathname}/rooms/${vm.selectedRoom.id}/join`;
 			vm.mail.subject = idiom.translate('webconference.invitation.default.subject');
-			vm.mail.body = getI18nWithParams('webconference.invitation.default.body', [vm.mail.link, vm.mail.link]);
+			vm.mail.body = $scope.getI18nWithParams('webconference.invitation.default.body', [vm.mail.link, vm.mail.link]);
 			vm.mail.invitees = [];
 		};
 
@@ -346,17 +379,22 @@ export const mainController = ng.controller('MainController',
 
 		// Utils
 
-		vm.hasActiveSession = (room) => room && 'active_session' in room && room.active_session !== null;
+		vm.hasActiveSession = (room) : boolean => room && 'active_session' in room && room.active_session !== null;
 
-		const getI18nWithParams = (key: string, params: string[]) : string => {
+		vm.isRunning = async (room) : Promise<boolean> => {
+			let {running} = await RoomService.isMeetingRunning(vm.selectedRoom);
+			return running;
+		}
+
+		vm.refresh = () => document.location.reload();
+
+		$scope.getI18nWithParams = (key: string, params: string[]) : string => {
 			let finalI18n = idiom.translate(key);
 			for (let i = 0; i < params.length; i++) {
 				finalI18n = finalI18n.replace(`{${i}}`, params[i]);
 			}
 			return finalI18n;
 		};
-
-		vm.refresh = () => document.location.reload();
 
 		$scope.safeApply = function () {
 			let phase = $scope.$root.$$phase;

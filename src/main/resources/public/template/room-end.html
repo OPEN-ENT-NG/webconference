@@ -1,0 +1,10 @@
+<lightbox show="vm.lightbox.end" on-close="vm.closeEndLightbox()">
+    <h2><i18n>webconference.room.end</i18n></h2>
+    <div>
+        [[getI18nWithParams('webconference.room.end.confirmation', [vm.meetingInfo.participantCount.toString(), vm.meetingInfo.moderatorCount.toString()])]]
+    </div>
+    <div class="right-magnet top-spacing-three">
+        <button class="cell cancel" ng-click="vm.closeEndLightbox()"><i18n>webconference.cancel</i18n></button>
+        <button class="cell" ng-click="vm.endCurrentRoom()"><i18n>webconference.room.end</i18n></button>
+    </div>
+</lightbox>

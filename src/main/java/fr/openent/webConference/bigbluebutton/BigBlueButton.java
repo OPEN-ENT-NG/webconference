@@ -8,6 +8,7 @@ import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientOptions;
 import io.vertx.core.http.HttpClientRequest;
+import io.vertx.core.json.DecodeException;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
@@ -159,6 +160,8 @@ public class BigBlueButton implements RoomProvider {
                     String returnCode = path.evaluate("/response/returncode", res.getDocumentElement());
 
                     if (!"SUCCESS".equals(returnCode) || response.statusCode() != 200) {
+                        log.error("[WebConference@create] Error in creating session : " + body);
+                        log.error("[WebConference@create] Response : " + response);
                         String messageKey = path.evaluate("/response/messageKey", res.getDocumentElement());
                         ErrorCode code = ErrorCode.get(messageKey);
                         switch (code) {
@@ -356,6 +359,53 @@ public class BigBlueButton implements RoomProvider {
                 });
                 response.exceptionHandler(throwable -> {
                     log.error("[WebConference@BigBlueButton] Failed to register web hook", throwable);
+                    handler.handle(new Either.Left<>(throwable.toString()));
+                });
+            }
+        });
+        request.putHeader("Client-Server", this.source);
+        request.end();
+    }
+
+    @Override
+    public void getMeetingInfo(String meetingId, Handler<Either<String, JsonObject>> handler) {
+        String parameters = "meetingID=" + meetingId;
+        String checksum = checksum(Actions.GET_MEETING_INFO + parameters + this.secret);
+        parameters = parameters + "&checksum=" + checksum;
+        HttpClientRequest request = httpClient.getAbs(this.host + this.apiEndpoint + "/" + Actions.GET_MEETING_INFO + "?" + parameters, response -> {
+            if (response.statusCode() != 200) {
+                String message = "[WebConference@BigBlueButton] Failed get meeting infos : " + meetingId;
+                log.error(message);
+                handler.handle(new Either.Left<>(message));
+            }
+            else {
+                response.bodyHandler(body -> {
+                    try {
+                        Document res = parseResponse(body);
+                        XPathFactory xpf = XPathFactory.newInstance();
+                        XPath path = xpf.newXPath();
+                        String returnCode = path.evaluate("/response/returncode", res.getDocumentElement());
+
+                        if (!"SUCCESS".equals(returnCode)) {
+                            handler.handle(new Either.Left<>("[WebConference@BigBlueButton] Response is not SUCCESS"));
+                            return;
+                        }
+
+                        String running = path.evaluate("/response/running", res.getDocumentElement());
+                        String participantCount = path.evaluate("/response/participantCount", res.getDocumentElement());
+                        String moderatorCount = path.evaluate("/response/moderatorCount", res.getDocumentElement());
+                        handler.handle(new Either.Right<>(
+                                new JsonObject()
+                                        .put("running", running)
+                                        .put("participantCount", participantCount)
+                                        .put("moderatorCount", moderatorCount)));
+                    } catch (XPathExpressionException | NullPointerException | DecodeException e) {
+                        log.error("[WebConference@BigBlueButton] Failed to parse get meeting info response", e);
+                        handler.handle(new Either.Left<>(e.toString()));
+                    }
+                });
+                response.exceptionHandler(throwable -> {
+                    log.error("[WebConference@BigBlueButton] Failed to get meeting info. An error is catch by exception handler. Meeting : " + meetingId, throwable);
                     handler.handle(new Either.Left<>(throwable.toString()));
                 });
             }

@@ -9,6 +9,8 @@ export interface RoomService {
     update(room: Room): Promise<Room>;
     delete(room: Room): Promise<Room>;
     end(room: Room): Promise<void>;
+    isMeetingRunning(room: Room): Promise<boolean>;
+    getMeetingInfo(room: Room): Promise<any>;
     sendInvitation(room: Room, mail: {}): Promise<void>;
     getAllMyRoomRights(): Promise<any>;
 }
@@ -42,6 +44,16 @@ export const roomService: RoomService = {
     async end({id}): Promise<void> {
         await http.get(`/${appPrefix}/rooms/${id}/end`);
         return;
+    },
+
+    async isMeetingRunning({id}): Promise<boolean> {
+        const {data} = await http.get(`/${appPrefix}/rooms/${id}/running`);
+        return data;
+    },
+
+    async getMeetingInfo({id}): Promise<any> {
+        const {data} = await http.get(`/${appPrefix}/rooms/${id}/meetingInfo`);
+        return data;
     },
 
     async sendInvitation({id}, mail: {}) : Promise<void> {

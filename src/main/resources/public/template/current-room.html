@@ -10,7 +10,7 @@
                         <i18n ng-show="!vm.hasActiveSession(vm.selectedRoom)">webconference.room.start</i18n>
                         <i18n ng-show="vm.hasActiveSession(vm.selectedRoom)">webconference.room.join</i18n>
                     </button>
-                    <button style="margin-left: 5px" ng-click="vm.endCurrentRoom()" class="cancel"
+                    <button style="margin-left: 5px" ng-click="vm.checkEndCurrentRoom(vm.selectedRoom)" class="cancel"
                             ng-show="vm.hasActiveSession(vm.selectedRoom)">
                         <i18n>webconference.room.end</i18n>
                     </button>
@@ -75,7 +75,7 @@
                                 <i18n ng-show="!vm.hasActiveSession(vm.selectedRoom)">webconference.room.start</i18n>
                                 <i18n ng-show="vm.hasActiveSession(vm.selectedRoom)">webconference.room.join</i18n>
                             </button>
-                            <button style="margin-left: 5px" ng-click="vm.endCurrentRoom()" class="cancel"
+                            <button style="margin-left: 5px" ng-click="vm.checkEndCurrentRoom(vm.selectedRoom)" class="cancel"
                                     ng-show="vm.hasActiveSession(vm.selectedRoom)">
                                 <i18n>webconference.room.end</i18n>
                             </button>

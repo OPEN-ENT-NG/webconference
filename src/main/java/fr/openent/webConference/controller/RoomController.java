@@ -405,6 +405,96 @@ public class RoomController extends ControllerHelper {
         });
     }
 
+    @Get("/rooms/:id/running")
+    @ApiDoc("Is meeting meeting")
+    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    public void isMeetingRunning(HttpServerRequest request) {
+        String roomId = request.getParam("id");
+        roomService.get(roomId, evt -> {
+            if (evt.isLeft()) {
+                log.error("[WebConference@getMeetingInfos] Failed to retrieve room : " + roomId);
+                renderError(request);
+                return;
+            }
+
+            JsonObject room = evt.right().getValue();
+            if (!room.containsKey("active_session")) {
+                notFound(request);
+                return;
+            }
+
+            String activeSession = room.getString("active_session");
+
+            if (activeSession == null) {
+                noContent(request);
+                return;
+            }
+
+            RoomProviderPool.getSingleton().getInstance(request).setHandler(ar -> {
+                RoomProvider instance = ar.result();
+                if (instance == null) {
+                    log.error("[WebConference@getMeetingInfos] Failed to get a video provider instance.");
+                    renderError(request);
+                    return;
+                }
+
+                instance.isMeetingRunning(activeSession, isRunning -> {
+                    if (isRunning.isLeft()) {
+                        log.error("[WebConference@list] Failed to check meeting running meeting : " + activeSession);
+                        renderError(request);
+                    }
+                    renderJson(request, new JsonObject().put("running", isRunning.right().getValue()));
+                });
+            });
+        });
+    }
+
+    @Get("/rooms/:id/meetingInfo")
+    @ApiDoc("Get infos about a current meeting")
+    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    public void getMeetingInfo(HttpServerRequest request) {
+        String roomId = request.getParam("id");
+        roomService.get(roomId, evt -> {
+            if (evt.isLeft()) {
+                log.error("[WebConference@getMeetingInfos] Failed to retrieve room : " + roomId);
+                renderError(request);
+                return;
+            }
+
+            JsonObject room = evt.right().getValue();
+            if (!room.containsKey("active_session")) {
+                notFound(request);
+                return;
+            }
+
+            String activeSession = room.getString("active_session");
+
+            if (activeSession == null) {
+                noContent(request);
+                return;
+            }
+
+            RoomProviderPool.getSingleton().getInstance(request).setHandler(ar -> {
+                RoomProvider instance = ar.result();
+                if (instance == null) {
+                    log.error("[WebConference@getMeetingInfos] Failed to get a video provider instance.");
+                    renderError(request);
+                    return;
+                }
+
+                instance.getMeetingInfo(activeSession, getMeetingInfoEvt -> {
+                    if (getMeetingInfoEvt.isLeft()) {
+                        log.error("[WebConference@getMeetingInfos] Failed to get meeting infos session " + activeSession);
+                        renderError(request);
+                    }
+                    else {
+                        renderJson(request, getMeetingInfoEvt.right().getValue());
+                    }
+                });
+            });
+        });
+    }
+
     @Post("/rooms/:id/invitation")
     @ApiDoc("Send an invitation by mail to all the wanted users")
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
