@@ -19,8 +19,9 @@ import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.I18n;
 import fr.wseduc.webutils.http.Renders;
 import fr.wseduc.webutils.request.RequestUtils;
-import io.vertx.core.Handler;
+import io.vertx.core.*;
 import io.vertx.core.eventbus.EventBus;
+import io.vertx.core.eventbus.Message;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -31,10 +32,7 @@ import org.entcore.common.http.filter.ResourceFilter;
 import org.entcore.common.user.UserInfos;
 import org.entcore.common.user.UserUtils;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
@@ -502,26 +500,63 @@ public class RoomController extends ControllerHelper {
         RequestUtils.bodyToJson(request, mail -> {
             UserUtils.getUserInfos(eb, request, user -> {
                 if (user != null) {
-                    JsonObject message = new JsonObject()
-                            .put("subject", mail.getString("subject"))
-                            .put("body", mail.getString("body"))
-                            .put("to", new JsonArray())
-                            .put("cci", mail.getJsonArray("invitees"));
+                    JsonArray invitees = mail.getJsonArray("invitees");
+                    JsonArray localRespondersIds = new JsonArray();
+                    JsonArray listMails = new JsonArray();
 
-                    JsonObject action = new JsonObject()
-                            .put("action", "send")
-                            .put("userId", user.getUserId())
-                            .put("username", user.getUsername())
-                            .put("message", message);
-
-                    // Send mail via Conversation app
-                    eb.request("org.entcore.conversation", action, handlerToAsyncHandler(messageEvent -> {
-                        if (!"ok".equals(messageEvent.body().getString("status"))) {
-                            log.error("[WebConference@sendInvitation] Failed to send invitation", messageEvent.body().getString("error"));
-                            renderError(request);
+                    // Generate list of mails to send
+                    for (int i = 0; i < invitees.size(); i++) {
+                        String id = invitees.getString(i);
+                        if (!localRespondersIds.contains(id)) {
+                            localRespondersIds.add(id);
                         }
-                        Renders.renderJson(request, messageEvent.body(), 200);
-                    }));
+
+                        // Generate new mail object if limit or end loop are reached
+                        if (i == invitees.size() - 1 || localRespondersIds.size() == config.getInteger("zimbra-max-recipients", 50)) {
+                            JsonObject message = new JsonObject()
+                                    .put("subject", mail.getString("subject"))
+                                    .put("body", mail.getString("body"))
+                                    .put("to", new JsonArray())
+                                    .put("cci", localRespondersIds);
+
+                            JsonObject action = new JsonObject()
+                                    .put("action", "send")
+                                    .put("userId", user.getUserId())
+                                    .put("username", user.getUsername())
+                                    .put("message", message);
+
+                            listMails.add(action);
+                            localRespondersIds = new JsonArray();
+                        }
+                    }
+
+                    // Prepare futures to get message responses
+                    List<Future> mails = new ArrayList<>();
+                    mails.addAll(Collections.nCopies(listMails.size(), Promise.promise().future()));
+
+                    // Code to send mails
+                    for (int i = 0; i < listMails.size(); i++) {
+                        Future future = mails.get(i);
+
+                        // Send mail via Conversation app if it exists or else with Zimbra
+                        eb.request("org.entcore.conversation", listMails.getJsonObject(i), (Handler<AsyncResult<Message<JsonObject>>>) messageEvent -> {
+                            if (!"ok".equals(messageEvent.result().body().getString("status"))) {
+                                log.error("[Formulaire@sendReminder] Failed to send reminder : " + messageEvent.cause());
+                                future.handle(Future.failedFuture(messageEvent.cause()));
+                            }
+                            future.handle(Future.succeededFuture(messageEvent.result().body()));
+                        });
+                    }
+
+
+                    // Try to send effectively mails with code below and get results
+                    CompositeFuture.all(mails).onComplete(evt -> {
+                        if (evt.failed()) {
+                            log.error("[Zimbra@sendMessage] Failed to send reminder : " + evt.cause());
+                            Future.failedFuture(evt.cause());
+                        }
+                        ok(request);
+                    });
                 } else {
                     log.error("User not found in session.");
                     Renders.unauthorized(request);

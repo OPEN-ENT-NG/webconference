@@ -15,6 +15,7 @@
         "app-registry.port" : 8012,
         "mode" : "${mode}",
         "entcore.port" : 8009,
+        "zimbra-max-recipients": "${zimbraMaxRecipients}",
         "bigbluebutton": {
             "host": "${webConferenceBBBHost}",
             "api_endpoint": "${webConferenceBBBAPIEndpoint}",
