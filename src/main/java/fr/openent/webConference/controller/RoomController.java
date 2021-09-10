@@ -505,7 +505,8 @@ public class RoomController extends ControllerHelper {
                     JsonObject message = new JsonObject()
                             .put("subject", mail.getString("subject"))
                             .put("body", mail.getString("body"))
-                            .put("to", mail.getJsonArray("invitees"));
+                            .put("to", new JsonArray())
+                            .put("cci", mail.getJsonArray("invitees"));
 
                     JsonObject action = new JsonObject()
                             .put("action", "send")
