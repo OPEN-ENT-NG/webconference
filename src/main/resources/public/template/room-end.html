@@ -1,7 +1,13 @@
 <lightbox show="vm.lightbox.end" on-close="vm.closeEndLightbox()">
     <h2><i18n>webconference.room.end</i18n></h2>
-    <div>
-        [[getI18nWithParams('webconference.room.end.confirmation', [vm.meetingInfo.participantCount.toString(), vm.meetingInfo.moderatorCount.toString()])]]
+    <div ng-if="vm.meetingInfo.participantCount <= 1">
+        [[getI18nWithParams('webconference.room.end.confirmation.alone', [vm.meetingInfo.moderatorCount.toString()])]]
+    </div>
+    <div ng-if="vm.meetingInfo.participantCount > 1 && vm.meetingInfo.moderatorCount <= 1>">
+        [[getI18nWithParams('webconference.room.end.confirmation.multiple.one.modo', [vm.meetingInfo.participantCount.toString()])]]
+    </div>
+    <div ng-if="vm.meetingInfo.participantCount > 1 && vm.meetingInfo.moderatorCount > 1">
+        [[getI18nWithParams('webconference.room.end.confirmation.multiple.modos', [vm.meetingInfo.participantCount.toString(), vm.meetingInfo.moderatorCount.toString()])]]
     </div>
     <div class="right-magnet top-spacing-three">
         <button class="cell cancel" ng-click="vm.closeEndLightbox()"><i18n>webconference.cancel</i18n></button>
