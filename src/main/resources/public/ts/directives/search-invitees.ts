@@ -143,6 +143,9 @@ export const searchInvitees = ng.directive('searchInvitees', ['$rootScope', ($ro
                     usersCache[startSearch] = { loading: true };
                     let id = $scope.resources[0]._id;
                     let path = '/' + appPrefix + '/share/json/' + id + '?search=' + startSearch;
+                    if (!startSearch) {
+                        path = '/' + appPrefix + '/share/json/' + id;
+                    }
                     http().get(path).done(function (data) {
                         data.users.visibles.map(user => user.type = 'user');
                         data.groups.visibles.map(group => group.type = 'group');
