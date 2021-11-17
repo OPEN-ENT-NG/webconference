@@ -1,5 +1,5 @@
     {
-      "name": "fr.openent~web-conference~1.0.1",
+      "name": "fr.openent~web-conference~1.0.2",
       "config": {
         "main" : "fr.openent.webConference.WebConference",
         "port" : 8088,
