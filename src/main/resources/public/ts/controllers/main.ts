@@ -119,6 +119,10 @@ export const mainController = ng.controller('MainController',
 		};
 
 		const init = async () => {
+			checkAllowPublicLink().then(() => {
+				$scope.safeApply();
+			});
+
 			vm.room = initEmptyRoom();
 			loadRooms().then(() => {
 				template.open('toaster', 'toaster');
@@ -376,8 +380,6 @@ export const mainController = ng.controller('MainController',
 			vm.mail.invitees = [];
 		};
 
-		init();
-
 		// Utils
 
 		vm.hasActiveSession = (room) : boolean => room && 'active_session' in room && room.active_session !== null;
@@ -409,7 +411,5 @@ export const mainController = ng.controller('MainController',
 			vm.allowPublicLink = data["allow_public_link"];
 		}
 
-		checkAllowPublicLink().then(() => {
-			$scope.safeApply();
-		});
+		init();
 	}]);

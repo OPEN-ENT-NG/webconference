@@ -19,7 +19,7 @@
             <input type="text" class="twelve" id="room-name" ng-model="vm.room.name" maxlength="50">
         </div>
     </div>
-    <div class="row" ng-if="vm.config.allowPublicLink">
+    <div class="row" ng-if="vm.allowPublicLink">
         <label for="room-public-link" class="cell twelve">
             <input type="checkbox" class="twelve" id="room-public-link" ng-model="vm.generate_public_link" ng-checked="!!vm.room.public_link">
             <i18n>webconference.room.generate.public.link</i18n>

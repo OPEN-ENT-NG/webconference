@@ -22,7 +22,7 @@ public class DefaultRoomService implements RoomService {
         StringBuilder query = new StringBuilder();
         JsonArray params = new JsonArray();
 
-        query.append("SELECT r.id, name, sessions, link, public_link, active_session, structure, owner AS owner_id, collab, opener ")
+        query.append("SELECT r.id, name, owner AS owner_id, sessions, link, public_link, active_session, structure, collab, opener ")
                 .append("FROM ").append(WebConference.ROOM_TABLE).append(" r ")
                 .append("LEFT JOIN ").append(WebConference.ROOM_SHARES_TABLE).append(" rs ON r.id = rs.resource_id ")
                 .append("LEFT JOIN ").append(WebConference.MEMBERS_TABLE).append(" m ON (m.id = rs.member_id AND m.group_id IS NOT NULL) ")
@@ -41,8 +41,7 @@ public class DefaultRoomService implements RoomService {
 
     @Override
     public void get(String id, Handler<Either<String, JsonObject>> handler) {
-        String query = "SELECT id, name, moderator_pw, attendee_pw, active_session, owner, structure, collab, opener " +
-                "FROM " + WebConference.ROOM_TABLE + " WHERE id = ?;";
+        String query = "SELECT * FROM " + WebConference.ROOM_TABLE + " WHERE id = ?;";
         JsonArray params = new JsonArray().add(id);
         Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(evt -> {
             if (evt.isLeft()) {
@@ -93,7 +92,7 @@ public class DefaultRoomService implements RoomService {
     @Override
     public void update(String id, JsonObject room, boolean isPublic, Handler<Either<String, JsonObject>> handler) {
         String public_link = isPublic ? (WebConference.publicUrl + id) : null;
-        String query = "UPDATE " + WebConference.ROOM_TABLE + " SET name = ?, structure = ?, public_link = ? WHERE id = ? RETURNING *;";
+        String query = "UPDATE " + WebConference.ROOM_TABLE + " SET name = ?, structure = ?, collab = ?, opener = ?, public_link = ? WHERE id = ? RETURNING *;";
         JsonArray params = new JsonArray()
                 .add(room.getString("name"))
                 .add(room.getString("structure"))

@@ -205,7 +205,8 @@ public class RoomController extends ControllerHelper {
 
                     room.remove("opener");
                     room.put("opener", user.getUsername());
-                    roomService.update(room.getString("id"), room, room.getString("public_link").equals("null"), updateRoomEvent -> {
+                    boolean isRoomPublic = !Objects.isNull(room.getString("public_link"));
+                    roomService.update(room.getString("id"), room, isRoomPublic, updateRoomEvent -> {
                         if (updateRoomEvent.isLeft()) {
                             log.error("[WebConference@joinAsModerator] Failed to update room opener for room : " + room.getString("id"));
                             handler.handle(new Either.Left<>(updateRoomEvent.left().toString()));
@@ -389,7 +390,8 @@ public class RoomController extends ControllerHelper {
 	                        }
 	                        else {
                                 room.remove("opener");
-                                roomService.update(room.getString("id"), room, room.getString("public_link").equals("null"), updateRoomEvent -> {
+                                boolean isRoomPublic = !Objects.isNull(room.getString("public_link"));
+                                roomService.update(room.getString("id"), room, isRoomPublic, updateRoomEvent -> {
                                     if (updateRoomEvent.isLeft()) {
                                         log.error("[WebConference@end] Failed to update room opener for room : " + room.getString("id"));
                                         renderError(request);
@@ -696,7 +698,8 @@ public class RoomController extends ControllerHelper {
                 }
 
                 room.put("collab", isShared);
-                roomService.update(roomId, room, room.getString("public_link").equals("null"), updateEvent -> {
+                boolean isRoomPublic = !Objects.isNull(room.getString("public_link"));
+                roomService.update(roomId, room, isRoomPublic, updateEvent -> {
                     if (updateEvent.isLeft()) {
                         log.error("[WebConference@updateRoomCollabProp] Fail to update room : " + updateEvent.left().getValue());
                     }
