@@ -1,0 +1,42 @@
+{
+    "name": "{{webConferenceVersion}}",
+    "config": {
+        "main" : "fr.openent.webConference.WebConference",
+        "port" : 8088,
+        "app-name" : "Web-conference",
+        "app-address" : "/webconference",
+        "app-icon" : "Web-conference-large",
+        "app-displayName" : "webconference",
+        "host": "http://{{ host }}",
+        {% if overrideTheme %} "override-theme": {}, {% endif %}
+        "ssl" : false,
+        "sql": true,
+        "auto-redeploy": false,
+        "userbook-host": "http://{{ host }}",
+        "integration-mode" : "HTTP",
+        "app-registry.port" : 8012,
+        "mode" : "prod",
+        "entcore.port" : 8009,
+        {% if webConferenceHost is defined %}
+        "bigbluebutton": {
+            "host": "{{ webConferenceHost }}",
+            "api_endpoint": "{{ webConferenceEndPoint }}",
+            "secret": "{{ webConferenceSecret }}"
+        },
+        {% elif webConferenceMultiHost is defined %}
+        "bigbluebutton": {{ webConferenceMultiHost }},
+        {% endif %}
+        "allow-public-link": {{ bbbAllowPublicLink  | default('false') }},
+        "publicConf": {
+            "xiti": {
+                "ID_SERVICE": {
+                    "default": 19
+                },
+                "LIBELLE_SERVICE": {
+                    "default": "VISIOCONFERENCE"
+                },
+                "OUTIL": "BBB"
+            }
+        }
+    }
+}
