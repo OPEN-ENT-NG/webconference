@@ -40,7 +40,12 @@ public class WebConference extends BaseServer {
 		EventBus eb = getEventBus(vertx);
 
 		webconfConfig = config;
-		publicUrl = config.getJsonObject("bigbluebutton").getString("host") + "/public/rooms/";
+		if (config.getValue("bigbluebutton") instanceof JsonObject) {
+			publicUrl = config.getJsonObject("bigbluebutton").getString("host") + "/public/rooms/";
+		} else {
+			publicUrl = config.getJsonArray("bigbluebutton").getJsonObject(0).getString("host") + "/public/rooms/";
+		}
+
 
 		EventStore eventStore = EventStoreFactory.getFactory().getEventStore(WebConference.class.getSimpleName());
 
