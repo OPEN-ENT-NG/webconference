@@ -12,6 +12,7 @@ export interface IRoom {
     structure: string
     owner_id?: string
     collab?: boolean
+    allow_waiting_room : boolean
 }
 
 export class Room implements Shareable, IRoom  {
@@ -30,6 +31,7 @@ export class Room implements Shareable, IRoom  {
     owner_id?: string;
     collab?: boolean
     opener?: string;
+    allow_waiting_room:boolean;
 
     constructor(structure?: string) {
         this.id = '';
@@ -42,6 +44,7 @@ export class Room implements Shareable, IRoom  {
         this.owner_id = null;
         this.collab = false;
         this.opener = '';
+        this.allow_waiting_room=false;
     }
 
     toJson() : Object {
@@ -55,7 +58,8 @@ export class Room implements Shareable, IRoom  {
             structure: this.structure,
             owner_id: this.owner_id,
             collab: this.collab,
-            opener: this.opener
+            opener: this.opener,
+            allow_waiting_room:this.allow_waiting_room,
         }
     }
 

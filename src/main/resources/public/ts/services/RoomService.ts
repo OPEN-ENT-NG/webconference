@@ -31,8 +31,8 @@ export const roomService: RoomService = {
         return data;
     },
 
-    async update({name, id, structure}, isPublic): Promise<Room> {
-        const {data} = await http.put(`/${appPrefix}/rooms/${id}/${isPublic}`, {name, structure});
+    async update(room, isPublic): Promise<Room> {
+        const {data} = await http.put(`/${appPrefix}/rooms/${room.id}/${isPublic}`, room);
         return data;
     },
 

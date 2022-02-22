@@ -42,6 +42,8 @@ import static org.entcore.common.http.response.DefaultResponseHandler.defaultRes
 public class RoomController extends ControllerHelper {
     static final String RESOURCE_NAME = "room";
     private static final String ROOM_MODULE = "WebConference-Room";
+    private static final Boolean GUEST = true;
+    private static final Boolean NOT_GUEST = false;
     private EventBus eb;
     private RoomService roomService;
     private SessionService sessionService = new DefaultSessionService();
@@ -135,9 +137,15 @@ public class RoomController extends ControllerHelper {
     @ApiDoc("Create a room")
     public void create(HttpServerRequest request) {
         boolean isPublic = Boolean.parseBoolean(request.getParam("isPublic"));
+
         String referer = request.headers().contains("referer") ? request.getHeader("referer") : request.scheme() + "://" + getHost(request) + "/webconference";
         final Handler<Either<String, JsonObject>> handler = eventHelper.onCreateResource(request, RESOURCE_NAME, defaultResponseHandler(request));
-        RequestUtils.bodyToJson(request, pathPrefix + "room", room -> UserUtils.getUserInfos(eb, request, user -> roomService.create(referer, room, isPublic, user, handler)));
+        RequestUtils.bodyToJson(request, pathPrefix + "room", room -> {
+
+            UserUtils.getUserInfos(eb, request, user -> {
+                roomService.create(referer, room, isPublic, user, handler);
+            });
+        });
     }
 
     @Put("/rooms/:id/:isPublic")
@@ -173,22 +181,21 @@ public class RoomController extends ControllerHelper {
         }
 
         if (room.containsKey("active_session") && room.getString("active_session") != null) {
-        	instance.isMeetingRunning(room.getString("active_session"), evt -> {
+            instance.isMeetingRunning(room.getString("active_session"), evt -> {
                 if (evt.isLeft()) handler.handle(new Either.Left<>(evt.left().getValue()));
                 else {
                     Boolean isRunning = evt.right().getValue();
                     if (isRunning)
-                        handler.handle(new Either.Right<>(instance.getRedirectURL(room.getString("active_session"), user.getUsername(), room.getString("moderator_pw"))));
+                        handler.handle(new Either.Right<>(instance.getRedirectURL(room.getString("active_session"), user.getUsername(), room.getString("moderator_pw"), NOT_GUEST)));
                     else {
                         room.remove("active_session");
                         joinAsModerator(room, user, locale, instance, handler);
                     }
                 }
             });
-        }
-        else {
+        } else {
             String sessionId = UUID.randomUUID().toString();
-            instance.create(room.getString("name"), sessionId, room.getString("id"), room.getString("moderator_pw"), room.getString("attendee_pw"), room.getString("uai", ""), locale, creationEvent -> {
+            instance.create(room.getString("name"), sessionId, room.getString("id"), room.getString("moderator_pw"), room.getString("attendee_pw"), room.getString("uai", ""), locale, room.getBoolean("allow_waiting_room"), creationEvent -> {
                 if (creationEvent.isLeft()) {
                     log.error("[WebConference@joinAsModerator] Failed to join room. Session creation failed.");
                     handler.handle(new Either.Left<>(creationEvent.left().getValue()));
@@ -213,11 +220,11 @@ public class RoomController extends ControllerHelper {
                             return;
                         }
 
-                        handler.handle(new Either.Right<>(instance.getRedirectURL(sessionId, user.getUsername(), room.getString("moderator_pw"))));
-						if (Boolean.TRUE.equals(config.getBoolean("enable-old-events", true))) {
-							eventStore.createAndStoreEvent(Event.ROOM_CREATION.name(), user);
-						}
-						eventStore.createAndStoreEvent(Event.CREATE.name(), user, new JsonObject().put("resource-type", ROOM_MODULE).put("override-module", ROOM_MODULE));
+                        handler.handle(new Either.Right<>(instance.getRedirectURL(sessionId, user.getUsername(), room.getString("moderator_pw"), NOT_GUEST)));
+                        if (Boolean.TRUE.equals(config.getBoolean("enable-old-events", true))) {
+                            eventStore.createAndStoreEvent(Event.ROOM_CREATION.name(), user);
+                        }
+                        eventStore.createAndStoreEvent(Event.CREATE.name(), user, new JsonObject().put("resource-type", ROOM_MODULE).put("override-module", ROOM_MODULE));
                     });
                 });
             });
@@ -227,12 +234,12 @@ public class RoomController extends ControllerHelper {
     private void joinAsAttendee(JsonObject room, UserInfos user, String locale, final RoomProvider instance, Handler<Either<String, String>> handler) {
         String activeSessionId = room.getString("active_session");
         if (activeSessionId != null) {
-        	instance.isMeetingRunning(activeSessionId, evt -> {
+            instance.isMeetingRunning(activeSessionId, evt -> {
                 if (evt.isLeft()) handler.handle(new Either.Left<>(evt.left().getValue()));
                 else {
                     Boolean isRunning = evt.right().getValue();
                     if (isRunning) {
-                        String url = instance.getRedirectURL(activeSessionId, user.getUsername(), room.getString("attendee_pw"));
+                        String url = instance.getRedirectURL(activeSessionId, user.getUsername(), room.getString("attendee_pw"), GUEST);
                         instance.join(url, canJoinEvent -> {
                             if (canJoinEvent.isLeft()) {
                                 log.error("[WebConference@joinAsAttendee] Meeting joining checking failed.");
@@ -242,15 +249,13 @@ public class RoomController extends ControllerHelper {
 
                             handler.handle(new Either.Right<>(url));
                         });
-                    }
-                    else {
+                    } else {
                         room.remove("active_session");
                         joinAsAttendee(room, user, locale, instance, handler);
                     }
                 }
             });
-        }
-        else {
+        } else {
             handler.handle(new Either.Right<>(""));
         }
     }
@@ -265,11 +270,11 @@ public class RoomController extends ControllerHelper {
                 renderError(request);
                 return;
             }
-            RoomProviderPool.getSingleton().getInstance(request, user).setHandler( ar -> {
+            RoomProviderPool.getSingleton().getInstance(request, user).setHandler(ar -> {
                 RoomProvider instance = ar.result();
-                if ( instance==null ) {
-                	log.error("[WebConference@join] Failed to get a video provider instance.");
-                	renderError(request);
+                if (instance == null) {
+                    log.error("[WebConference@join] Failed to get a video provider instance.");
+                    renderError(request);
                     return;
                 }
 
@@ -310,7 +315,7 @@ public class RoomController extends ControllerHelper {
 
                 String roomId = room.getString("id");
                 roomService.getUsersShared(roomId, usersShared -> {
-                    if ( usersShared.isLeft()) {
+                    if (usersShared.isLeft()) {
                         log.error("[WebConference@join] Failed to get users with shared rights on room " + roomId);
                         renderError(request);
                         return;
@@ -379,16 +384,14 @@ public class RoomController extends ControllerHelper {
 
                 instance.end(activeSession, moderatorPW, endEvt -> {
                     if (endEvt.isLeft()) {
-	                    log.error("[WebConference@end] Failed to end session " + activeSession);
-	                    renderError(request);
-	                }
-                    else {
-	                    sessionService.end(activeSession, event -> {
-	                        if (event.isLeft()) {
-	                            log.error("[WebConference@end] Failed to end sql session " + activeSession, event.left().getValue());
-	                            renderError(request);
-	                        }
-	                        else {
+                        log.error("[WebConference@end] Failed to end session " + activeSession);
+                        renderError(request);
+                    } else {
+                        sessionService.end(activeSession, event -> {
+                            if (event.isLeft()) {
+                                log.error("[WebConference@end] Failed to end sql session " + activeSession, event.left().getValue());
+                                renderError(request);
+                            } else {
                                 room.remove("opener");
                                 boolean isRoomPublic = !Objects.isNull(room.getString("public_link"));
                                 roomService.update(room.getString("id"), room, isRoomPublic, updateRoomEvent -> {
@@ -399,11 +402,11 @@ public class RoomController extends ControllerHelper {
 
                                     noContent(request);
                                 });
-	                        }
-	                    });
-	                }
-	            });
-           	});
+                            }
+                        });
+                    }
+                });
+            });
         });
     }
 
@@ -488,8 +491,7 @@ public class RoomController extends ControllerHelper {
                     if (getMeetingInfoEvt.isLeft()) {
                         log.error("[WebConference@getMeetingInfos] Failed to get meeting infos session " + activeSession);
                         renderError(request);
-                    }
-                    else {
+                    } else {
                         renderJson(request, getMeetingInfoEvt.right().getValue());
                     }
                 });
@@ -649,8 +651,7 @@ public class RoomController extends ControllerHelper {
                                     Renders.renderJson(request, error, 400);
                                 }
                             });
-                        }
-                        else {
+                        } else {
                             log.error("[WebConference@getSharedWithMe] Fail to get user's shared rights");
                         }
                     });
@@ -676,7 +677,7 @@ public class RoomController extends ControllerHelper {
 
                     while (!isShared && j < values.size()) { // Iterate over each pair id-actions
                         if (values.get(j) instanceof List) {
-                            List<String> actions = (ArrayList)(values.get(j));
+                            List<String> actions = (ArrayList) (values.get(j));
 
                             int k = 0;
                             while (!isShared && k < actions.size()) { // Iterate over each action for an id

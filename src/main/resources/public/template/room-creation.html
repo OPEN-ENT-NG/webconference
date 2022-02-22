@@ -25,6 +25,15 @@
             <i18n>webconference.room.generate.public.link</i18n>
         </label>
     </div>
+
+    <div class="row">
+        <label for="waiting-room" class="cell twelve">
+            <input type="checkbox" class="twelve" id="waiting-room" ng-model="vm.room.allow_waiting_room" ng-checked="vm.room.allow_waiting_room">
+            <i18n>webconference.room.generate.waiting.room</i18n>
+        </label>
+    </div>
+
+
     <div class="row">
         <div class="right-magnet">
             <button ng-click="vm.createRoom(vm.room, vm.generate_public_link)" ng-if="!vm.room.id">

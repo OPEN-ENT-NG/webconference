@@ -3,6 +3,7 @@
   "webconference.room.create": "Créer une salle",
   "webconference.room.name": "Nom de la salle",
   "webconference.room.generate.public.link": "Générer un lien public",
+  "webconference.room.generate.waiting.room": "Activer la salle d'attente",
   "webconference.create": "Créer",
   "webconference.update": "Modifier",
   "webconference.cancel": "Annuler",

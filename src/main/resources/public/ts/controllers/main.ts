@@ -259,13 +259,14 @@ export const mainController = ng.controller('MainController',
 		};
 
 		vm.updateRoom = async (room, isPublic: boolean) => {
-			const { name, id, structure, public_link } = await RoomService.update(room, isPublic);
+			const data = await RoomService.update(room, isPublic);
 			vm.room = initEmptyRoom();
 			vm.rooms.all.forEach(aRoom => {
-				if (aRoom.id === id) {
-					aRoom.name = name;
-					aRoom.structure = structure;
-					aRoom.public_link = public_link;
+				if (aRoom.id === data.id) {
+					aRoom.name = data.name;
+					aRoom.structure = data.structure;
+					aRoom.public_link = data.public_link;
+					aRoom.allow_waiting_room = data.allow_waiting_room;
 				}
 			});
 			vm.closeRoomLightbox();
