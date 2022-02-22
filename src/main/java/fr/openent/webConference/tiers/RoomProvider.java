@@ -8,8 +8,8 @@ public interface RoomProvider {
 
 	String getSource();
 
-	void create(String name, String meetingID, String roomID, String moderatorPW, String attendeePW, String structure, String locale,
-			Handler<Either<String, String>> handler);
+	void create(String name, String meetingID, String roomID, String moderatorPW, String attendeePW, String structure,
+				String locale, Boolean waitingRoom, Handler<Either<String, String>> handler);
 
 	void join(String url, Handler<Either<String, String>> handler);
 
@@ -17,7 +17,7 @@ public interface RoomProvider {
 
 	void isMeetingRunning(String meetingId, Handler<Either<String, Boolean>> handler);
 
-	String getRedirectURL(String sessionID, String userDisplayName, String password);
+	String getRedirectURL(String sessionID, String userDisplayName, String password, Boolean guest);
 
 	void addWebHook(String webhook, Handler<Either<String, String>> handler);
 
