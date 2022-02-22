@@ -149,11 +149,14 @@ public class BigBlueButton implements RoomProvider {
     }
 
     @Override
-	public void create(String name, String meetingID, String roomID, String moderatorPW, String attendeePW, String structure, String locale, Boolean waitingRoom, Handler<Either<String, String>> handler) {
+	public void create(String name, String meetingID, String roomID, String moderatorPW, String attendeePW, String structure, String locale, Boolean waitingRoom, String streamURL, Handler<Either<String, String>> handler) {
         String encodedName = encodeParams(name);
         String guestPolicy = waitingRoom ? "ASK_MODERATOR" : "ALWAYS_ACCEPT";
 
         String parameters = "name=" + encodedName + "&meetingID=" + meetingID + "&moderatorPW=" + moderatorPW + "&attendeePW=" + attendeePW + "&guestPolicy=" + guestPolicy + "&endWhenNoModerator=" + END_NO_MODERATOR + "&endWhenNoModeratorDelayInMinutes=" + DELAY_END;
+        if(streamURL != null) {
+            parameters += "&streamURL=" + encodeParams(streamURL);
+        }
         String checksum = checksum(Actions.CREATE + parameters + this.secret);
         parameters = parameters + "&checksum=" + checksum;
         HttpClientRequest request = httpClient.getAbs(this.host + this.apiEndpoint + "/" + Actions.CREATE + "?" + parameters, response -> {
@@ -286,6 +289,42 @@ public class BigBlueButton implements RoomProvider {
                     log.error("[WebConference@BigBlueButton] Failed to end meeting. An error is catch by exception handler. Meetind : " + meetingId, throwable);
                     handler.handle(new Either.Left<>(throwable.toString()));
                 });
+            }
+        });
+        request.putHeader("Client-Server", this.source);
+        request.end();
+    }
+
+    @Override
+    public void startStreaming(String meetingId, Handler<Either<String, Boolean>> handler) {
+        String parameters = "meetingID=" + meetingId;
+        String checksum = checksum(Actions.START_STREAM + parameters + this.secret);
+        parameters = parameters + "&checksum=" + checksum;
+        HttpClientRequest request = httpClient.getAbs(this.host + this.apiEndpoint + "/" + Actions.START_STREAM + "?" + parameters, response -> {
+            if (response.statusCode() != 200) {
+                String message = "[WebConference@BigBlueButton] Failed starting streaming with meeting id : " + meetingId;
+                log.error(message);
+                handler.handle(new Either.Left<>(message));
+            } else {
+                handler.handle(new Either.Right<>(true));
+            }
+        });
+        request.putHeader("Client-Server", this.source);
+        request.end();
+    }
+
+    @Override
+    public void stopStreaming(String meetingId, Handler<Either<String, Boolean>> handler) {
+        String parameters = "meetingID=" + meetingId;
+        String checksum = checksum(Actions.STOP_STREAM + parameters + this.secret);
+        parameters = parameters + "&checksum=" + checksum;
+        HttpClientRequest request = httpClient.getAbs(this.host + this.apiEndpoint + "/" + Actions.STOP_STREAM + "?" + parameters, response -> {
+            if (response.statusCode() != 200) {
+                String message = "[WebConference@BigBlueButton] Failed stopping streaming with meeting id : " + meetingId;
+                log.error(message);
+                handler.handle(new Either.Left<>(message));
+            } else {
+                handler.handle(new Either.Right<>(true));
             }
         });
         request.putHeader("Client-Server", this.source);

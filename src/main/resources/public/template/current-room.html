@@ -10,6 +10,11 @@
                         <i18n ng-show="!vm.hasActiveSession(vm.selectedRoom)">webconference.room.start</i18n>
                         <i18n ng-show="vm.hasActiveSession(vm.selectedRoom)">webconference.room.join</i18n>
                     </button>
+                    <button style="margin-left: 5px" ng-if="vm.hasActiveSession(vm.selectedRoom)" ng-disabled="vm.selectedRoom.isLoadingStreaming" ng-click="vm.updateStream(vm.selectedRoom)" class="cancel">
+                        <i18n ng-show="vm.selectedRoom.isStreaming">webconference.room.streaming.stop</i18n>
+                        <i18n ng-show="!vm.selectedRoom.isStreaming">webconference.room.streaming.start</i18n>
+                        <i class="loading" ng-if="vm.selectedRoom.isLoadingStreaming"></i>
+                    </button>
                     <button style="margin-left: 5px" ng-click="vm.checkEndCurrentRoom(vm.selectedRoom)" class="cancel"
                             ng-show="vm.hasActiveSession(vm.selectedRoom)">
                         <i18n>webconference.room.end</i18n>
@@ -106,6 +111,10 @@
                             <button ng-click="vm.startCurrentRoom()">
                                 <i18n ng-show="!vm.hasActiveSession(vm.selectedRoom)">webconference.room.start</i18n>
                                 <i18n ng-show="vm.hasActiveSession(vm.selectedRoom)">webconference.room.join</i18n>
+                            </button>
+                            <button style="margin-left: 5px" ng-if="vm.hasActiveSession(vm.selectedRoom)" ng-click="vm.updateStream(vm.selectedRoom)">
+                                <i18n ng-show="vm.selectedRoom.isStreaming">webconference.room.streaming.stop</i18n>
+                                <i18n ng-show="!vm.selectedRoom.isStreaming">webconference.room.streaming.start</i18n>
                             </button>
                             <button style="margin-left: 5px" ng-click="vm.checkEndCurrentRoom(vm.selectedRoom)" class="cancel"
                                     ng-show="vm.hasActiveSession(vm.selectedRoom)">

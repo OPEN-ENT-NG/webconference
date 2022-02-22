@@ -9,11 +9,15 @@ public interface RoomProvider {
 	String getSource();
 
 	void create(String name, String meetingID, String roomID, String moderatorPW, String attendeePW, String structure,
-				String locale, Boolean waitingRoom, Handler<Either<String, String>> handler);
+				String locale, Boolean waitingRoom, String streamURL, Handler<Either<String, String>> handler);
 
 	void join(String url, Handler<Either<String, String>> handler);
 
 	void end(String meetingId, String moderatorPW, Handler<Either<String, Boolean>> handler);
+
+    void startStreaming(String meetingId, Handler<Either<String, Boolean>> handler);
+
+	void stopStreaming(String meetingId, Handler<Either<String, Boolean>> handler);
 
 	void isMeetingRunning(String meetingId, Handler<Either<String, Boolean>> handler);
 

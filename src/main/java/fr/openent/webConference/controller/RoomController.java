@@ -137,11 +137,9 @@ public class RoomController extends ControllerHelper {
     @ApiDoc("Create a room")
     public void create(HttpServerRequest request) {
         boolean isPublic = Boolean.parseBoolean(request.getParam("isPublic"));
-
         String referer = request.headers().contains("referer") ? request.getHeader("referer") : request.scheme() + "://" + getHost(request) + "/webconference";
         final Handler<Either<String, JsonObject>> handler = eventHelper.onCreateResource(request, RESOURCE_NAME, defaultResponseHandler(request));
         RequestUtils.bodyToJson(request, pathPrefix + "room", room -> {
-
             UserUtils.getUserInfos(eb, request, user -> {
                 roomService.create(referer, room, isPublic, user, handler);
             });
@@ -155,7 +153,9 @@ public class RoomController extends ControllerHelper {
     public void update(HttpServerRequest request) {
         String id = request.getParam("id");
         boolean isPublic = Boolean.parseBoolean(request.getParam("isPublic"));
-        RequestUtils.bodyToJson(request, pathPrefix + "room", room -> roomService.update(id, room, isPublic, defaultResponseHandler(request)));
+        RequestUtils.bodyToJson(request, pathPrefix + "room", room -> {
+            roomService.update(id, room, isPublic, defaultResponseHandler(request));
+        });
     }
 
     @Delete("/rooms/:id")
@@ -195,7 +195,8 @@ public class RoomController extends ControllerHelper {
             });
         } else {
             String sessionId = UUID.randomUUID().toString();
-            instance.create(room.getString("name"), sessionId, room.getString("id"), room.getString("moderator_pw"), room.getString("attendee_pw"), room.getString("uai", ""), locale, room.getBoolean("allow_waiting_room"), creationEvent -> {
+            String urlStream = room.getBoolean("allow_streaming") ? room.getString("streaming_link") + "/" + room.getString("streaming_key") : null;
+            instance.create(room.getString("name"), sessionId, room.getString("id"), room.getString("moderator_pw"), room.getString("attendee_pw"), room.getString("uai", ""), locale, room.getBoolean("allow_waiting_room"), urlStream, creationEvent -> {
                 if (creationEvent.isLeft()) {
                     log.error("[WebConference@joinAsModerator] Failed to join room. Session creation failed.");
                     handler.handle(new Either.Left<>(creationEvent.left().getValue()));
@@ -724,4 +725,81 @@ public class RoomController extends ControllerHelper {
             }
         });
     }
+
+    //Streaming API
+
+    @Get("/rooms/:id/stream/start")
+    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @ApiDoc("Start stream by room id")
+    public void startStream(HttpServerRequest request) {
+        String id = request.getParam("id");
+        UserUtils.getUserInfos(eb, request, user -> roomService.get(id, event -> {
+            if (event.isLeft()) {
+                renderError(request);
+                return;
+            }
+            RoomProviderPool.getSingleton().getInstance(request, user).setHandler(ar -> {
+                RoomProvider instance = ar.result();
+                if (instance == null) {
+                    log.error("[WebConference@join] Failed to get a video provider instance.");
+                    renderError(request);
+                    return;
+                }
+
+                JsonObject room = event.right().getValue();
+                String activeSession = room.getString("active_session");
+
+                if (activeSession == null) {
+                    noContent(request);
+                    return;
+                }
+                instance.startStreaming(activeSession, startStreamingEvent -> {
+                    if (startStreamingEvent.isLeft()) {
+                        log.error("[WebConference@list] Failed to check meeting running meeting : " + activeSession);
+                        renderError(request);
+                    }
+                    renderJson(request, new JsonObject());
+                });
+
+            });
+        }));
+    }
+
+    @Get("/rooms/:id/stream/stop")
+    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @ApiDoc("Stop stream by room id")
+    public void stopStream(HttpServerRequest request) {
+        String id = request.getParam("id");
+        UserUtils.getUserInfos(eb, request, user -> roomService.get(id, event -> {
+            if (event.isLeft()) {
+                renderError(request);
+                return;
+            }
+            RoomProviderPool.getSingleton().getInstance(request, user).setHandler(ar -> {
+                RoomProvider instance = ar.result();
+                if (instance == null) {
+                    log.error("[WebConference@join] Failed to get a video provider instance.");
+                    renderError(request);
+                    return;
+                }
+
+                JsonObject room = event.right().getValue();
+                String activeSession = room.getString("active_session");
+
+                if (activeSession == null) {
+                    noContent(request);
+                    return;
+                }
+                instance.stopStreaming(activeSession, stopStreamingEvent -> {
+                    if (stopStreamingEvent.isLeft()) {
+                        log.error("[WebConference@list] Failed to check meeting running meeting : " + activeSession);
+                        renderError(request);
+                    }
+                    renderJson(request, new JsonObject());
+                });
+
+            });
+        }));
+    }
+
 }

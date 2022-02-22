@@ -1,47 +1,79 @@
 <lightbox show="vm.lightbox.room" on-close="vm.closeRoomLightbox()">
-    <h3 class="row">
-        <i18n>webconference.room.create</i18n>
-    </h3>
-    <div class="row" ng-show="vm.structures.length > 1">
-        <label for="room-structure" class="cell three twelve-mobile">
-            <i18n>webconference.structure</i18n>
-        </label>
-        <div class="cell nine twelve-mobile">
-            <select id="room-structure" ng-model="vm.room.structure" class="twelve-mobile"
-                    ng-options="structure.id as structure.name for structure in vm.structures"></select>
+    <div class="padding-10">
+        <h3 class="row">
+            <i18n>webconference.room.create</i18n>
+        </h3>
+        <div class="row" ng-show="vm.structures.length > 1">
+            <label for="room-structure" class="cell three twelve-mobile">
+                <i18n>webconference.structure</i18n>
+            </label>
+            <div class="cell six twelve-mobile">
+                <select id="room-structure" ng-model="vm.room.structure" class="twelve-mobile"
+                        ng-options="structure.id as structure.name for structure in vm.structures"></select>
+            </div>
         </div>
-    </div>
-    <div class="row">
-        <label for="room-name" class="cell three twelve-mobile">
-            <i18n>webconference.room.name</i18n>
-        </label>
-        <div class="cell nine twelve-mobile">
-            <input type="text" class="twelve" id="room-name" ng-model="vm.room.name" maxlength="50">
+        <div class="row padding-bottom-15">
+            <label for="room-name" class="cell three twelve-mobile">
+                <i18n>webconference.room.name</i18n>
+            </label>
+            <div class="cell nine twelve-mobile">
+                <input type="text" class="twelve" id="room-name" ng-model="vm.room.name" maxlength="50">
+            </div>
         </div>
-    </div>
-    <div class="row" ng-if="vm.allowPublicLink">
-        <label for="room-public-link" class="cell twelve">
-            <input type="checkbox" class="twelve" id="room-public-link" ng-model="vm.generate_public_link" ng-checked="!!vm.room.public_link">
-            <i18n>webconference.room.generate.public.link</i18n>
-        </label>
-    </div>
-
-    <div class="row">
-        <label for="waiting-room" class="cell twelve">
-            <input type="checkbox" class="twelve" id="waiting-room" ng-model="vm.room.allow_waiting_room" ng-checked="vm.room.allow_waiting_room">
-            <i18n>webconference.room.generate.waiting.room</i18n>
-        </label>
-    </div>
-
-
-    <div class="row">
-        <div class="right-magnet">
-            <button ng-click="vm.createRoom(vm.room, vm.generate_public_link)" ng-if="!vm.room.id">
-                <i18n>webconference.create</i18n>
-            </button>
-            <button ng-click="vm.updateRoom(vm.room, vm.generate_public_link)" ng-if="vm.room.id">
-                <i18n>webconference.update</i18n>
-            </button>
+        <div class="row padding-bottom-15">
+        <span class="font-bold">
+            <i18n>webconference.room.options</i18n>
+        </span>
+        </div>
+        <div class="row padding-bottom-15" ng-if="vm.allowPublicLink">
+            <label for="room-public-link" class="cell twelve">
+                <input type="checkbox" class="twelve" id="room-public-link" ng-model="vm.generate_public_link"
+                       ng-checked="!!vm.room.public_link">
+                <i18n>webconference.room.generate.public.link</i18n>
+            </label>
+        </div>
+        <div class="row padding-bottom-15">
+            <label for="waiting-room" class="cell twelve">
+                <input type="checkbox" class="twelve" id="waiting-room" ng-model="vm.room.allow_waiting_room"
+                       ng-checked="vm.room.allow_waiting_room">
+                <i18n>webconference.room.generate.waiting.room</i18n>
+            </label>
+        </div>
+        <div ng-if="vm.hasWorkflowStream()" class="row">
+            <label for="streaming" class="cell twelve ">
+                <input type="checkbox" class="twelve" id="streaming" ng-model="vm.room.allow_streaming"
+                       ng-checked="vm.room.allow_streaming">
+                <i18n>webconference.room.generate.streaming</i18n>
+            </label>
+            <div ng-if="vm.room.allow_streaming"
+                 class="cell nine twelve-mobile margin-left-25 padding-top-15">
+                <div class="row">
+                    <label for="streaming-link" class="cell four twelve-mobile">
+                        <i18n>webconference.room.generate.streaming.link</i18n>
+                    </label>
+                    <div class="cell seven twelve-mobile">
+                        <input type="text" class="twelve" id="streaming-link" ng-model="vm.room.streaming_link">
+                    </div>
+                </div>
+                <div class="row">
+                    <label for="streaming-key" class="cell four twelve-mobile">
+                        <i18n>webconference.room.generate.streaming.key</i18n>
+                    </label>
+                    <div class="cell seven twelve-mobile">
+                        <input type="text" class="twelve" id="streaming-key" ng-model="vm.room.streaming_key">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="right-magnet">
+                <button ng-click="vm.createRoom(vm.room, vm.generate_public_link)" ng-disabled="vm.isRoomFormEmpty(vm.room)" ng-if="!vm.room.id">
+                    <i18n>webconference.create</i18n>
+                </button>
+                <button ng-click="vm.updateRoom(vm.room, vm.generate_public_link)" ng-disabled="vm.isRoomFormEmpty(vm.room)" ng-if="vm.room.id">
+                    <i18n>webconference.update</i18n>
+                </button>
+            </div>
         </div>
     </div>
 </lightbox>

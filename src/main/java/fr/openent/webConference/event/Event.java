@@ -4,5 +4,6 @@ public enum Event {
     ACCESS,
 	CREATE,
     ROOM_CREATION,
-    ROOM_ACCESS
+    ROOM_ACCESS,
+    STREAM_CREATION,
 }
