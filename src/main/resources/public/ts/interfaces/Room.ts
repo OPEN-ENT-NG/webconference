@@ -12,10 +12,14 @@ export interface IRoom {
     structure: string
     owner_id?: string
     collab?: boolean
-    allow_waiting_room : boolean
+    allow_waiting_room: boolean
+    allow_streaming: boolean
+    streaming_link: string
+    streaming_key: string
+    isStreaming: boolean
 }
 
-export class Room implements Shareable, IRoom  {
+export class Room implements Shareable, IRoom {
     shared: any;
     owner: { userId: string; displayName: string };
     myRights: any;
@@ -31,7 +35,12 @@ export class Room implements Shareable, IRoom  {
     owner_id?: string;
     collab?: boolean
     opener?: string;
-    allow_waiting_room:boolean;
+    allow_waiting_room: boolean;
+    allow_streaming: boolean;
+    streaming_link: string;
+    streaming_key: string;
+    isStreaming: boolean;
+    isLoadingStreaming: boolean;
 
     constructor(structure?: string) {
         this.id = '';
@@ -44,10 +53,15 @@ export class Room implements Shareable, IRoom  {
         this.owner_id = null;
         this.collab = false;
         this.opener = '';
-        this.allow_waiting_room=false;
+        this.allow_waiting_room = false;
+        this.allow_streaming = false;
+        this.isStreaming = false;
+        this.isLoadingStreaming = false;
+        this.streaming_link = '';
+        this.streaming_key = '';
     }
 
-    toJson() : Object {
+    toJson(): Object {
         return {
             id: this.id,
             name: this.name,
@@ -59,11 +73,14 @@ export class Room implements Shareable, IRoom  {
             owner_id: this.owner_id,
             collab: this.collab,
             opener: this.opener,
-            allow_waiting_room:this.allow_waiting_room,
+            allow_waiting_room: this.allow_waiting_room,
+            allow_streaming: this.allow_streaming,
+            streaming_link: this.streaming_link,
+            steaming_key: this.streaming_key
         }
     }
 
-    generateShareRights = () : void => {
+    generateShareRights = (): void => {
         this._id = this.id;
         this.owner = {userId: this.owner_id, displayName: this.name};
         this.myRights = new Rights<Room>(this);
@@ -73,7 +90,7 @@ export class Room implements Shareable, IRoom  {
 export class Rooms {
     all: Room[];
 
-    sync = async () : Promise<void> => {
+    sync = async (): Promise<void> => {
         this.all = [];
         try {
             let rooms: any = await roomService.list();
@@ -85,7 +102,7 @@ export class Rooms {
         }
     };
 
-    setResourceRights = async () : Promise<void> => {
+    setResourceRights = async (): Promise<void> => {
         let dataRigths = await roomService.getAllMyRoomRights();
         let ids = this.all.map(room => room.id);
         for (let i = 0; i < ids.length; i++) {

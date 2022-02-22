@@ -3,6 +3,7 @@ import {IStructure, Room, Rooms} from '../interfaces';
 import * as Clipboard from 'clipboard';
 import {roomService} from "../services";
 import http from "axios";
+import {ALLOWED_STREAM} from "../core/enum/allowedStream";
 
 declare const window: any;
 
@@ -36,6 +37,7 @@ interface ViewModel {
 
 	hasWorkflowZimbra(): boolean;
 	hasWorkflowMessagerie(): boolean;
+	hasWorkflowStream(): boolean;
 	hasShareRightManager(room : Room): boolean;
 	hasShareRightContrib(room : Room): boolean;
 
@@ -57,11 +59,14 @@ interface ViewModel {
 	deleteRoom(room: Room);
 	sendInvitation(room: Room);
 	startCurrentRoom();
+	isRoomFormEmpty(room: Room): boolean;
 	checkEndCurrentRoom(room: Room);
 	endCurrentRoom();
 
 	updateInvitees(data: any[]): Promise<void>;
+	hasActiveStreaming(room: Room): boolean;
 	hasActiveSession(room: Room): boolean;
+	updateStream(room: Room): Promise<void>;
 	isRunning(room: Room): Promise<boolean>;
 	refresh();
 
@@ -147,6 +152,10 @@ export const mainController = ng.controller('MainController',
 
 		vm.hasWorkflowMessagerie = function () {
 			return model.me.hasWorkflow('org.entcore.conversation.controllers.ConversationController|view');
+		};
+
+		vm.hasWorkflowStream = function () {
+			return model.me.hasWorkflow(Behaviours.applicationsBehaviours['web-conference'].rights.workflow.streaming);
 		};
 
 		vm.hasShareRightManager = (room : Room) => {
@@ -249,24 +258,34 @@ export const mainController = ng.controller('MainController',
 		};
 
 		vm.createRoom = async (room: Room, isPublic: boolean = false) => {
+			if(!checkAllowStreamingLink(room)) {
+				notify.error(idiom.translate('webconference.room.streaming.allowed.error'));
+				return;
+			}
 			const { id } = await RoomService.create(room, isPublic);
 			await vm.rooms.sync();
 			vm.room = initEmptyRoom();
 			vm.selectedRoom = vm.rooms.all[vm.rooms.all.map(r => r.id).indexOf(id)];
 			vm.closeRoomLightbox();
-
 			$scope.safeApply();
 		};
 
 		vm.updateRoom = async (room, isPublic: boolean) => {
+			if(!checkAllowStreamingLink(room)) {
+				notify.error(idiom.translate('webconference.room.streaming.allowed.error'));
+				return;
+			}
 			const data = await RoomService.update(room, isPublic);
 			vm.room = initEmptyRoom();
-			vm.rooms.all.forEach(aRoom => {
-				if (aRoom.id === data.id) {
-					aRoom.name = data.name;
-					aRoom.structure = data.structure;
-					aRoom.public_link = data.public_link;
-					aRoom.allow_waiting_room = data.allow_waiting_room;
+			vm.rooms.all.forEach(room => {
+				if (room.id === data.id) {
+					room.name = data.name;
+					room.structure = data.structure;
+					room.public_link = data.public_link;
+					room.allow_waiting_room = data.allow_waiting_room;
+					room.allow_streaming = data.allow_streaming;
+					room.streaming_link = data.streaming_link;
+					room.streaming_key = data.streaming_key;
 				}
 			});
 			vm.closeRoomLightbox();
@@ -301,6 +320,7 @@ export const mainController = ng.controller('MainController',
 
 		vm.startCurrentRoom = async () => {
 			let isRunning = await vm.isRunning(vm.selectedRoom);
+			vm.selectedRoom.isStreaming = vm.hasActiveStreaming(vm.selectedRoom);
 			if (isRunning && !vm.hasActiveSession(vm.selectedRoom)) {
 				let tempId = vm.selectedRoom.id;
 				notify.info(idiom.translate('webconference.room.join.opened'));
@@ -385,9 +405,32 @@ export const mainController = ng.controller('MainController',
 
 		vm.hasActiveSession = (room) : boolean => room && 'active_session' in room && room.active_session !== null;
 
+		vm.hasActiveStreaming = (room) : boolean => room && 'allow_streaming' in room && room.allow_streaming;
+
 		vm.isRunning = async (room) : Promise<boolean> => {
 			let {running} = await RoomService.isMeetingRunning(vm.selectedRoom);
 			return running;
+		}
+
+		vm.updateStream = async (room): Promise<void> => {
+			room.isLoadingStreaming = true;
+			$scope.safeApply();
+			if (room.isStreaming) {
+				await RoomService.stopStream(vm.selectedRoom);
+			} else {
+				await RoomService.startStream(vm.selectedRoom);
+			}
+			room.isStreaming = !room.isStreaming;
+			room.isLoadingStreaming = false;
+			$scope.safeApply();
+		}
+
+		vm.isRoomFormEmpty = (room): boolean => {
+			let isEmpty = false;
+			if((!!!$scope.vm.room.name || $scope.vm.room.allow_streaming) && (!!!$scope.vm.room.streaming_link || !!!$scope.vm.room.streaming_key)) {
+				isEmpty = true;
+			}
+			return isEmpty;
 		}
 
 		vm.refresh = () => document.location.reload();
@@ -411,6 +454,22 @@ export const mainController = ng.controller('MainController',
 			const { data } = await http.get(`/${appPrefix}/allowsPublic`);
 			vm.allowPublicLink = data["allow_public_link"];
 		}
+
+		const checkAllowStreamingLink = function (room: Room) : boolean {
+			let isAllowed: boolean = false;
+			if(room.allow_streaming) {
+				for (const stream_link in ALLOWED_STREAM) {
+					if(new RegExp(ALLOWED_STREAM[stream_link]).test(room.streaming_link)) {
+						isAllowed = true;
+					}
+				}
+			} else {
+				isAllowed = true;
+			}
+			return isAllowed;
+		}
+
+
 
 		init();
 	}]);

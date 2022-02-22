@@ -22,7 +22,7 @@ public class DefaultRoomService implements RoomService {
         StringBuilder query = new StringBuilder();
         JsonArray params = new JsonArray();
 
-        query.append("SELECT r.id, name, owner AS owner_id, sessions, link, public_link, allow_waiting_room, active_session, structure, collab, opener ")
+        query.append("SELECT r.id, name, owner AS owner_id, sessions, link, public_link, allow_waiting_room, allow_streaming, streaming_link, streaming_key, active_session, structure, collab, opener ")
                 .append("FROM ").append(WebConference.ROOM_TABLE).append(" r ")
                 .append("LEFT JOIN ").append(WebConference.ROOM_SHARES_TABLE).append(" rs ON r.id = rs.resource_id ")
                 .append("LEFT JOIN ").append(WebConference.MEMBERS_TABLE).append(" m ON (m.id = rs.member_id AND m.group_id IS NOT NULL) ")
@@ -59,8 +59,7 @@ public class DefaultRoomService implements RoomService {
             structureService.retrieveUAI(structure, uai -> {
                 if (uai.isLeft()) {
                     handler.handle(uai.left());
-                }
-                else {
+                } else {
                     room.put("uai", uai.right().getValue().getString("uai"));
                     handler.handle(new Either.Right<>(room));
                 }
@@ -75,7 +74,11 @@ public class DefaultRoomService implements RoomService {
         String attendeePW = UUID.randomUUID().toString();
         String link = referer + "/rooms/" + id + "/join";
         String public_link = isPublic ? (WebConference.publicUrl + id) : null;
-        String query = "INSERT INTO " + WebConference.ROOM_TABLE + " (id, name, owner, moderator_pw, attendee_pw, link, public_link, allow_waiting_room, structure) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING *;";
+        String query = "INSERT INTO " + WebConference.ROOM_TABLE +
+                " (id, name, owner, moderator_pw, attendee_pw, link, public_link, allow_waiting_room, allow_streaming," +
+                " streaming_link, streaming_key, structure)" +
+                " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)" +
+                " RETURNING *;";
         JsonArray params = new JsonArray()
                 .add(id)
                 .add(room.getString("name", ""))
@@ -85,6 +88,9 @@ public class DefaultRoomService implements RoomService {
                 .add(link)
                 .add(public_link)
                 .add(room.getBoolean("allow_waiting_room"))
+                .add(room.getBoolean("allow_streaming"))
+                .add(room.getString("streaming_link"))
+                .add(room.getString("streaming_key"))
                 .add(room.getString("structure", ""));
 
         Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
@@ -93,7 +99,11 @@ public class DefaultRoomService implements RoomService {
     @Override
     public void update(String id, JsonObject room, boolean isPublic, Handler<Either<String, JsonObject>> handler) {
         String public_link = isPublic ? (WebConference.publicUrl + id) : null;
-        String query = "UPDATE " + WebConference.ROOM_TABLE + " SET name = ?, structure = ?, collab = ?, opener = ?, public_link = ?, allow_waiting_room = ? WHERE id = ? RETURNING *;";
+        String query = "UPDATE " + WebConference.ROOM_TABLE +
+                " SET name = ?, structure = ?, collab = ?, opener = ?, public_link = ?, allow_waiting_room = ?," +
+                " allow_streaming = ?, streaming_link = ?, streaming_key = ?" +
+                " WHERE id = ?" +
+                " RETURNING *;";
         JsonArray params = new JsonArray()
                 .add(room.getString("name"))
                 .add(room.getString("structure"))
@@ -101,8 +111,10 @@ public class DefaultRoomService implements RoomService {
                 .add(room.getString("opener", null))
                 .add(public_link)
                 .add(room.getBoolean("allow_waiting_room"))
+                .add(room.getBoolean("allow_streaming", false))
+                .add(room.getString("streaming_link", null))
+                .add(room.getString("streaming_key", null))
                 .add(id);
-
         Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
     }
 

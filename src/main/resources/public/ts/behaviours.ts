@@ -9,7 +9,9 @@ const rights = {
             right: "fr-openent-webConference-controller-RoomController|initManagerSharingRight"
         }
     },
-    workflow: {}
+    workflow: {
+        streaming: "fr.openent.webConference.controller.StreamController|createStreaming"
+    }
 };
 
 Behaviours.register('web-conference', {

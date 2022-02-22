@@ -24,6 +24,7 @@ public class WebConference extends BaseServer {
 
 	public static final String VIEW_WORKFLOW = "webconference.view";
 	public static final String CREATE_WORKFLOW = "webconference.create";
+	public static final String STREAMING_WORKFLOW = "webconference.stream";
 
 	public static final String CONTRIB_SHARING_RIGHT = "webconference.contrib";
 	public static final String MANAGER_SHARING_RIGHT = "webconference.manager";
@@ -71,6 +72,7 @@ public class WebConference extends BaseServer {
 
 
 		addController(roomController);
+		addController(new StreamController(eb, eventStore));
 		addController(new SynchroController());
 		addController(new WebConferenceController(eventStore));
 		addController(new WebHookController());
