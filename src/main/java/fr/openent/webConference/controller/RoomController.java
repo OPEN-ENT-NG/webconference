@@ -10,6 +10,7 @@ import fr.openent.webConference.service.StructureService;
 import fr.openent.webConference.service.impl.DefaultRoomService;
 import fr.openent.webConference.service.impl.DefaultSessionService;
 import fr.openent.webConference.service.impl.DefaultStructureService;
+import fr.openent.webConference.service.impl.UserService;
 import fr.openent.webConference.tiers.RoomProvider;
 import fr.openent.webConference.tiers.RoomProviderPool;
 import fr.wseduc.rs.*;
@@ -35,7 +36,6 @@ import org.entcore.common.user.UserUtils;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static fr.wseduc.webutils.Utils.handlerToAsyncHandler;
 import static org.entcore.common.http.response.DefaultResponseHandler.arrayResponseHandler;
 import static org.entcore.common.http.response.DefaultResponseHandler.defaultResponseHandler;
 
@@ -48,14 +48,16 @@ public class RoomController extends ControllerHelper {
     private RoomService roomService;
     private SessionService sessionService = new DefaultSessionService();
     private StructureService structureService = new DefaultStructureService();
+    private UserService userService;
     private EventStore eventStore;
     private final EventHelper eventHelper;
 
     public RoomController(EventBus eb, EventStore eventStore) {
         this.eb = eb;
         this.eventStore = eventStore;
-        roomService = new DefaultRoomService();
+        this.roomService = new DefaultRoomService();
         this.eventHelper = new EventHelper(eventStore);
+        this.userService = new UserService(eb);
     }
 
     @SecuredAction(value = WebConference.CONTRIB_SHARING_RIGHT, type = ActionType.RESOURCE)
@@ -326,14 +328,28 @@ public class RoomController extends ControllerHelper {
                         authorizedUsers.add(usersShared.right().getValue().getJsonObject(i).getString("member_id"));
                     }
 
-                    String userId = user.getUserId();
-                    if (userId.equals(room.getString("owner")) || authorizedUsers.contains(userId))
-                        joinAsModerator(room, user, I18n.acceptLanguage(request), instance, joiningHandler);
-                    else joinAsAttendee(room, user, I18n.acceptLanguage(request), instance, joiningHandler);
+                    userService.getUsers(authorizedUsers, authorizedUsers, userEvent -> {
+                        String userId = user.getUserId();
+                        JsonArray usersJson = userEvent.right().getValue(); //get all users able to access and modify conference room
+                        JsonArray users = new JsonArray();
+
+                        for (int i = 0; i < usersJson.size(); ++i) {
+                            JsonObject userEach = usersJson.getJsonObject(i); // seperate each user into a JsonObject
+                            String idUser = userEach.getString("id"); // get their id and transform into string
+                            users.add(idUser);
+                        }
+
+                        if (userId.equals(room.getString("owner")) || users.contains(userId)) {
+                            joinAsModerator(room, user, I18n.acceptLanguage(request), instance, joiningHandler);
+                        } else {
+                            joinAsAttendee(room, user, I18n.acceptLanguage(request), instance, joiningHandler);
+                        }
+                    });
                 });
             });
         }));
     }
+
 
     private void tooManySessionsPerStructure(HttpServerRequest request, JsonObject room) {
         structureService.retrieveActiveUsers(room.getString("structure", ""), evt -> {
