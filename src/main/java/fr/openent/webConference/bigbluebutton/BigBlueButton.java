@@ -137,18 +137,21 @@ public class BigBlueButton implements RoomProvider {
     }
 
     @Override
-	public String getRedirectURL(String sessionID, String userDisplayName, String password) {
+	public String getRedirectURL(String sessionID, String userDisplayName, String password, Boolean guest) {
         String encodedName = encodeParams(userDisplayName);
         String parameters = "fullName=" + encodedName + "&meetingID=" + sessionID + "&password=" + password;
+        parameters = guest ? (parameters + "&guest=" + guest) : parameters;
         String checksum = checksum(Actions.JOIN + parameters + this.secret);
         String url = this.host + this.apiEndpoint + "/" + Actions.JOIN + "?" + parameters + "&checksum=" + checksum;
         return url;
     }
 
     @Override
-	public void create(String name, String meetingID, String roomID, String moderatorPW, String attendeePW, String structure, String locale, Handler<Either<String, String>> handler) {
+	public void create(String name, String meetingID, String roomID, String moderatorPW, String attendeePW, String structure, String locale, Boolean waitingRoom, Handler<Either<String, String>> handler) {
         String encodedName = encodeParams(name);
-        String parameters = "name=" + encodedName + "&meetingID=" + meetingID + "&moderatorPW=" + moderatorPW + "&attendeePW=" + attendeePW;
+        String guestPolicy = waitingRoom ? "ASK_MODERATOR" : "ALWAYS_ACCEPT";
+
+        String parameters = "name=" + encodedName + "&meetingID=" + meetingID + "&moderatorPW=" + moderatorPW + "&attendeePW=" + attendeePW + "&guestPolicy=" + guestPolicy;
         String checksum = checksum(Actions.CREATE + parameters + this.secret);
         parameters = parameters + "&checksum=" + checksum;
         HttpClientRequest request = httpClient.getAbs(this.host + this.apiEndpoint + "/" + Actions.CREATE + "?" + parameters, response -> {

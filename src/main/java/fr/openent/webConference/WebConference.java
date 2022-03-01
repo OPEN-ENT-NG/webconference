@@ -33,6 +33,7 @@ public class WebConference extends BaseServer {
 
 	public static JsonObject webconfConfig;
 	public static String publicUrl;
+
 	
 	@Override
 	public void start() throws Exception {

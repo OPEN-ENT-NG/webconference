@@ -99,7 +99,16 @@
     font-size: 20px;
     vertical-align: top;
   }
-
+  i.waitingRoom {
+    margin: auto 0 20px 0;
+  }
+  i.waitingRoom::before {
+    font-family: 'material-icons';
+    content: "\FB32";
+    color: #5b6472;
+    font-size: 20px;
+    vertical-align: top;
+  }
   lightbox {
     .action-buttons {
       margin-top: 10px;
