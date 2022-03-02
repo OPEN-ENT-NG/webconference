@@ -17,8 +17,10 @@
                     <h4>[[room.name]]</h4>
                     <em class="metadata" ng-show="vm.structures.length > 1 && room.structure">[[vm.structureMap.get(room.structure) || '']]</em>
                 </div>
-                <i class="waitingRoom" tooltip="Une salle d'attente est programmée" ng-if="room.allow_waiting_room" title="Salle d'attente"></i>
-                <i class="sharing" ng-if="room.collab" title="Salle partagée"></i>
+                <div class="logos_div">
+                    <i class="waitingRoom" tooltip="Une salle d'attente est programmée" ng-if="room.allow_waiting_room"></i>
+                    <i class="sharing" ng-if="room.collab" tooltip="La salle est partagée"></i>
+                </div>
 
             </div>
         </div>
@@ -26,7 +28,7 @@
     <div class="row center-component flex row top-spacing-ten" ng-show="vm.rooms && vm.rooms.all.length === 0">
         <div class="emptyscreen eleven centered">
             <h2 class="emptyscreen-header"><i18n>webconference.rooms.title.empty</i18n></h2>
-            <img src="/webconference/public/image/waiting_img.svg" class="emptyscreen-image__mini"/>
+            <img src="/webconference/public/image/waiting_img.svg"/>
             <h4 class="emptyscreen-footer"><i18n>webconference.rooms.empty</i18n></h4>
             <button ng-click="vm.openRoomLightbox()" class="vertical-spacing-six">
                 <i18n>webconferences.room.create</i18n>

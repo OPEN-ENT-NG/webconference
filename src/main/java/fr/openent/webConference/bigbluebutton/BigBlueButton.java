@@ -45,7 +45,7 @@ public class BigBlueButton implements RoomProvider {
 
     private static final Boolean END_NO_MODERATOR = true;
     private static Integer DELAY_END = 2;
-    
+
     public static BigBlueButton newInstance( final Vertx vertx, final String source, final String appAddress, final JsonObject BBBConf ) {
 		BigBlueButton instance = new BigBlueButton();
 		instance.setHost(vertx, BBBConf.getString("host", ""));
@@ -153,7 +153,7 @@ public class BigBlueButton implements RoomProvider {
         String encodedName = encodeParams(name);
         String guestPolicy = waitingRoom ? "ASK_MODERATOR" : "ALWAYS_ACCEPT";
 
-        String parameters = "name=" + encodedName + "&meetingID=" + meetingID + "&moderatorPW=" + moderatorPW + "&attendeePW=" + attendeePW + "&guestPolicy=" + guestPolicy + "&endWhenNoModerator=" + END_NO_MODERATOR + "&endWhenNoModerator=" + DELAY_END;
+        String parameters = "name=" + encodedName + "&meetingID=" + meetingID + "&moderatorPW=" + moderatorPW + "&attendeePW=" + attendeePW + "&guestPolicy=" + guestPolicy + "&endWhenNoModerator=" + END_NO_MODERATOR + "&endWhenNoModeratorDelayInMinutes=" + DELAY_END;
         String checksum = checksum(Actions.CREATE + parameters + this.secret);
         parameters = parameters + "&checksum=" + checksum;
         HttpClientRequest request = httpClient.getAbs(this.host + this.apiEndpoint + "/" + Actions.CREATE + "?" + parameters, response -> {
