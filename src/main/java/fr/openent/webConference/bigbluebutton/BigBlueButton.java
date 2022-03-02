@@ -42,6 +42,9 @@ public class BigBlueButton implements RoomProvider {
     private String source;
     private static final Logger log = LoggerFactory.getLogger(BigBlueButton.class);
     private HttpClient httpClient;
+
+    private static final Boolean END_NO_MODERATOR = true;
+    private static Integer DELAY_END = 2;
     
     public static BigBlueButton newInstance( final Vertx vertx, final String source, final String appAddress, final JsonObject BBBConf ) {
 		BigBlueButton instance = new BigBlueButton();
@@ -137,10 +140,9 @@ public class BigBlueButton implements RoomProvider {
     }
 
     @Override
-	public String getRedirectURL(String sessionID, String userDisplayName, String password, Boolean guest) {
+	public String getRedirectURL(String sessionID, String userDisplayName, String password) {
         String encodedName = encodeParams(userDisplayName);
         String parameters = "fullName=" + encodedName + "&meetingID=" + sessionID + "&password=" + password;
-        parameters = guest ? (parameters + "&guest=" + guest) : parameters;
         String checksum = checksum(Actions.JOIN + parameters + this.secret);
         String url = this.host + this.apiEndpoint + "/" + Actions.JOIN + "?" + parameters + "&checksum=" + checksum;
         return url;
@@ -151,7 +153,7 @@ public class BigBlueButton implements RoomProvider {
         String encodedName = encodeParams(name);
         String guestPolicy = waitingRoom ? "ASK_MODERATOR" : "ALWAYS_ACCEPT";
 
-        String parameters = "name=" + encodedName + "&meetingID=" + meetingID + "&moderatorPW=" + moderatorPW + "&attendeePW=" + attendeePW + "&guestPolicy=" + guestPolicy;
+        String parameters = "name=" + encodedName + "&meetingID=" + meetingID + "&moderatorPW=" + moderatorPW + "&attendeePW=" + attendeePW + "&guestPolicy=" + guestPolicy + "&endWhenNoModerator=" + END_NO_MODERATOR + "&endWhenNoModerator=" + DELAY_END;
         String checksum = checksum(Actions.CREATE + parameters + this.secret);
         parameters = parameters + "&checksum=" + checksum;
         HttpClientRequest request = httpClient.getAbs(this.host + this.apiEndpoint + "/" + Actions.CREATE + "?" + parameters, response -> {
