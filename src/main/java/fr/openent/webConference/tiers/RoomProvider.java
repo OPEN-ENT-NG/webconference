@@ -17,7 +17,7 @@ public interface RoomProvider {
 
 	void isMeetingRunning(String meetingId, Handler<Either<String, Boolean>> handler);
 
-	String getRedirectURL(String sessionID, String userDisplayName, String password, Boolean guest);
+	String getRedirectURL(String sessionID, String userDisplayName, String password);
 
 	void addWebHook(String webhook, Handler<Either<String, String>> handler);
 

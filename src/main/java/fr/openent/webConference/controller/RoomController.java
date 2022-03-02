@@ -42,8 +42,6 @@ import static org.entcore.common.http.response.DefaultResponseHandler.defaultRes
 public class RoomController extends ControllerHelper {
     static final String RESOURCE_NAME = "room";
     private static final String ROOM_MODULE = "WebConference-Room";
-    private static final Boolean GUEST = true;
-    private static final Boolean NOT_GUEST = false;
     private EventBus eb;
     private RoomService roomService;
     private SessionService sessionService = new DefaultSessionService();
@@ -188,7 +186,7 @@ public class RoomController extends ControllerHelper {
                 else {
                     Boolean isRunning = evt.right().getValue();
                     if (isRunning)
-                        handler.handle(new Either.Right<>(instance.getRedirectURL(room.getString("active_session"), user.getUsername(), room.getString("moderator_pw"), NOT_GUEST)));
+                        handler.handle(new Either.Right<>(instance.getRedirectURL(room.getString("active_session"), user.getUsername(), room.getString("moderator_pw"))));
                     else {
                         room.remove("active_session");
                         joinAsModerator(room, user, locale, instance, handler);
@@ -222,7 +220,7 @@ public class RoomController extends ControllerHelper {
                             return;
                         }
 
-                        handler.handle(new Either.Right<>(instance.getRedirectURL(sessionId, user.getUsername(), room.getString("moderator_pw"), NOT_GUEST)));
+                        handler.handle(new Either.Right<>(instance.getRedirectURL(sessionId, user.getUsername(), room.getString("moderator_pw"))));
                         if (Boolean.TRUE.equals(config.getBoolean("enable-old-events", true))) {
                             eventStore.createAndStoreEvent(Event.ROOM_CREATION.name(), user);
                         }
@@ -241,7 +239,7 @@ public class RoomController extends ControllerHelper {
                 else {
                     Boolean isRunning = evt.right().getValue();
                     if (isRunning) {
-                        String url = instance.getRedirectURL(activeSessionId, user.getUsername(), room.getString("attendee_pw"), GUEST);
+                        String url = instance.getRedirectURL(activeSessionId, user.getUsername(), room.getString("attendee_pw"));
                         instance.join(url, canJoinEvent -> {
                             if (canJoinEvent.isLeft()) {
                                 log.error("[WebConference@joinAsAttendee] Meeting joining checking failed.");
