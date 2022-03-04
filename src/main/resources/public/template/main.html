@@ -28,7 +28,9 @@
     <div class="row center-component flex row top-spacing-ten" ng-show="vm.rooms && vm.rooms.all.length === 0">
         <div class="emptyscreen eleven centered">
             <h2 class="emptyscreen-header"><i18n>webconference.rooms.title.empty</i18n></h2>
-            <img src="/webconference/public/image/waiting_img.svg"/>
+            <div class="img_div">
+                <img src="/webconference/public/image/waiting_img.svg"/>
+            </div>
             <h4 class="emptyscreen-footer"><i18n>webconference.rooms.empty</i18n></h4>
             <button ng-click="vm.openRoomLightbox()" class="vertical-spacing-six">
                 <i18n>webconferences.room.create</i18n>
