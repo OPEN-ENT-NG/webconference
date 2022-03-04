@@ -117,6 +117,13 @@
       float: right;
     }
   }
+  .emptyscreen{
+    margin-top:-25px;
+    img{
+      width:37%;
+      height:auto;
+    }
+  }
 }
 
 @media screen and (max-width: $tablette) {
