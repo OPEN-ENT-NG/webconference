@@ -117,6 +117,16 @@
       float: right;
     }
   }
+  .emptyscreen{
+    margin-top:-25px;
+  }
+  .emptyscreen img{
+    width:100%;
+    height:auto;
+  }
+  .img_div{
+    width:37%;
+  }
 }
 
 @media screen and (max-width: $tablette) {
