@@ -10,7 +10,8 @@ const rights = {
         }
     },
     workflow: {
-        streaming: "fr.openent.webConference.controller.StreamController|createStreaming"
+        streaming: "fr.openent.webConference.controller.StreamController|createStreaming",
+        create: "fr.openent.webConference.controller.RoomController|create"
     }
 };
 

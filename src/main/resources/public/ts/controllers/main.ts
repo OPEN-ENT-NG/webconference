@@ -38,6 +38,7 @@ interface ViewModel {
 	hasWorkflowZimbra(): boolean;
 	hasWorkflowMessagerie(): boolean;
 	hasWorkflowStream(): boolean;
+	hasWorkflowCreate(): boolean;
 	hasShareRightManager(room : Room): boolean;
 	hasShareRightContrib(room : Room): boolean;
 
@@ -156,6 +157,10 @@ export const mainController = ng.controller('MainController',
 
 		vm.hasWorkflowStream = function () {
 			return model.me.hasWorkflow(Behaviours.applicationsBehaviours['web-conference'].rights.workflow.streaming);
+		};
+
+		vm.hasWorkflowCreate = function () {
+			return model.me.hasWorkflow(Behaviours.applicationsBehaviours['web-conference'].rights.workflow.create);
 		};
 
 		vm.hasShareRightManager = (room : Room) => {
