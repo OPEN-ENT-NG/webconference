@@ -17,7 +17,7 @@
                     <h4>[[room.name]]</h4>
                     <em class="metadata" ng-show="vm.structures.length > 1 && room.structure">[[vm.structureMap.get(room.structure) || '']]</em>
                 </div>
-                <div class="logos_div two-mobile">
+                <div class="logos_div two">
                     <i class="waitingRoom" tooltip="Une salle d'attente est programmée" ng-if="room.allow_waiting_room" title="Salle d'attente"></i>
                     <i class="sharing" ng-if="room.collab" title="Salle partagée"></i>
                     <i class="streaming" ng-class="{'active': room.isStreaming}" ng-if="room.allow_streaming" tooltip="webconference.room.tooltip.streaming" title="Streaming activé"></i>
