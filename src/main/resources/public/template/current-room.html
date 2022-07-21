@@ -29,16 +29,10 @@
                         </em>
                     </em>
                 </div>
-                <label class="row">
-                    <em>
-                        <i18n>webconference.attendee.invite</i18n>
-                    </em>
-                </label>
                 <div class="top-spacing-three">
                     <div class="twelve-mobile url-container">
-                        <div class="input-url seven-mobile cell">
+                        <div class="input-url cell">
                             <i18n class="bold cell">webconference.ent.link</i18n>
-                            <input type="text" ng-model="vm.selectedRoom.link" readonly>
                         </div>
                         <a class="clipboard-link-field" data-clipboard-text="[[vm.selectedRoom.link]]">
                             <i class="copy"></i>
@@ -46,9 +40,8 @@
                         </a>
                     </div>
                     <div class="twelve-mobile url-container" ng-if="!!vm.selectedRoom.public_link && vm.allowPublicLink">
-                        <div class="input-url seven-mobile cell">
+                        <div class="input-url cell">
                             <i18n class="bold cell">webconference.public.link</i18n>
-                            <input type="text" ng-model="vm.selectedRoom.public_link" readonly>
                         </div>
                         <a class="clipboard-link-field" data-clipboard-text="[[vm.selectedRoom.public_link]]">
                             <i class="copy"></i>
