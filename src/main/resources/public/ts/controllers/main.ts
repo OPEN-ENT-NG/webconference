@@ -159,7 +159,7 @@ export const mainController = ng.controller('MainController',
 			return model.me.hasWorkflow(Behaviours.applicationsBehaviours['web-conference'].rights.workflow.streaming);
 		};
 
-		vm.hasWorkflowCreate = function () {
+		vm.hasWorkflowCreate = function (): boolean {
 			return model.me.hasWorkflow(Behaviours.applicationsBehaviours['web-conference'].rights.workflow.create);
 		};
 
