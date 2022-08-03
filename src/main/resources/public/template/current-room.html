@@ -105,7 +105,7 @@
                                 <i18n ng-show="!vm.hasActiveSession(vm.selectedRoom)">webconference.room.start</i18n>
                                 <i18n ng-show="vm.hasActiveSession(vm.selectedRoom)">webconference.room.join</i18n>
                             </button>
-                            <button style="margin-left: 5px" ng-if="vm.hasActiveSession(vm.selectedRoom)" ng-click="vm.updateStream(vm.selectedRoom)">
+                            <button style="margin-left: 5px" ng-if="vm.hasActiveSession(vm.selectedRoom) && vm.selectedRoom.allow_streaming" ng-click="vm.updateStream(vm.selectedRoom)">
                                 <i18n ng-show="vm.selectedRoom.isStreaming">webconference.room.streaming.stop</i18n>
                                 <i18n ng-show="!vm.selectedRoom.isStreaming">webconference.room.streaming.start</i18n>
                             </button>
