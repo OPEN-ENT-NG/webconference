@@ -28,6 +28,7 @@
   "webconference.room.end": "Fermer la salle",
   "webconference.rooms.title.empty": "Communiquez facilement même à distance",
   "webconference.rooms.empty": "Vous avez besoin d'échanger par vidéo ? De faire une présentation ? <br> Créez une salle, partagez la et discutez !",
+  "webconference.rooms.empty.no.rights": "Aucune salle ne vous a été partagée pour le moment.",
   "webconferences.room.create": "Créer une salle",
   "webconference.waiting.message": "Oups ! La salle que vous tentez de rejoindre n'est pas encore ouverte.",
   "webconference.waiting.refresh": "Actualiser",
