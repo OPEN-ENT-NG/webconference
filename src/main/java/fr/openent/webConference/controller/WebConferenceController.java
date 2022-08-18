@@ -12,6 +12,7 @@ import io.vertx.core.json.JsonObject;
 import org.entcore.common.controller.ControllerHelper;
 import org.entcore.common.events.EventStore;
 import org.entcore.common.http.filter.ResourceFilter;
+import org.entcore.common.http.filter.SuperAdminFilter;
 
 public class WebConferenceController extends ControllerHelper {
     private EventStore eventStore;
@@ -34,5 +35,19 @@ public class WebConferenceController extends ControllerHelper {
     public void get(HttpServerRequest request) {
         JsonObject allow_public_link = new JsonObject().put("allow_public_link", WebConference.webconfConfig.getValue("allow-public-link", false));
         Renders.renderJson(request, allow_public_link, 200);
+    }
+
+    @Get("/config")
+    @SecuredAction(value = "", type = ActionType.RESOURCE)
+    @ResourceFilter(SuperAdminFilter.class)
+    public void getConfig(final HttpServerRequest request) {
+        JsonObject safeConfig = config.copy();
+
+        JsonObject bigbluebuttonConfig = safeConfig.getJsonObject("bigbluebutton", null);
+        if (bigbluebuttonConfig != null) {
+            if (bigbluebuttonConfig.getString("secret", null) != null) bigbluebuttonConfig.put("secret", "**********");
+        }
+
+        renderJson(request, safeConfig);
     }
 }
