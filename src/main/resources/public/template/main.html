@@ -25,6 +25,7 @@
             </div>
         </div>
     </div>
+    <!-- Emptystate screen with create right (workflowCreate) -->
     <div class="row center-component flex row top-spacing-ten" ng-show="vm.rooms && vm.rooms.all.length === 0 && vm.hasWorkflowCreate() == true">
         <div class="emptyscreen eleven centered">
             <h2 class="emptyscreen-header"><i18n>webconference.rooms.title.empty</i18n></h2>
@@ -37,6 +38,7 @@
             </button>
         </div>
     </div>
+    <!-- Emptystate screen without create right (workflowCreate) -->
     <div class="row center-component flex row top-spacing-ten" ng-show="vm.rooms && vm.rooms.all.length === 0 && vm.hasWorkflowCreate() == false">
         <div class="emptyscreen eleven centered">
             <div class="img_div">
