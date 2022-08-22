@@ -125,7 +125,7 @@ public class RoomController extends ControllerHelper {
     }
 
     @Get("/rooms/:id")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = WebConference.CONTRIB_SHARING_RIGHT, type = ActionType.RESOURCE)
     @ApiDoc("Get given room")
     public void get(HttpServerRequest request) {
         String id = request.getParam("id");
@@ -427,7 +427,7 @@ public class RoomController extends ControllerHelper {
 
     @Get("/rooms/:id/running")
     @ApiDoc("Is meeting meeting")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = WebConference.CONTRIB_SHARING_RIGHT, type = ActionType.RESOURCE)
     public void isMeetingRunning(HttpServerRequest request) {
         String roomId = request.getParam("id");
         roomService.get(roomId, evt -> {
@@ -471,7 +471,7 @@ public class RoomController extends ControllerHelper {
 
     @Get("/rooms/:id/meetingInfo")
     @ApiDoc("Get infos about a current meeting")
-    @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
+    @SecuredAction(value = WebConference.CONTRIB_SHARING_RIGHT, type = ActionType.RESOURCE)
     public void getMeetingInfo(HttpServerRequest request) {
         String roomId = request.getParam("id");
         roomService.get(roomId, evt -> {
