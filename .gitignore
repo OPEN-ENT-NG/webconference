@@ -8,7 +8,6 @@
 .jshintrc
 node_modules/
 src/main/resources/view
-/coverage/front/cobertura-coverage.xml
 src/main/resources/public/dist
 src/main/resources/public/js
 src/main/resources/public/template/entcore
