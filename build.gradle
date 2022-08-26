@@ -56,8 +56,6 @@ compileTestJava {
     targetCompatibility = project.targetCompatibility
 }
 dependencies {
-    implementation 'org.testng:testng:7.1.0'
-    implementation 'junit:junit:4.13.1'
     compileOnly "io.vertx:vertx-core:$vertxVersion"
     testCompile "junit:junit:$junitVersion"
     testCompile "org.entcore:tests:$entCoreVersion"
