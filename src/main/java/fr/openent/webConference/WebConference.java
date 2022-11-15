@@ -1,6 +1,7 @@
 package fr.openent.webConference;
 
 import fr.openent.webConference.controller.*;
+import fr.openent.webConference.core.Config;
 import fr.openent.webConference.tiers.RoomProviderPool;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonObject;
@@ -31,7 +32,6 @@ public class WebConference extends BaseServer {
 
 	public static final String CONTRIB_SHARING_BEHAVIOUR = "fr-openent-webConference-controller-RoomController|initContribSharingRight";
 	public static final String MANAGER_SHARING_BEHAVIOUR = "fr-openent-webConference-controller-RoomController|initManagerSharingRight";
-
 	public static JsonObject webconfConfig;
 	public static String publicUrl;
 
@@ -47,7 +47,6 @@ public class WebConference extends BaseServer {
 		} else {
 			publicUrl = config.getJsonArray("bigbluebutton").getJsonObject(0).getString("host") + "/public/rooms/";
 		}
-
 
 		EventStore eventStore = EventStoreFactory.getFactory().getEventStore(WebConference.class.getSimpleName());
 

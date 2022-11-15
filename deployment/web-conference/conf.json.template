@@ -21,6 +21,9 @@
             "host": "${webConferenceBBBHost}",
             "api_endpoint": "${webConferenceBBBAPIEndpoint}",
             "secret": "${webConferenceBBBSecret}"
+        },
+        "share": {
+            "overrideDefaultActions": "${webConferenceDefaultShare}"
         }
       }
     }
