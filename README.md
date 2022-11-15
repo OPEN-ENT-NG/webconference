@@ -17,6 +17,9 @@
         "host": "${webConferenceBBBHost}",
         "api_endpoint": "${webConferenceBBBAPIEndpoint}",
         "secret": "${webConferenceBBBAPIEndpoint}"
+    },
+    "share": {
+        "overrideDefaultActions": "${webConferenceDefaultShare}"
     }
   }
 }
@@ -29,4 +32,5 @@ allowPublicLink = ${String}
 zimbraMaxRecipients = Integer
 webConferenceBBBHost = ${String}
 webConferenceBBBAPIEndpoint = ${String}
+webConferenceDefaultShare = Array(String)
 </pre>

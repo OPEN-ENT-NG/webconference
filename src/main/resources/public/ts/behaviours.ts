@@ -1,4 +1,4 @@
-import { Behaviours } from 'entcore';
+import {Behaviours} from 'entcore';
 
 const rights = {
     resources: {
@@ -12,6 +12,9 @@ const rights = {
     workflow: {
         streaming: "fr.openent.webConference.controller.StreamController|createStreaming",
         create: "fr.openent.webConference.controller.RoomController|create"
+    },
+    share: {
+        overrideDefaultActions: ['webconference.contrib']
     }
 };
 
@@ -20,5 +23,9 @@ Behaviours.register('web-conference', {
 
     resourceRights: function () {
         return ['contrib', 'manager'];
+    },
+
+    share: function() {
+        return rights.share;
     }
 });
