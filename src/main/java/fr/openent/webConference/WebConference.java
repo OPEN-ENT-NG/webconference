@@ -31,7 +31,6 @@ public class WebConference extends BaseServer {
 
 	public static final String CONTRIB_SHARING_BEHAVIOUR = "fr-openent-webConference-controller-RoomController|initContribSharingRight";
 	public static final String MANAGER_SHARING_BEHAVIOUR = "fr-openent-webConference-controller-RoomController|initManagerSharingRight";
-
 	public static JsonObject webconfConfig;
 	public static String publicUrl;
 
@@ -47,7 +46,6 @@ public class WebConference extends BaseServer {
 		} else {
 			publicUrl = config.getJsonArray("bigbluebutton").getJsonObject(0).getString("host") + "/public/rooms/";
 		}
-
 
 		EventStore eventStore = EventStoreFactory.getFactory().getEventStore(WebConference.class.getSimpleName());
 

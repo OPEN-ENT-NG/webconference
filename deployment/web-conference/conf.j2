@@ -28,6 +28,9 @@
         "bigbluebutton": {{ webConferenceMultiHost }},
         {% endif %}
         "allow-public-link": {{ bbbAllowPublicLink  | default('false') }},
+        "share": {
+            "overrideDefaultActions": {{ webConferenceDefaultShare }}
+         },
         "publicConf": {
             "xiti": {
                 "ID_SERVICE": {
