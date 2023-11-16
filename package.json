@@ -5,9 +5,6 @@
   "main": "gulpfile.js",
   "author": "",
   "license": "",
-  "bugs": {
-    "url": ""
-  },
   "homepage": "",
   "dependencies": {
     "entcore": "dev",
@@ -16,29 +13,29 @@
     "core-js": "2.4.1",
     "gulp": "4.0.2",
     "gulp-clean": "0.4.0",
-    "gulp-sourcemaps": "^2.6.0",
+    "gulp-sourcemaps": "2.6.0",
     "merge2": "1.1.0",
-    "ts-loader": "^3.2.0",
+    "ts-loader": "3.2.0",
     "typescript": "2.4.1",
     "webpack": "3.1.0",
     "webpack-stream": "3.2.0",
-    "yargs": "^8.0.2",
-    "entcore-toolkit": "^1.2.0",
-    "clipboard": "^2.0.4"
+    "yargs": "8.0.2",
+    "entcore-toolkit": "1.2.0",
+    "clipboard": "2.0.4"
   },
   "devDependencies": {
-    "@mdi/font": "^4.4.95",
+    "@mdi/font": "4.4.95",
     "@types/angular": "1.8.3",
     "@types/core-js": "0.9.42",
-    "@types/jest": "^22.2.0",
-    "@types/jquery": "^2.0.34",
-    "axios-mock-adapter": "^1.19.0",
-    "gulp-append-prepend": "^1.0.9",
-    "gulp-replace": "^1.0.0",
-    "jest": "^24.7.1",
-    "jest-environment-node": "^23.0.0",
-    "natives": "^1.1.6",
-    "ts-jest": "^22.4.2"
+    "@types/jest": "22.2.0",
+    "@types/jquery": "2.0.34",
+    "axios-mock-adapter": "1.19.0",
+    "gulp-append-prepend": "1.0.9",
+    "gulp-replace": "1.0.0",
+    "jest": "22.4.2",
+    "jest-environment-node": "23.0.0",
+    "natives": "1.1.6",
+    "ts-jest": "22.4.2"
   },
   "scripts": {
     "coverage": "./node_modules/.bin/jest --config jest.config.js --coverage",
