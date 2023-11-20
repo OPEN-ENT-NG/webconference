@@ -81,7 +81,7 @@ public class DefaultRoomService implements RoomService {
                 " RETURNING *;";
         JsonArray params = new JsonArray()
                 .add(id)
-                .add(room.getString("name", ""))
+                .add(room.getString("name", "").isEmpty() ? "Salle de cours" : room.getString("name"))
                 .add(user.getUserId() != null ? user.getUserId() : "")
                 .add(moderatorPW)
                 .add(attendeePW)

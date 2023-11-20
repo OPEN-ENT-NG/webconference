@@ -432,7 +432,7 @@ export const mainController = ng.controller('MainController',
 
 		vm.isRoomFormEmpty = (room): boolean => {
 			let isEmpty = false;
-			if((!!!$scope.vm.room.name || $scope.vm.room.allow_streaming) && (!!!$scope.vm.room.streaming_link || !!!$scope.vm.room.streaming_key)) {
+			if (!$scope.vm.room.name || $scope.vm.room.allow_streaming && (!$scope.vm.room.streaming_link || !$scope.vm.room.streaming_key)) {
 				isEmpty = true;
 			}
 			return isEmpty;
