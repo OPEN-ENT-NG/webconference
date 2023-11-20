@@ -1,6 +1,7 @@
 package fr.openent.webConference.service.impl;
 
 import fr.openent.webConference.WebConference;
+import fr.openent.webConference.core.Config;
 import fr.openent.webConference.service.RoomService;
 import fr.openent.webConference.service.StructureService;
 import fr.wseduc.webutils.Either;
@@ -81,7 +82,7 @@ public class DefaultRoomService implements RoomService {
                 " RETURNING *;";
         JsonArray params = new JsonArray()
                 .add(id)
-                .add(room.getString("name", "").isEmpty() ? "Salle de cours" : room.getString("name"))
+                .add(room.getString("name", Config.ROOM_NAME_DEFAULT).isEmpty() ? Config.ROOM_NAME_DEFAULT : room.getString("name"))
                 .add(user.getUserId() != null ? user.getUserId() : "")
                 .add(moderatorPW)
                 .add(attendeePW)
