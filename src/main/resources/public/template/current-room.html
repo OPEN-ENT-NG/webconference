@@ -5,7 +5,7 @@
                 <h2 class="six twelve-mobile">
                     [[vm.selectedRoom.name]]
                 </h2>
-                <div class="six button zero-mobile">
+                <div class="six button zero-mobile" ng-if="vm.hasWorkflowCreate(vm.selectedRoom)">
                     <button ng-click="vm.startCurrentRoom()">
                         <i18n ng-show="!vm.hasActiveSession(vm.selectedRoom)">webconference.room.start</i18n>
                         <i18n ng-show="vm.hasActiveSession(vm.selectedRoom)">webconference.room.join</i18n>
