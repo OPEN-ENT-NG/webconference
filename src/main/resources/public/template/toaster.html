@@ -1,4 +1,4 @@
-<section class="toggle-buttons" ng-if="vm.rooms && vm.rooms.all.length > 0 && vm.hasShareRightManager(vm.selectedRoom)">
+<section class="toggle-buttons" ng-if="vm.rooms && vm.rooms.all.length > 0 && vm.hasShareRightManager(vm.selectedRoom) && vm.hasWorkflowCreate(vm.selectedRoom)">
     <div class="toggle">
         <div class="row">
             <button ng-click="vm.openRoomUpdate(vm.selectedRoom)" ng-if="!vm.hasActiveSession(vm.selectedRoom)" class="cell">
