@@ -138,11 +138,12 @@ public class RoomController extends ControllerHelper {
     @ApiDoc("Create a room")
     public void create(HttpServerRequest request) {
         boolean isPublic = Boolean.parseBoolean(request.getParam("isPublic"));
+        final String locale = I18n.acceptLanguage(request);
         String referer = request.headers().contains("referer") ? request.getHeader("referer") : request.scheme() + "://" + getHost(request) + "/webconference";
         final Handler<Either<String, JsonObject>> handler = eventHelper.onCreateResource(request, RESOURCE_NAME, defaultResponseHandler(request));
         RequestUtils.bodyToJson(request, pathPrefix + "room", room -> {
             UserUtils.getUserInfos(eb, request, user -> {
-                roomService.create(referer, room, isPublic, user, handler);
+                roomService.create(referer, room, isPublic, user, handler, locale);
             });
         });
     }

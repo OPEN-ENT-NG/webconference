@@ -5,6 +5,7 @@ import fr.openent.webConference.core.Config;
 import fr.openent.webConference.service.RoomService;
 import fr.openent.webConference.service.StructureService;
 import fr.wseduc.webutils.Either;
+import fr.wseduc.webutils.I18n;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -17,6 +18,7 @@ import java.util.UUID;
 
 public class DefaultRoomService implements RoomService {
     private StructureService structureService = new DefaultStructureService();
+    private static final I18n i18n = I18n.getInstance();
 
     @Override
     public void list(List<String> groupsAndUserIds, UserInfos user, Handler<Either<String, JsonArray>> handler) {
@@ -69,7 +71,7 @@ public class DefaultRoomService implements RoomService {
     }
 
     @Override
-    public void create(String referer, JsonObject room, boolean isPublic, UserInfos user, Handler<Either<String, JsonObject>> handler) {
+    public void create(String referer, JsonObject room, boolean isPublic, UserInfos user, Handler<Either<String, JsonObject>> handler, String locale) {
         String id = UUID.randomUUID().toString();
         String moderatorPW = UUID.randomUUID().toString();
         String attendeePW = UUID.randomUUID().toString();
@@ -82,7 +84,9 @@ public class DefaultRoomService implements RoomService {
                 " RETURNING *;";
         JsonArray params = new JsonArray()
                 .add(id)
-                .add(room.getString("name", Config.ROOM_NAME_DEFAULT).isEmpty() ? Config.ROOM_NAME_DEFAULT : room.getString("name"))
+                .add(room.getString("name", i18n.translate(Config.ROOM_NAME_DEFAULT, I18n.DEFAULT_DOMAIN, locale)).isEmpty()
+                        ? i18n.translate(Config.ROOM_NAME_DEFAULT, I18n.DEFAULT_DOMAIN, locale)
+                        : room.getString("name"))
                 .add(user.getUserId() != null ? user.getUserId() : "")
                 .add(moderatorPW)
                 .add(attendeePW)
