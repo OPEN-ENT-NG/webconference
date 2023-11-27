@@ -2,6 +2,7 @@ package fr.openent.webConference.controller;
 
 import fr.openent.webConference.WebConference;
 import fr.openent.webConference.bigbluebutton.ErrorCode;
+import fr.openent.webConference.core.constants.Field;
 import fr.openent.webConference.event.Event;
 import fr.openent.webConference.security.RoomFilter;
 import fr.openent.webConference.service.RoomService;
@@ -138,12 +139,16 @@ public class RoomController extends ControllerHelper {
     @ApiDoc("Create a room")
     public void create(HttpServerRequest request) {
         boolean isPublic = Boolean.parseBoolean(request.getParam("isPublic"));
-        final String locale = I18n.acceptLanguage(request);
         String referer = request.headers().contains("referer") ? request.getHeader("referer") : request.scheme() + "://" + getHost(request) + "/webconference";
         final Handler<Either<String, JsonObject>> handler = eventHelper.onCreateResource(request, RESOURCE_NAME, defaultResponseHandler(request));
         RequestUtils.bodyToJson(request, pathPrefix + "room", room -> {
             UserUtils.getUserInfos(eb, request, user -> {
-                roomService.create(referer, room, isPublic, user, handler, locale);
+                if (room.getString(Field.NAME, "").isEmpty()) {
+                    log.error("[WebConference@RoomController::create] Room name is empty");
+                    handler.handle(new Either.Left<>("[WebConference@RoomController::create] Room name is empty"));
+                    return;
+                }
+                roomService.create(referer, room, isPublic, user, handler);
             });
         });
     }

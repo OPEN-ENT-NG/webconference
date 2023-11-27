@@ -2,7 +2,6 @@
   "webconference.title": "Visio-conférence",
   "webconference.room.create": "Créer une salle",
   "webconference.room.name": "Nom de la salle",
-  "webconference.room.name.default": "Salle de cours",
   "webconference.room.options": "Options",
   "webconference.room.generate.public.link": "Générer un lien public",
   "webconference.room.generate.streaming": "Activer le streaming de la salle",
