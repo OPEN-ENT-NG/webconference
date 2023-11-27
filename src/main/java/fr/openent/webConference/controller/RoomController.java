@@ -2,6 +2,7 @@ package fr.openent.webConference.controller;
 
 import fr.openent.webConference.WebConference;
 import fr.openent.webConference.bigbluebutton.ErrorCode;
+import fr.openent.webConference.core.constants.Field;
 import fr.openent.webConference.event.Event;
 import fr.openent.webConference.security.RoomFilter;
 import fr.openent.webConference.service.RoomService;
@@ -142,6 +143,11 @@ public class RoomController extends ControllerHelper {
         final Handler<Either<String, JsonObject>> handler = eventHelper.onCreateResource(request, RESOURCE_NAME, defaultResponseHandler(request));
         RequestUtils.bodyToJson(request, pathPrefix + "room", room -> {
             UserUtils.getUserInfos(eb, request, user -> {
+                if (room.getString(Field.NAME, "").isEmpty()) {
+                    log.error("[WebConference@RoomController::create] Room name is empty");
+                    handler.handle(new Either.Left<>("[WebConference@RoomController::create] Room name is empty"));
+                    return;
+                }
                 roomService.create(referer, room, isPublic, user, handler);
             });
         });
