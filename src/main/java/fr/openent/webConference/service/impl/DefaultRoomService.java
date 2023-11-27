@@ -1,6 +1,7 @@
 package fr.openent.webConference.service.impl;
 
 import fr.openent.webConference.WebConference;
+import fr.openent.webConference.core.constants.Field;
 import fr.openent.webConference.service.RoomService;
 import fr.openent.webConference.service.StructureService;
 import fr.wseduc.webutils.Either;
@@ -81,17 +82,17 @@ public class DefaultRoomService implements RoomService {
                 " RETURNING *;";
         JsonArray params = new JsonArray()
                 .add(id)
-                .add(room.getString("name", ""))
+                .add(room.getString(Field.NAME, ""))
                 .add(user.getUserId() != null ? user.getUserId() : "")
                 .add(moderatorPW)
                 .add(attendeePW)
                 .add(link)
                 .add(public_link)
-                .add(room.getBoolean("allow_waiting_room"))
-                .add(room.getBoolean("allow_streaming"))
-                .add(room.getString("streaming_link"))
-                .add(room.getString("streaming_key"))
-                .add(room.getString("structure", ""));
+                .add(room.getBoolean(Field.ALLOW_WAITING_ROOM))
+                .add(room.getBoolean(Field.ALLOW_STREAMING))
+                .add(room.getString(Field.STREAMING_LINK))
+                .add(room.getString(Field.STREAMING_KEY))
+                .add(room.getString(Field.STRUCTURE, ""));
 
         Sql.getInstance().prepared(query, params, SqlResult.validUniqueResultHandler(handler));
     }
