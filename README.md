@@ -34,3 +34,15 @@ webConferenceBBBHost = ${String}
 webConferenceBBBAPIEndpoint = ${String}
 webConferenceDefaultShare = Array(String)
 </pre>
+
+Dans votre configuration nginx du springboard, vous devez spécifier la politique de referer
+afin de pouvoir renvoyer correctement le path pour l'ouverture de salle.
+
+<pre>
+location /webconference {
+proxy_pass http://vertx:8090;
+add_header Referrer-Policy "origin-when-cross-origin";
+}
+</pre>
+
+Par défault, cette valeur est initialisée à "strict-origin"
