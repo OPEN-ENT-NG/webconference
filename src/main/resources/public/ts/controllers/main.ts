@@ -70,7 +70,6 @@ interface ViewModel {
 	updateStream(room: Room): Promise<void>;
 	isRunning(room: Room): Promise<boolean>;
 	refresh();
-
 }
 
 function processStructures(): Array<IStructure> {
@@ -337,19 +336,21 @@ export const mainController = ng.controller('MainController',
 			}
 			else {
 				vm.selectedRoom.sessions++;
-				let result = window.open(vm.selectedRoom.link);
-				result.window.onload = function () {
-					if (result.error) {
-						vm.selectedRoom.active_session = null;
-						switch (result.error) {
-							case "tooManyRoomsPerStructure": break;
-							case "tooManyUsers": break;
-							case "tooManyRooms": break;
-							default: notify.error(idiom.translate('webconference.room.end.error')); break;
+				setTimeout(() => {
+					let result = window.open(vm.selectedRoom.link);
+					result.window.onload = function () {
+						if (result.error) {
+							vm.selectedRoom.active_session = null;
+							switch (result.error) {
+								case "tooManyRoomsPerStructure": break;
+								case "tooManyUsers": break;
+								case "tooManyRooms": break;
+								default: notify.error(idiom.translate('webconference.room.end.error')); break;
+							}
 						}
-					}
-					$scope.safeApply();
-				};
+						$scope.safeApply();
+					};
+				})
 				vm.selectedRoom.active_session = '';
 				vm.selectedRoom.opener = model.me.username;
 				$scope.safeApply();
