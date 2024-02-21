@@ -62,7 +62,7 @@
   "webconference.invitation.subject.label": "Objet de l'invitation : ",
   "webconference.invitation.subject.placeholder": "Titre de l'invitation",
   "webconference.invitation.default.subject": "Invitation à une salle de visio-conférence",
-  "webconference.invitation.default.body": "<div>Bonjour,</br></br>Vous êtes invité à participer à une visio-conférence.</br>Voici le lien d'accès à la salle : <a href='{0}'>{1}</a></br></br>L'ouverture de la salle se fera quelques minutes avant la réunion.</br></br>Cordialement.</div>",
+  "webconference.invitation.default.body": "<div>Bonjour,<br/><br/>Vous êtes invité à participer à une visio-conférence.<br/>Voici le lien d'accès à la salle : <a href='{0}'>{1}</a><br/><br/>L'ouverture de la salle se fera quelques minutes avant la réunion.<br/><br/>Cordialement.</div>",
   "webconference.invitation.link.label" : "Lien d'accès à la salle : ",
   "webconference.invitation.error.invitees": "Il semble que vous n'ayez sélectionné aucun destinaire !",
   "webconference.invitation.error.subject": "Il semble que votre invitation n'est pas d'objet !",
