@@ -5,9 +5,7 @@ import fr.wseduc.webutils.Either;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
-import io.vertx.core.http.HttpClient;
-import io.vertx.core.http.HttpClientOptions;
-import io.vertx.core.http.HttpClientRequest;
+import io.vertx.core.http.*;
 import io.vertx.core.json.DecodeException;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
@@ -46,35 +44,35 @@ public class BigBlueButton implements RoomProvider {
     private static final Boolean END_NO_MODERATOR = true;
     private static Integer DELAY_END = 2;
 
-    public static BigBlueButton newInstance( final Vertx vertx, final String source, final String appAddress, final JsonObject BBBConf ) {
-		BigBlueButton instance = new BigBlueButton();
-		instance.setHost(vertx, BBBConf.getString("host", ""));
-		instance.setSource( source );
-		instance.setApiEndpoint(BBBConf.getString("api_endpoint", ""));
-		instance.setSecret(BBBConf.getString("secret", ""));
+    public static BigBlueButton newInstance(final Vertx vertx, final String source, final String appAddress, final JsonObject BBBConf) {
+        BigBlueButton instance = new BigBlueButton();
+        instance.setHost(vertx, BBBConf.getString("host", ""));
+        instance.setSource(source);
+        instance.setApiEndpoint(BBBConf.getString("api_endpoint", ""));
+        instance.setSecret(BBBConf.getString("secret", ""));
 
-		log.info("[WebConference@BigBlueButton] Adding web hook");
-		String webhookURL = source + appAddress + "/webhook";
-		instance.addWebHook(webhookURL, event -> {
-			if (event.isRight()) {
-				log.info("[WebConference] Web hook added : " + webhookURL);
-			} else {
-				log.error("[WebConference] Failed to add web hook", event.left().getValue());
-			}
-		});
-		return instance;
+        log.info("[WebConference@BigBlueButton] Adding web hook");
+        String webhookURL = source + appAddress + "/webhook";
+        instance.addWebHook(webhookURL, event -> {
+            if (event.isRight()) {
+                log.info("[WebConference] Web hook added : " + webhookURL);
+            } else {
+                log.error("[WebConference] Failed to add web hook", event.left().getValue());
+            }
+        });
+        return instance;
     }
 
-	public void setSource(String source) {
+    public void setSource(String source) {
         this.source = source;
     }
 
     @Override
-	public String getSource() {
+    public String getSource() {
         return this.source;
     }
 
-	public void setHost(Vertx vertx, String host) {
+    public void setHost(Vertx vertx, String host) {
         this.host = host;
         try {
             URI uri = new URI(host);
@@ -91,18 +89,18 @@ public class BigBlueButton implements RoomProvider {
         }
     }
 
-	public void setApiEndpoint(String apiEndpoint) {
+    public void setApiEndpoint(String apiEndpoint) {
         this.apiEndpoint = apiEndpoint;
     }
 
-	public void setSecret(String secret) {
+    public void setSecret(String secret) {
         this.secret = secret;
     }
 
     private String checksum(String value) {
-        try( Formatter formatter = new Formatter() ) {
+        try (Formatter formatter = new Formatter()) {
             byte[] bytes = MessageDigest.getInstance("SHA-1").digest(value.getBytes());
-            
+
             for (byte b : bytes) {
                 formatter.format("%02x", b);
             }
@@ -140,7 +138,7 @@ public class BigBlueButton implements RoomProvider {
     }
 
     @Override
-	public String getRedirectURL(String sessionID, String userDisplayName, String password) {
+    public String getRedirectURL(String sessionID, String userDisplayName, String password) {
         String encodedName = encodeParams(userDisplayName);
         String parameters = "fullName=" + encodedName + "&meetingID=" + sessionID + "&password=" + password;
         String checksum = checksum(Actions.JOIN + parameters + this.secret);
@@ -149,78 +147,39 @@ public class BigBlueButton implements RoomProvider {
     }
 
     @Override
-	public void create(String name, String meetingID, String roomID, String moderatorPW, String attendeePW, String structure, String locale, Boolean waitingRoom, String streamURL, Handler<Either<String, String>> handler) {
+    public void create(String name, String meetingID, String roomID, String moderatorPW, String attendeePW, String structure, String locale, Boolean waitingRoom, String streamURL, Handler<Either<String, String>> handler) {
         String encodedName = encodeParams(name);
         String guestPolicy = waitingRoom ? "ASK_MODERATOR" : "ALWAYS_ACCEPT";
 
         String parameters = "name=" + encodedName + "&meetingID=" + meetingID + "&moderatorPW=" + moderatorPW + "&attendeePW=" + attendeePW + "&guestPolicy=" + guestPolicy + "&endWhenNoModerator=" + END_NO_MODERATOR + "&endWhenNoModeratorDelayInMinutes=" + DELAY_END;
-        if(streamURL != null) {
+        if (streamURL != null) {
             parameters += "&streamURL=" + encodeParams(streamURL);
         }
         String checksum = checksum(Actions.CREATE + parameters + this.secret);
         parameters = parameters + "&checksum=" + checksum;
-        HttpClientRequest request = httpClient.getAbs(this.host + this.apiEndpoint + "/" + Actions.CREATE + "?" + parameters, response -> {
-            response.bodyHandler(body -> {
-                try {
-                    Document res = parseResponse(body);
-                    XPathFactory xpf = XPathFactory.newInstance();
-                    XPath path = xpf.newXPath();
-                    String returnCode = path.evaluate("/response/returncode", res.getDocumentElement());
 
-                    if (!"SUCCESS".equals(returnCode) || response.statusCode() != 200) {
-                        log.error("[WebConference@create] Error in creating session : " + body);
-                        log.error("[WebConference@create] Response : " + response);
-                        String messageKey = path.evaluate("/response/messageKey", res.getDocumentElement());
-                        ErrorCode code = ErrorCode.get(messageKey);
-                        switch (code) {
-                            case TOO_MANY_SESSIONS_PER_STRUCTURE:
-                                handler.handle(new Either.Left<>(ErrorCode.TOO_MANY_SESSIONS_PER_STRUCTURE.code()));
-                                return;
-                            case TOO_MANY_USERS:
-                                handler.handle(new Either.Left<>(ErrorCode.TOO_MANY_USERS.code()));
-                                return;
-                            case TOO_MANY_SESSIONS:
-                                handler.handle(new Either.Left<>(ErrorCode.TOO_MANY_SESSIONS.code()));
-                                return;
-                            default:
-                                handler.handle(new Either.Left<>("[WebConference@BigBlueButton] Failed to create meeting"));
-                                return;
-                        }
-                    }
+        String url = this.host + this.apiEndpoint + "/" + Actions.CREATE + "?" + parameters;
 
-                    String internalId = path.evaluate("/response/internalMeetingID", res.getDocumentElement());
-                    if (internalId == null)
-                        handler.handle(new Either.Left<>("[WebConference@BigBlueButton] No internal id"));
-                    else handler.handle(new Either.Right<>(internalId));
-                } catch (XPathExpressionException | NullPointerException e) {
-                    log.error("[WebConference@BigBlueButton] Failed to parse creation response", e);
-                    handler.handle(new Either.Left<>(e.toString()));
-                }
-            });
-            response.exceptionHandler(throwable -> {
-                log.error("[WebConference@BigBlueButton] Failed to create meeting. An error is catch by exception handler", throwable);
-                handler.handle(new Either.Left<>(throwable.toString()));
-            });
-        });
-        request.putHeader("Client-Server", this.source);
-        request.putHeader("Client-Structure", structure);
-        request.putHeader("Client-Locale", locale);
-        request.putHeader("Client-Room", roomID);
-        request.end();
-    }
+        RequestOptions requestOptions = new RequestOptions()
+                .setAbsoluteURI(url)
+                .setMethod(HttpMethod.GET)
+                .addHeader("Client-Server", this.source)
+                .addHeader("Client-Structure", structure)
+                .addHeader("Client-Locale", locale)
+                .addHeader("Client-Room", roomID);
 
-    @Override
-    public void join(String url, Handler<Either<String, String>> handler) {
-        HttpClientRequest request = httpClient.getAbs(url, response -> {
-            response.bodyHandler(body -> {
-                try {
-                    if (response.statusCode() != 302) {
+        httpClient.request(requestOptions)
+                .flatMap(HttpClientRequest::send)
+                .onSuccess(response -> response.bodyHandler(body -> {
+                    try {
                         Document res = parseResponse(body);
                         XPathFactory xpf = XPathFactory.newInstance();
                         XPath path = xpf.newXPath();
                         String returnCode = path.evaluate("/response/returncode", res.getDocumentElement());
 
-                        if (!"FOUND".equals(returnCode)) {
+                        if (!"SUCCESS".equals(returnCode) || response.statusCode() != 200) {
+                            log.error("[WebConference@create] Error in creating session : " + body);
+                            log.error("[WebConference@create] Response : " + response);
                             String messageKey = path.evaluate("/response/messageKey", res.getDocumentElement());
                             ErrorCode code = ErrorCode.get(messageKey);
                             switch (code) {
@@ -234,65 +193,120 @@ public class BigBlueButton implements RoomProvider {
                                     handler.handle(new Either.Left<>(ErrorCode.TOO_MANY_SESSIONS.code()));
                                     return;
                                 default:
-                                    handler.handle(new Either.Left<>("[WebConference@BigBlueButton] Failed to check meeting joining"));
+                                    handler.handle(new Either.Left<>("[WebConference@BigBlueButton] Failed to create meeting"));
                                     return;
                             }
                         }
 
-                        log.error("[WebConference@BigBlueButton] Error in format joining check response");
-                        handler.handle(new Either.Left<>("Error response format is not valid"));
+                        String internalId = path.evaluate("/response/internalMeetingID", res.getDocumentElement());
+                        if (internalId == null)
+                            handler.handle(new Either.Left<>("[WebConference@BigBlueButton] No internal id"));
+                        else handler.handle(new Either.Right<>(internalId));
+                    } catch (XPathExpressionException | NullPointerException e) {
+                        log.error("[WebConference@BigBlueButton] Failed to parse creation response", e);
+                        handler.handle(new Either.Left<>(e.toString()));
                     }
-                    handler.handle(new Either.Right<>("Redirection found."));
-                } catch (XPathExpressionException | NullPointerException e) {
-                    log.error("[WebConference@BigBlueButton] Failed to parse joining check response", e);
-                    handler.handle(new Either.Left<>(e.toString()));
-                }
-            });
-            response.exceptionHandler(throwable -> {
-                log.error("[WebConference@BigBlueButton] Failed to check meeting joining. An error is catch by exception handler", throwable);
-                handler.handle(new Either.Left<>(throwable.toString()));
-            });
-        });
-        request.end();
+                }))
+                .onFailure(throwable -> {
+                    log.error("[WebConference@BigBlueButton] Failed to create meeting. An error is catch by exception handler", throwable);
+                    handler.handle(new Either.Left<>(throwable.toString()));
+                });
     }
 
     @Override
-	public void end(String meetingId, String moderatorPW, Handler<Either<String, Boolean>> handler) {
+    public void join(String url, Handler<Either<String, String>> handler) {
+        RequestOptions requestOptions = new RequestOptions()
+                .setAbsoluteURI(url)
+                .setMethod(HttpMethod.GET);
+        httpClient.request(requestOptions)
+                .flatMap(HttpClientRequest::send)
+                .onSuccess(response -> {
+                    response.bodyHandler(body -> {
+                        try {
+                            if (response.statusCode() != 302) {
+                                Document res = parseResponse(body);
+                                XPathFactory xpf = XPathFactory.newInstance();
+                                XPath path = xpf.newXPath();
+                                String returnCode = path.evaluate("/response/returncode", res.getDocumentElement());
+
+                                if (!"FOUND".equals(returnCode)) {
+                                    String messageKey = path.evaluate("/response/messageKey", res.getDocumentElement());
+                                    ErrorCode code = ErrorCode.get(messageKey);
+                                    switch (code) {
+                                        case TOO_MANY_SESSIONS_PER_STRUCTURE:
+                                            handler.handle(new Either.Left<>(ErrorCode.TOO_MANY_SESSIONS_PER_STRUCTURE.code()));
+                                            return;
+                                        case TOO_MANY_USERS:
+                                            handler.handle(new Either.Left<>(ErrorCode.TOO_MANY_USERS.code()));
+                                            return;
+                                        case TOO_MANY_SESSIONS:
+                                            handler.handle(new Either.Left<>(ErrorCode.TOO_MANY_SESSIONS.code()));
+                                            return;
+                                        default:
+                                            handler.handle(new Either.Left<>("[WebConference@BigBlueButton] Failed to check meeting joining"));
+                                            return;
+                                    }
+                                }
+
+                                log.error("[WebConference@BigBlueButton] Error in format joining check response");
+                                handler.handle(new Either.Left<>("Error response format is not valid"));
+                            }
+                            handler.handle(new Either.Right<>("Redirection found."));
+                        } catch (XPathExpressionException | NullPointerException e) {
+                            log.error("[WebConference@BigBlueButton] Failed to parse joining check response", e);
+                            handler.handle(new Either.Left<>(e.toString()));
+                        }
+                    });
+                }).onFailure(throwable -> {
+                    log.error("[WebConference@BigBlueButton] Failed to check meeting joining. An error is catch by exception handler", throwable);
+                    handler.handle(new Either.Left<>(throwable.toString()));
+                });
+    }
+
+    @Override
+    public void end(String meetingId, String moderatorPW, Handler<Either<String, Boolean>> handler) {
         String parameters = "meetingID=" + meetingId + "&password=" + moderatorPW;
         String checksum = checksum(Actions.END + parameters + this.secret);
         parameters = parameters + "&checksum=" + checksum;
-        HttpClientRequest request = httpClient.getAbs(this.host + this.apiEndpoint + "/" + Actions.END + "?" + parameters, response -> {
-            if (response.statusCode() != 200) {
-                String message = "[WebConference@BigBlueButton] Failed to end meeting : " + meetingId;
-                log.error(message);
-                handler.handle(new Either.Left<>(message));
-            } else {
-                response.bodyHandler(body -> {
-                    try {
-                        Document res = parseResponse(body);
-                        XPathFactory xpf = XPathFactory.newInstance();
-                        XPath path = xpf.newXPath();
-                        String returnCode = path.evaluate("/response/returncode", res.getDocumentElement());
+        String url = this.host + this.apiEndpoint + "/" + Actions.END + "?" + parameters;
 
-                        if (!"SUCCESS".equals(returnCode)) {
-                            handler.handle(new Either.Left<>("[WebConference@BigBlueButton] Response is not SUCCESS"));
-                            return;
-                        }
+        RequestOptions requestOptions = new RequestOptions()
+                .setAbsoluteURI(url)
+                .setMethod(HttpMethod.GET)
+                .addHeader("Client-Server", this.source);
 
-                        handler.handle(new Either.Right<>(true));
-                    } catch (XPathExpressionException | NullPointerException e) {
-                        log.error("[WebConference@BigBlueButton] Failed to parse end meeting response body");
-                        handler.handle(new Either.Left<>(e.toString()));
+        httpClient.request(requestOptions)
+                .flatMap(HttpClientRequest::send)
+                .onSuccess(response -> {
+                    if (response.statusCode() != 200) {
+                        String message = "[WebConference@BigBlueButton] Failed to end meeting : " + meetingId;
+                        log.error(message);
+                        handler.handle(new Either.Left<>(message));
+                    } else {
+                        response.bodyHandler(body -> {
+                            try {
+                                Document res = parseResponse(body);
+                                XPathFactory xpf = XPathFactory.newInstance();
+                                XPath path = xpf.newXPath();
+                                String returnCode = path.evaluate("/response/returncode", res.getDocumentElement());
+
+                                if (!"SUCCESS".equals(returnCode)) {
+                                    handler.handle(new Either.Left<>("[WebConference@BigBlueButton] Response is not SUCCESS"));
+                                    return;
+                                }
+
+                                handler.handle(new Either.Right<>(true));
+                            } catch (XPathExpressionException | NullPointerException e) {
+                                log.error("[WebConference@BigBlueButton] Failed to parse end meeting response body");
+                                handler.handle(new Either.Left<>(e.toString()));
+                            }
+                        });
+                        response.exceptionHandler(throwable -> {
+                            log.error("[WebConference@BigBlueButton] Failed to end meeting. An error is catch by exception handler. Meetind : " + meetingId, throwable);
+                            handler.handle(new Either.Left<>(throwable.toString()));
+                        });
                     }
                 });
-                response.exceptionHandler(throwable -> {
-                    log.error("[WebConference@BigBlueButton] Failed to end meeting. An error is catch by exception handler. Meetind : " + meetingId, throwable);
-                    handler.handle(new Either.Left<>(throwable.toString()));
-                });
-            }
-        });
-        request.putHeader("Client-Server", this.source);
-        request.end();
     }
 
     @Override
@@ -300,17 +314,24 @@ public class BigBlueButton implements RoomProvider {
         String parameters = "meetingID=" + meetingId;
         String checksum = checksum(Actions.START_STREAM + parameters + this.secret);
         parameters = parameters + "&checksum=" + checksum;
-        HttpClientRequest request = httpClient.getAbs(this.host + this.apiEndpoint + "/" + Actions.START_STREAM + "?" + parameters, response -> {
-            if (response.statusCode() != 200) {
-                String message = "[WebConference@BigBlueButton] Failed starting streaming with meeting id : " + meetingId;
-                log.error(message);
-                handler.handle(new Either.Left<>(message));
-            } else {
-                handler.handle(new Either.Right<>(true));
-            }
-        });
-        request.putHeader("Client-Server", this.source);
-        request.end();
+        String url = this.host + this.apiEndpoint + "/" + Actions.START_STREAM + "?" + parameters;
+
+        RequestOptions requestOptions = new RequestOptions()
+                .setAbsoluteURI(url)
+                .setMethod(HttpMethod.GET)
+                .addHeader("Client-Server", this.source);
+
+        httpClient.request(requestOptions)
+                .flatMap(HttpClientRequest::send)
+                .onSuccess(response -> {
+                    if (response.statusCode() != 200) {
+                        String message = "[WebConference@BigBlueButton] Failed starting streaming with meeting id : " + meetingId;
+                        log.error(message);
+                        handler.handle(new Either.Left<>(message));
+                    } else {
+                        handler.handle(new Either.Right<>(true));
+                    }
+                });
     }
 
     @Override
@@ -318,98 +339,118 @@ public class BigBlueButton implements RoomProvider {
         String parameters = "meetingID=" + meetingId;
         String checksum = checksum(Actions.STOP_STREAM + parameters + this.secret);
         parameters = parameters + "&checksum=" + checksum;
-        HttpClientRequest request = httpClient.getAbs(this.host + this.apiEndpoint + "/" + Actions.STOP_STREAM + "?" + parameters, response -> {
-            if (response.statusCode() != 200) {
-                String message = "[WebConference@BigBlueButton] Failed stopping streaming with meeting id : " + meetingId;
-                log.error(message);
-                handler.handle(new Either.Left<>(message));
-            } else {
-                handler.handle(new Either.Right<>(true));
-            }
-        });
-        request.putHeader("Client-Server", this.source);
-        request.end();
+        String url = this.host + this.apiEndpoint + "/" + Actions.STOP_STREAM + "?" + parameters;
+
+        RequestOptions requestOptions = new RequestOptions()
+                .setAbsoluteURI(url)
+                .setMethod(HttpMethod.GET)
+                .addHeader("Client-Server", this.source);
+
+        httpClient.request(requestOptions)
+                .flatMap(HttpClientRequest::send)
+                .onSuccess(response -> {
+                    if (response.statusCode() != 200) {
+                        String message = "[WebConference@BigBlueButton] Failed stopping streaming with meeting id : " + meetingId;
+                        log.error(message);
+                        handler.handle(new Either.Left<>(message));
+                    } else {
+                        handler.handle(new Either.Right<>(true));
+                    }
+                });
     }
 
     @Override
-	public void isMeetingRunning(String meetingId, Handler<Either<String, Boolean>> handler) {
+    public void isMeetingRunning(String meetingId, Handler<Either<String, Boolean>> handler) {
         String parameters = "meetingID=" + meetingId;
         String checksum = checksum(Actions.IS_MEETING_RUNNING + parameters + this.secret);
         parameters = parameters + "&checksum=" + checksum;
-        HttpClientRequest request = httpClient.getAbs(this.host + this.apiEndpoint + "/" + Actions.IS_MEETING_RUNNING + "?" + parameters, response -> {
-            if (response.statusCode() != 200) {
-                String message = "[WebConference@BigBlueButton] Failed check meeting status : " + meetingId;
-                log.error(message);
-                handler.handle(new Either.Left<>(message));
-            } else {
-                response.bodyHandler(body -> {
-                    try {
-                        Document res = parseResponse(body);
-                        XPathFactory xpf = XPathFactory.newInstance();
-                        XPath path = xpf.newXPath();
-                        String returnCode = path.evaluate("/response/returncode", res.getDocumentElement());
+        String url = this.host + this.apiEndpoint + "/" + Actions.IS_MEETING_RUNNING + "?" + parameters;
 
-                        if (!"SUCCESS".equals(returnCode)) {
-                            handler.handle(new Either.Left<>("[WebConference@BigBlueButton] Response is not SUCCESS"));
-                            return;
-                        }
+        RequestOptions requestOptions = new RequestOptions()
+                .setAbsoluteURI(url)
+                .setMethod(HttpMethod.GET)
+                .addHeader("Client-Server", this.source);
 
-                        String running = path.evaluate("/response/running", res.getDocumentElement());
-                        handler.handle(new Either.Right<>(Boolean.parseBoolean(running)));
-                    } catch (XPathExpressionException | NullPointerException e) {
-                        log.error("[WebConference@BigBlueButton] Failed to parse end meeting response body");
-                        handler.handle(new Either.Left<>(e.toString()));
+        httpClient.request(requestOptions)
+                .flatMap(HttpClientRequest::send)
+                .onSuccess(response -> {
+                    if (response.statusCode() != 200) {
+                        String message = "[WebConference@BigBlueButton] Failed check meeting status : " + meetingId;
+                        log.error(message);
+                        handler.handle(new Either.Left<>(message));
+                    } else {
+                        response.bodyHandler(body -> {
+                            try {
+                                Document res = parseResponse(body);
+                                XPathFactory xpf = XPathFactory.newInstance();
+                                XPath path = xpf.newXPath();
+                                String returnCode = path.evaluate("/response/returncode", res.getDocumentElement());
+
+                                if (!"SUCCESS".equals(returnCode)) {
+                                    handler.handle(new Either.Left<>("[WebConference@BigBlueButton] Response is not SUCCESS"));
+                                    return;
+                                }
+
+                                String running = path.evaluate("/response/running", res.getDocumentElement());
+                                handler.handle(new Either.Right<>(Boolean.parseBoolean(running)));
+                            } catch (XPathExpressionException | NullPointerException e) {
+                                log.error("[WebConference@BigBlueButton] Failed to parse end meeting response body");
+                                handler.handle(new Either.Left<>(e.toString()));
+                            }
+                        });
+                        response.exceptionHandler(throwable -> {
+                            log.error("[WebConference@BigBlueButton] Failed to check meeting status. An error is catch by exception handler. Meeting : " + meetingId, throwable);
+                            handler.handle(new Either.Left<>(throwable.toString()));
+                        });
                     }
                 });
-                response.exceptionHandler(throwable -> {
-                    log.error("[WebConference@BigBlueButton] Failed to check meeting status. An error is catch by exception handler. Meeting : " + meetingId, throwable);
-                    handler.handle(new Either.Left<>(throwable.toString()));
-                });
-            }
-        });
-        request.putHeader("Client-Server", this.source);
-        request.end();
     }
 
     @Override
-	public void addWebHook(String webhook, Handler<Either<String, String>> handler) {
+    public void addWebHook(String webhook, Handler<Either<String, String>> handler) {
         String parameter = "callbackURL=" + this.encodeParams(webhook);
         String checksum = checksum(Actions.CREATE_HOOK + parameter + this.secret);
         String url = this.host + this.apiEndpoint + "/" + Actions.CREATE_HOOK + "?" + parameter + "&checksum=" + checksum;
         log.info("[WebConference@BigBlueButton] web hook end point : " + url);
-        HttpClientRequest request = this.httpClient.getAbs(url, response -> {
-            if (response.statusCode() != 200) {
-                String message = "[WebConference@BigBlueButton] Failed to add webhook";
-                log.error(message);
-                handler.handle(new Either.Left<>(message));
-            } else {
-                response.bodyHandler(body -> {
-                    try {
-                        Document res = parseResponse(body);
-                        XPathFactory xpf = XPathFactory.newInstance();
-                        XPath path = xpf.newXPath();
-                        String returnCode = path.evaluate("/response/returncode", res.getDocumentElement());
 
-                        if (!"SUCCESS".equals(returnCode)) {
-                            handler.handle(new Either.Left<>("[WebConference@BigBlueButton] Response is not SUCCESS"));
-                            return;
-                        }
+        RequestOptions requestOptions = new RequestOptions()
+                .setAbsoluteURI(url)
+                .setMethod(HttpMethod.GET)
+                .addHeader("Client-Server", this.source);
 
-                        String hookId = path.evaluate("/response/hookID", res.getDocumentElement());
-                        handler.handle(new Either.Right<>(hookId));
-                    } catch (XPathExpressionException | NullPointerException e) {
-                        log.error("[WebConference@BigBlueButton] Failed to parse web hook response", e);
-                        handler.handle(new Either.Left<>(e.toString()));
+        httpClient.request(requestOptions)
+                .flatMap(HttpClientRequest::send)
+                .onSuccess(response -> {
+                    if (response.statusCode() != 200) {
+                        String message = "[WebConference@BigBlueButton] Failed to add webhook";
+                        log.error(message);
+                        handler.handle(new Either.Left<>(message));
+                    } else {
+                        response.bodyHandler(body -> {
+                            try {
+                                Document res = parseResponse(body);
+                                XPathFactory xpf = XPathFactory.newInstance();
+                                XPath path = xpf.newXPath();
+                                String returnCode = path.evaluate("/response/returncode", res.getDocumentElement());
+
+                                if (!"SUCCESS".equals(returnCode)) {
+                                    handler.handle(new Either.Left<>("[WebConference@BigBlueButton] Response is not SUCCESS"));
+                                    return;
+                                }
+
+                                String hookId = path.evaluate("/response/hookID", res.getDocumentElement());
+                                handler.handle(new Either.Right<>(hookId));
+                            } catch (XPathExpressionException | NullPointerException e) {
+                                log.error("[WebConference@BigBlueButton] Failed to parse web hook response", e);
+                                handler.handle(new Either.Left<>(e.toString()));
+                            }
+                        });
+                        response.exceptionHandler(throwable -> {
+                            log.error("[WebConference@BigBlueButton] Failed to register web hook", throwable);
+                            handler.handle(new Either.Left<>(throwable.toString()));
+                        });
                     }
                 });
-                response.exceptionHandler(throwable -> {
-                    log.error("[WebConference@BigBlueButton] Failed to register web hook", throwable);
-                    handler.handle(new Either.Left<>(throwable.toString()));
-                });
-            }
-        });
-        request.putHeader("Client-Server", this.source);
-        request.end();
     }
 
     @Override
@@ -417,45 +458,51 @@ public class BigBlueButton implements RoomProvider {
         String parameters = "meetingID=" + meetingId;
         String checksum = checksum(Actions.GET_MEETING_INFO + parameters + this.secret);
         parameters = parameters + "&checksum=" + checksum;
-        HttpClientRequest request = httpClient.getAbs(this.host + this.apiEndpoint + "/" + Actions.GET_MEETING_INFO + "?" + parameters, response -> {
-            if (response.statusCode() != 200) {
-                String message = "[WebConference@BigBlueButton] Failed get meeting infos : " + meetingId;
-                log.error(message);
-                handler.handle(new Either.Left<>(message));
-            }
-            else {
-                response.bodyHandler(body -> {
-                    try {
-                        Document res = parseResponse(body);
-                        XPathFactory xpf = XPathFactory.newInstance();
-                        XPath path = xpf.newXPath();
-                        String returnCode = path.evaluate("/response/returncode", res.getDocumentElement());
+        String url = this.host + this.apiEndpoint + "/" + Actions.GET_MEETING_INFO + "?" + parameters;
 
-                        if (!"SUCCESS".equals(returnCode)) {
-                            handler.handle(new Either.Left<>("[WebConference@BigBlueButton] Response is not SUCCESS"));
-                            return;
-                        }
+        RequestOptions requestOptions = new RequestOptions()
+                .setAbsoluteURI(url)
+                .setMethod(HttpMethod.GET)
+                .addHeader("Client-Server", this.source);
 
-                        String running = path.evaluate("/response/running", res.getDocumentElement());
-                        String participantCount = path.evaluate("/response/participantCount", res.getDocumentElement());
-                        String moderatorCount = path.evaluate("/response/moderatorCount", res.getDocumentElement());
-                        handler.handle(new Either.Right<>(
-                                new JsonObject()
-                                        .put("running", running)
-                                        .put("participantCount", participantCount)
-                                        .put("moderatorCount", moderatorCount)));
-                    } catch (XPathExpressionException | NullPointerException | DecodeException e) {
-                        log.error("[WebConference@BigBlueButton] Failed to parse get meeting info response", e);
-                        handler.handle(new Either.Left<>(e.toString()));
+        httpClient.request(requestOptions)
+                .flatMap(HttpClientRequest::send)
+                .onSuccess(response -> {
+                    if (response.statusCode() != 200) {
+                        String message = "[WebConference@BigBlueButton] Failed get meeting infos : " + meetingId;
+                        log.error(message);
+                        handler.handle(new Either.Left<>(message));
+                    } else {
+                        response.bodyHandler(body -> {
+                            try {
+                                Document res = parseResponse(body);
+                                XPathFactory xpf = XPathFactory.newInstance();
+                                XPath path = xpf.newXPath();
+                                String returnCode = path.evaluate("/response/returncode", res.getDocumentElement());
+
+                                if (!"SUCCESS".equals(returnCode)) {
+                                    handler.handle(new Either.Left<>("[WebConference@BigBlueButton] Response is not SUCCESS"));
+                                    return;
+                                }
+
+                                String running = path.evaluate("/response/running", res.getDocumentElement());
+                                String participantCount = path.evaluate("/response/participantCount", res.getDocumentElement());
+                                String moderatorCount = path.evaluate("/response/moderatorCount", res.getDocumentElement());
+                                handler.handle(new Either.Right<>(
+                                        new JsonObject()
+                                                .put("running", running)
+                                                .put("participantCount", participantCount)
+                                                .put("moderatorCount", moderatorCount)));
+                            } catch (XPathExpressionException | NullPointerException | DecodeException e) {
+                                log.error("[WebConference@BigBlueButton] Failed to parse get meeting info response", e);
+                                handler.handle(new Either.Left<>(e.toString()));
+                            }
+                        });
+                        response.exceptionHandler(throwable -> {
+                            log.error("[WebConference@BigBlueButton] Failed to get meeting info. An error is catch by exception handler. Meeting : " + meetingId, throwable);
+                            handler.handle(new Either.Left<>(throwable.toString()));
+                        });
                     }
                 });
-                response.exceptionHandler(throwable -> {
-                    log.error("[WebConference@BigBlueButton] Failed to get meeting info. An error is catch by exception handler. Meeting : " + meetingId, throwable);
-                    handler.handle(new Either.Left<>(throwable.toString()));
-                });
-            }
-        });
-        request.putHeader("Client-Server", this.source);
-        request.end();
     }
 }

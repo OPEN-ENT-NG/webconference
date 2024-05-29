@@ -28,7 +28,7 @@ public class UserService {
                 .put("action", "list-users")
                 .put("userIds", userIds)
                 .put("groupIds", groupIds);
-        eb.send(DIRECTORY_ADDRESS, action, handlerToAsyncHandler(validResultHandler(handler)));
+        eb.request(DIRECTORY_ADDRESS, action, handlerToAsyncHandler(validResultHandler(handler)));
     }
 }
 
