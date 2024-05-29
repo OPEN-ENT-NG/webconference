@@ -15,3 +15,6 @@ rev-manifest.json
 /.idea
 gradle*
 /src/main/resources/public/font/
+.env
+target
+dependency-reduced-pom.xml
