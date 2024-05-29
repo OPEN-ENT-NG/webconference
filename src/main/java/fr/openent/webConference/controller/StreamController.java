@@ -51,7 +51,7 @@ public class StreamController extends ControllerHelper {
                     return;
                 }
 
-                RoomProviderPool.getSingleton().getInstance(request).setHandler(ar -> {
+                RoomProviderPool.getSingleton().getInstance(request).onComplete(ar -> {
                     RoomProvider instance = ar.result();
                     if (instance == null) {
                         log.error("[WebConference@getMeetingInfos] Failed to get a video provider instance.");

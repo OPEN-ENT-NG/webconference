@@ -36,6 +36,7 @@ import org.entcore.common.user.UserUtils;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 import static org.entcore.common.http.response.DefaultResponseHandler.arrayResponseHandler;
 import static org.entcore.common.http.response.DefaultResponseHandler.defaultResponseHandler;
@@ -84,7 +85,7 @@ public class RoomController extends ControllerHelper {
                         return;
                     }
 
-                    RoomProviderPool.getSingleton().getInstance(request, user).setHandler(ar -> {
+                    RoomProviderPool.getSingleton().getInstance(request, user).onComplete(ar -> {
                         RoomProvider instance = ar.result();
                         if (instance == null) {
                             log.error("[WebConference@list] Failed to get a video provider instance.");
@@ -278,7 +279,7 @@ public class RoomController extends ControllerHelper {
                 renderError(request);
                 return;
             }
-            RoomProviderPool.getSingleton().getInstance(request, user).setHandler(ar -> {
+            RoomProviderPool.getSingleton().getInstance(request, user).onComplete(ar -> {
                 RoomProvider instance = ar.result();
                 if (instance == null) {
                     log.error("[WebConference@join] Failed to get a video provider instance.");
@@ -396,7 +397,7 @@ public class RoomController extends ControllerHelper {
                 return;
             }
 
-            RoomProviderPool.getSingleton().getInstance(request).setHandler(ar -> {
+            RoomProviderPool.getSingleton().getInstance(request).onComplete(ar -> {
                 RoomProvider instance = ar.result();
                 if (instance == null) {
                     log.error("[WebConference@end] Failed to get a video provider instance.");
@@ -458,7 +459,7 @@ public class RoomController extends ControllerHelper {
                 return;
             }
 
-            RoomProviderPool.getSingleton().getInstance(request).setHandler(ar -> {
+            RoomProviderPool.getSingleton().getInstance(request).onComplete(ar -> {
                 RoomProvider instance = ar.result();
                 if (instance == null) {
                     log.error("[WebConference@getMeetingInfos] Failed to get a video provider instance.");
@@ -503,7 +504,7 @@ public class RoomController extends ControllerHelper {
                 return;
             }
 
-            RoomProviderPool.getSingleton().getInstance(request).setHandler(ar -> {
+            RoomProviderPool.getSingleton().getInstance(request).onComplete(ar -> {
                 RoomProvider instance = ar.result();
                 if (instance == null) {
                     log.error("[WebConference@getMeetingInfos] Failed to get a video provider instance.");
@@ -561,26 +562,29 @@ public class RoomController extends ControllerHelper {
                     }
 
                     // Prepare futures to get message responses
-                    List<Future> mails = new ArrayList<>();
-                    mails.addAll(Collections.nCopies(listMails.size(), Promise.promise().future()));
+                    List<Promise<JsonObject>> mails = new ArrayList<>();
+                    mails.addAll(Collections.nCopies(listMails.size(), Promise.promise()));
 
                     // Code to send mails
                     for (int i = 0; i < listMails.size(); i++) {
-                        Future future = mails.get(i);
+                        Promise<JsonObject> promise = mails.get(i);
 
                         // Send mail via Conversation app if it exists or else with Zimbra
                         eb.request("org.entcore.conversation", listMails.getJsonObject(i), (Handler<AsyncResult<Message<JsonObject>>>) messageEvent -> {
                             if (!"ok".equals(messageEvent.result().body().getString("status"))) {
                                 log.error("[Formulaire@sendReminder] Failed to send reminder : " + messageEvent.cause());
-                                future.handle(Future.failedFuture(messageEvent.cause()));
+                                promise.handle(Future.failedFuture(messageEvent.cause()));
                             }
-                            future.handle(Future.succeededFuture(messageEvent.result().body()));
+                            promise.handle(Future.succeededFuture(messageEvent.result().body()));
                         });
                     }
 
+                    List<Future<JsonObject>> mailsFuture = mails.stream()
+                            .map(Promise::future)
+                            .collect(Collectors.toList());
 
                     // Try to send effectively mails with code below and get results
-                    CompositeFuture.all(mails).onComplete(evt -> {
+                    Future.all(mailsFuture).onComplete(evt -> {
                         if (evt.failed()) {
                             log.error("[Zimbra@sendMessage] Failed to send reminder : " + evt.cause());
                             Future.failedFuture(evt.cause());
@@ -747,7 +751,7 @@ public class RoomController extends ControllerHelper {
                 renderError(request);
                 return;
             }
-            RoomProviderPool.getSingleton().getInstance(request, user).setHandler(ar -> {
+            RoomProviderPool.getSingleton().getInstance(request, user).onComplete(ar -> {
                 RoomProvider instance = ar.result();
                 if (instance == null) {
                     log.error("[WebConference@join] Failed to get a video provider instance.");
@@ -784,7 +788,7 @@ public class RoomController extends ControllerHelper {
                 renderError(request);
                 return;
             }
-            RoomProviderPool.getSingleton().getInstance(request, user).setHandler(ar -> {
+            RoomProviderPool.getSingleton().getInstance(request, user).onComplete(ar -> {
                 RoomProvider instance = ar.result();
                 if (instance == null) {
                     log.error("[WebConference@join] Failed to get a video provider instance.");

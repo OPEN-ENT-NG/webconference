@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import io.vertx.core.Promise;
 import org.entcore.common.user.UserInfos;
 import org.entcore.common.user.UserUtils;
 
@@ -98,13 +99,11 @@ public class RoomProviderPool {
 	 * @return a room provider
 	 */
     public Future<RoomProvider> getInstance( final HttpServerRequest request ) {
-    	Future<RoomProvider> roomProvider = Future.future();
+		Promise<RoomProvider> roomProvider = Promise.promise();
         UserUtils.getUserInfos(eb, request, user -> {
-        	getInstance(request, user).setHandler(handler -> {
-        		roomProvider.handle( handler );
-        	});
+        	getInstance(request, user).onComplete(roomProvider::handle);
         });
-        return roomProvider;
+        return roomProvider.future();
     }
 
     /**
@@ -113,53 +112,52 @@ public class RoomProviderPool {
      * @return
      */
     public Future<RoomProvider> getInstance( final HttpServerRequest request, final UserInfos user ) {
-    	Future<RoomProvider> roomProvider = Future.future();
-    	CompositeFuture.all( 
+		Promise<RoomProvider> roomProviderPromise = Promise.promise();
+    	Future.all(
 			getInstanceFromUser(user), 				// 1) Look for a RoomProvider dedicated to one of this user's structures.
 			getInstanceFromDomain(request.host()),	// 2) Look for a RoomProvider dedicated to this domain.
 			getDefaultInstance()					// 3) Look for a default RoomProvider
-		).setHandler(handler -> {
+		).onComplete(handler -> {
 			if( handler.succeeded() ) {
 				CompositeFuture results = handler.result();
 				for( int i=0; i<results.size(); i++ ) {
 					if( results.resultAt(i)!=null) {
-						roomProvider.complete(results.resultAt(i));
+						roomProviderPromise.complete(results.resultAt(i));
 						break;
 					}
 				}
 			}
-			if( ! roomProvider.isComplete() )
-				roomProvider.fail( handler.cause() );
+			roomProviderPromise.tryFail( handler.cause() );
 		});
-        return roomProvider;
+        return roomProviderPromise.future();
     }
     
     /** Retrieve the roomProvider for this User, or null if none can be found. */
     private Future<RoomProvider> getInstanceFromUser( final UserInfos user ) {
-    	Future<RoomProvider> roomProvider = Future.future();
+		Promise<RoomProvider> roomProviderPromise = Promise.promise();
 		List<String> structures = user.getStructures();
 		for( int i=0; structures!=null && i<structures.size(); i++ ) {
 			RoomProvider instance = roomProviders.get( structures.get(i) );
 			if( instance != null ) {
-				roomProvider.complete( instance );
-				return roomProvider;
+				roomProviderPromise.complete( instance );
+				return roomProviderPromise.future();
 			}
 		}
-		roomProvider.complete( null );
-		return roomProvider;
+		roomProviderPromise.complete( null );
+		return roomProviderPromise.future();
     }
     
     /** Retrieve the roomProvider for this Domain, or null if none can be found. */
     private Future<RoomProvider> getInstanceFromDomain( final String domain ) {
-    	Future<RoomProvider> roomProvider = Future.future();
-    	roomProvider.complete( roomProviders.get(domain) );
-		return roomProvider;
+		Promise<RoomProvider> roomProviderPromise = Promise.promise();
+		roomProviderPromise.complete( roomProviders.get(domain) );
+		return roomProviderPromise.future();
     }
     
     /** Retrieve any default roomProvider. */
     private Future<RoomProvider> getDefaultInstance() {
-    	Future<RoomProvider> roomProvider = Future.future();
-    	roomProvider.complete( roomProviders.get("*") );
-		return roomProvider;
+		Promise<RoomProvider> roomProviderPromise = Promise.promise();
+		roomProviderPromise.complete( roomProviders.get("*") );
+		return roomProviderPromise.future();
     }
 }
