@@ -107,6 +107,16 @@ watch () {
   docker-compose run --rm -u "$USER_UID:$GROUP_GID" node sh -c "node_modules/gulp/bin/gulp.js watch --springboard=/home/node/$SPRINGBOARD"
 }
 
+publishNexus() {
+  version=`docker compose run --rm maven mvn $MVN_OPTS help:evaluate -Dexpression=project.version -q -DforceStdout`
+  level=`echo $version | cut -d'-' -f3`
+  case "$level" in
+    *SNAPSHOT) export nexusRepository='snapshots' ;;
+    *)         export nexusRepository='releases' ;;
+  esac
+  docker compose run --rm  maven mvn -DrepositoryId=ode-$nexusRepository -Durl=$repo -DskipTests -Dmaven.test.skip=true --settings /var/maven/.m2/settings.xml deploy
+}
+
 for param in "$@"
 do
   case $param in
@@ -127,6 +137,9 @@ do
       ;;
     publish)
       publish
+      ;;
+    publishNexus)
+      publishNexus
       ;;
     test)
       testNode ; test
