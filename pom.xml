@@ -12,7 +12,7 @@
 
     <groupId>fr.openent</groupId>
     <artifactId>web-conference</artifactId>
-    <version>1.3-migration-SNAPSHOT</version>
+    <version>2.0-b2school-SNAPSHOT</version>
 
     <scm>
         <connection>scm:git:https://github.com/OPEN-ENT-NG/webconference.git</connection>
@@ -29,11 +29,10 @@
     </repositories>
 
     <properties>
-        <vertxVersion>3.9.5</vertxVersion>
         <toolsVersion>2.0.0-final</toolsVersion>
         <junitVersion>4.10</junitVersion>
         <mockitoVersion>[2.0,3.0)</mockitoVersion>
-        <entCoreVersion>4.11-SNAPSHOT</entCoreVersion>
+        <entCoreVersion>5.0-b2school-SNAPSHOT</entCoreVersion>
         <powerMockVersion>2.0.2</powerMockVersion>
     </properties>
 

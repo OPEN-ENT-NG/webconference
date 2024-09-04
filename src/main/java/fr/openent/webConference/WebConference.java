@@ -2,6 +2,7 @@ package fr.openent.webConference;
 
 import fr.openent.webConference.controller.*;
 import fr.openent.webConference.tiers.RoomProviderPool;
+import io.vertx.core.Promise;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonObject;
 import org.entcore.common.events.EventStore;
@@ -36,8 +37,8 @@ public class WebConference extends BaseServer {
 
 	
 	@Override
-	public void start() throws Exception {
-		super.start();
+	public void start(Promise<Void> startPromise) throws Exception {
+		super.start(startPromise);
 		EventBus eb = getEventBus(vertx);
 
 		webconfConfig = config;
@@ -76,5 +77,8 @@ public class WebConference extends BaseServer {
 		addController(new WebHookController());
 
 		RoomProviderPool.getSingleton().init(vertx, eb, config);
+
+		startPromise.tryComplete();
+		startPromise.tryFail("[Webconference@Webconference::start] Fail to start Webconference");
 	}
 }
