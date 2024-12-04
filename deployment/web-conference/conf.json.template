@@ -1,5 +1,5 @@
     {
-      "name": "fr.openent~web-conference~2.0-b2school-SNAPSHOT",
+      "name": "fr.openent~web-conference~${webConferenceVersion}",
       "config": {
         "main" : "fr.openent.webConference.WebConference",
         "port" : 8088,
