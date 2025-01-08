@@ -7,7 +7,7 @@
   "license": "",
   "homepage": "",
   "dependencies": {
-    "entcore": "dev",
+    "entcore": "develop-pedago",
     "awesome-typescript-loader": "3.2.1",
     "axios": "0.17.0",
     "core-js": "2.4.1",
