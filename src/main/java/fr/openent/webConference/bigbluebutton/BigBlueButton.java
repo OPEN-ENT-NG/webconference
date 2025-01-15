@@ -38,6 +38,7 @@ public class BigBlueButton implements RoomProvider {
     private String apiEndpoint;
     private String secret;
     private String source;
+    private String logoutURL;
     private static final Logger log = LoggerFactory.getLogger(BigBlueButton.class);
     private HttpClient httpClient;
 
@@ -50,6 +51,7 @@ public class BigBlueButton implements RoomProvider {
         instance.setSource(source);
         instance.setApiEndpoint(BBBConf.getString("api_endpoint", ""));
         instance.setSecret(BBBConf.getString("secret", ""));
+        instance.setLogoutURL(BBBConf.getString("logoutURL", ""));
 
         log.info("[WebConference@BigBlueButton] Adding web hook");
         String webhookURL = source + appAddress + "/webhook";
@@ -95,6 +97,10 @@ public class BigBlueButton implements RoomProvider {
 
     public void setSecret(String secret) {
         this.secret = secret;
+    }
+
+    public void setLogoutURL(String logoutURL) {
+        this.logoutURL = logoutURL;
     }
 
     private String checksum(String value) {
@@ -154,6 +160,9 @@ public class BigBlueButton implements RoomProvider {
         String parameters = "name=" + encodedName + "&meetingID=" + meetingID + "&moderatorPW=" + moderatorPW + "&attendeePW=" + attendeePW + "&guestPolicy=" + guestPolicy + "&endWhenNoModerator=" + END_NO_MODERATOR + "&endWhenNoModeratorDelayInMinutes=" + DELAY_END;
         if (streamURL != null) {
             parameters += "&streamURL=" + encodeParams(streamURL);
+        }
+        if (!logoutURL.trim().isEmpty()) {
+            parameters += "&logoutURL=" + encodeParams(this.logoutURL);
         }
         String checksum = checksum(Actions.CREATE + parameters + this.secret);
         parameters = parameters + "&checksum=" + checksum;
