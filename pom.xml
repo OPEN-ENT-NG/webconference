@@ -12,7 +12,7 @@
 
     <groupId>fr.openent</groupId>
     <artifactId>web-conference</artifactId>
-    <version>2.0-SNAPSHOT</version>
+    <version>2.0.3</version>
 
     <scm>
         <connection>scm:git:https://github.com/OPEN-ENT-NG/webconference.git</connection>
@@ -32,7 +32,7 @@
         <toolsVersion>2.0.0-final</toolsVersion>
         <junitVersion>4.10</junitVersion>
         <mockitoVersion>[2.0,3.0)</mockitoVersion>
-        <entCoreVersion>6.4-SNAPSHOT</entCoreVersion>
+        <entCoreVersion>6.6.1</entCoreVersion>
         <powerMockVersion>2.0.2</powerMockVersion>
     </properties>
 
