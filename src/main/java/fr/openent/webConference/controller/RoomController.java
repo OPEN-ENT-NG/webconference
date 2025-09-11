@@ -570,12 +570,32 @@ public class RoomController extends ControllerHelper {
                         Promise<JsonObject> promise = mails.get(i);
 
                         // Send mail via Conversation app if it exists or else with Zimbra
-                        eb.request("org.entcore.conversation", listMails.getJsonObject(i), (Handler<AsyncResult<Message<JsonObject>>>) messageEvent -> {
-                            if (!"ok".equals(messageEvent.result().body().getString("status"))) {
-                                log.error("[Formulaire@sendReminder] Failed to send reminder : " + messageEvent.cause());
+                        // eb.request("org.entcore.conversation", listMails.getJsonObject(i), (Handler<AsyncResult<Message<JsonObject>>>) messageEvent -> {
+                        //     if (!"ok".equals(messageEvent.result().body().getString("status"))) {
+                        //         log.error("[Formulaire@sendReminder] Failed to send reminder : " + messageEvent.cause());
+                        //         promise.handle(Future.failedFuture(messageEvent.cause()));
+                        //     }
+                        //     promise.handle(Future.succeededFuture(messageEvent.result().body()));
+                        // });
+                        JsonObject mailData = listMails.getJsonObject(i);
+                        log.info("[WebConference@sendInvitation] Sending to conversation service: " + mailData.encode());
+                        
+                        eb.request("org.entcore.conversation", mailData, (Handler<AsyncResult<Message<JsonObject>>>) messageEvent -> {
+                            if (messageEvent.failed()) {
+                                log.error("[WebConference@sendInvitation] Conversation service call failed: " + messageEvent.cause());
                                 promise.handle(Future.failedFuture(messageEvent.cause()));
+                            } else {
+                                JsonObject response = messageEvent.result().body();
+                                log.info("[WebConference@sendInvitation] Conversation service response: " + response.encode());
+                                
+                                if (!"ok".equals(response.getString("status"))) {
+                                    log.error("[WebConference@sendInvitation] Conversation service returned error status: " + response.getString("status"));
+                                    promise.handle(Future.failedFuture(new RuntimeException("Conversation service returned error: " + response.getString("status"))));
+                                } else {
+                                    log.info("[WebConference@sendInvitation] Successfully sent via conversation service");
+                                    promise.handle(Future.succeededFuture(response));
+                                }
                             }
-                            promise.handle(Future.succeededFuture(messageEvent.result().body()));
                         });
                     }
 
