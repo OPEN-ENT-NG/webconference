@@ -564,7 +564,25 @@ public class RoomController extends ControllerHelper {
                     // Prepare futures to get message responses
                     List<Promise<JsonObject>> mails = new ArrayList<>();
                     mails.addAll(Collections.nCopies(listMails.size(), Promise.promise()));
-
+                    log.info("[WebConference@sendInvitation] Created " + listMails.size() + " email batches for " + invitees.size() + " recipients");
+                    
+                    // Log the contents of each email batch for debugging
+                    for (int i = 0; i < listMails.size(); i++) {
+                        JsonObject batch = listMails.getJsonObject(i);
+                        log.info("[WebConference@sendInvitation] Batch " + i + " details:");
+                        log.info("  - Action: " + batch.getString("action"));
+                        log.info("  - UserId: " + batch.getString("userId"));
+                        log.info("  - Username: " + batch.getString("username"));
+                        
+                        JsonObject message = batch.getJsonObject("message");
+                        if (message != null) {
+                            log.info("  - Subject: " + message.getString("subject"));
+                            log.info("  - Body length: " + (message.getString("body") != null ? message.getString("body").length() : "null") + " chars");
+                            log.info("  - To recipients: " + message.getJsonArray("to").size());
+                            log.info("  - CCI recipients: " + message.getJsonArray("cci").size());
+                            log.info("  - CCI list: " + message.getJsonArray("cci").encode());
+                        }
+                    }
                     // Code to send mails
                     for (int i = 0; i < listMails.size(); i++) {
                         Promise<JsonObject> promise = mails.get(i);
