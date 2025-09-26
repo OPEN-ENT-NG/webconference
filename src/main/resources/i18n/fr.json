@@ -59,7 +59,7 @@
   "webconference.room.generate.public.link": "Générer un lien public",
   "webconference.room.generate.streaming": "Activer le streaming de la salle",
   "webconference.room.generate.streaming.key": "Clé de diffusion",
-  "webconference.room.generate.streaming.link": "URL RMTP",
+  "webconference.room.generate.streaming.link": "URL RTMP",
   "webconference.room.generate.waiting.room": "Activer la salle d'attente",
   "webconference.room.join": "Rejoindre la salle",
   "webconference.room.join.opened": "Une session est déjà en cours pour la salle que vous souhaitez ouvrir.",
