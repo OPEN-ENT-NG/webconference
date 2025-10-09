@@ -32,7 +32,7 @@
         <toolsVersion>2.0.0-final</toolsVersion>
         <junitVersion>4.10</junitVersion>
         <mockitoVersion>[2.0,3.0)</mockitoVersion>
-        <entCoreVersion>6.7-SNAPSHOT</entCoreVersion>
+        <entCoreVersion>6.9-SNAPSHOT</entCoreVersion>
         <powerMockVersion>2.0.2</powerMockVersion>
     </properties>
 
