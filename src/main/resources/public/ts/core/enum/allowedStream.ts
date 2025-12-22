@@ -1,3 +1,4 @@
 export enum ALLOWED_STREAM {
-    PEERTUBE = 'peertube'
+    PEERTUBE = 'peertube',
+    VIMEO = 'vimeo',
 }
