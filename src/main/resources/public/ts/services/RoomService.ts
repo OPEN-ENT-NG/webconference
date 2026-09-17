@@ -1,5 +1,5 @@
 import {appPrefix, ng} from 'entcore';
-import http from 'axios';
+import { http } from 'entcore-toolkit';
 import {Room, Rooms} from '../interfaces'
 
 export interface RoomService {

@@ -2,7 +2,7 @@ import {idiom, model, ng, template, notify, Behaviours, appPrefix} from 'entcore
 import {IStructure, Room, Rooms} from '../interfaces';
 import * as Clipboard from 'clipboard';
 import {roomService} from "../services";
-import http from "axios";
+import { http } from "entcore-toolkit";
 import {ALLOWED_STREAM} from "../core/enum/allowedStream";
 
 declare const window: any;
