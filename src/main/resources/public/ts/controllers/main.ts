@@ -244,7 +244,11 @@ export const mainController = ng.controller('MainController',
 
 		// Other functions
 
-		const initEmptyRoom = () => (new Room(vm.structures[0].id));
+		const initEmptyRoom = () => {
+			const room = new Room(vm.structures[0].id);
+			room.allow_waiting_room = true;
+			return room;
+		};
 
 		const loadRooms = async () => {
 			await vm.rooms.sync();
