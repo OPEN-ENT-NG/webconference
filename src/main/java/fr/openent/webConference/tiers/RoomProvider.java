@@ -1,6 +1,7 @@
 package fr.openent.webConference.tiers;
 
 import fr.wseduc.webutils.Either;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonObject;
 
@@ -26,5 +27,7 @@ public interface RoomProvider {
 	void addWebHook(String webhook, Handler<Either<String, String>> handler);
 
 	void getMeetingInfo(String meetingId, Handler<Either<String, JsonObject>> handler);
+
+	Future<MeetingStatus> getMeetingStatus(String meetingId);
 
 }

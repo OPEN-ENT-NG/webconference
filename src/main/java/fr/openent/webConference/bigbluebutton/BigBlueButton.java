@@ -1,7 +1,9 @@
 package fr.openent.webConference.bigbluebutton;
 
+import fr.openent.webConference.tiers.MeetingStatus;
 import fr.openent.webConference.tiers.RoomProvider;
 import fr.wseduc.webutils.Either;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
@@ -513,5 +515,57 @@ public class BigBlueButton implements RoomProvider {
                         });
                     }
                 });
+    }
+
+    @Override
+    public Future<MeetingStatus> getMeetingStatus(String meetingId) {
+        String parameters = "meetingID=" + meetingId;
+        String checksum = checksum(Actions.GET_MEETING_INFO + parameters + this.secret);
+        String url = this.host + this.apiEndpoint + "/" + Actions.GET_MEETING_INFO + "?" + parameters + "&checksum=" + checksum;
+
+        RequestOptions requestOptions = new RequestOptions()
+                .setAbsoluteURI(url)
+                .setMethod(HttpMethod.GET)
+                .addHeader("Client-Server", this.source);
+
+        return httpClient.request(requestOptions)
+                .compose(HttpClientRequest::send)
+                .compose(response -> response.statusCode() == 200
+                        ? response.body()
+                        : Future.failedFuture("[WebConference@BigBlueButton] Failed to get meeting status : " + meetingId))
+                .compose(body -> parseMeetingStatus(body, meetingId));
+    }
+
+    private Future<MeetingStatus> parseMeetingStatus(Buffer body, String meetingId) {
+        Document res = parseResponse(body);
+        if (res == null) {
+            return Future.failedFuture("[WebConference@BigBlueButton] Unreadable meeting info : " + meetingId);
+        }
+
+        try {
+            XPath path = XPathFactory.newInstance().newXPath();
+            if (!"SUCCESS".equals(path.evaluate("/response/returncode", res.getDocumentElement()))) {
+                // BBB forgets a meeting shortly after it ends, so an unknown meeting counts as ended.
+                return "notFound".equals(path.evaluate("/response/messageKey", res.getDocumentElement()))
+                        ? Future.succeededFuture(MeetingStatus.ENDED)
+                        : Future.failedFuture("[WebConference@BigBlueButton] Meeting info request failed : " + meetingId);
+            }
+
+            if (parseLongOrZero(path.evaluate("/response/endTime", res.getDocumentElement())) > 0) {
+                return Future.succeededFuture(MeetingStatus.ENDED);
+            }
+            boolean running = Boolean.parseBoolean(path.evaluate("/response/running", res.getDocumentElement()));
+            return Future.succeededFuture(running ? MeetingStatus.RUNNING : MeetingStatus.NOT_RUNNING);
+        } catch (XPathExpressionException e) {
+            return Future.failedFuture(e);
+        }
+    }
+
+    private static long parseLongOrZero(String value) {
+        try {
+            return Long.parseLong(value.trim());
+        } catch (NumberFormatException e) {
+            return 0L;
+        }
     }
 }

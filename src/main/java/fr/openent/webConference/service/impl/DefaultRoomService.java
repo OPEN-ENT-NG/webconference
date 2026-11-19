@@ -23,7 +23,7 @@ public class DefaultRoomService implements RoomService {
         StringBuilder query = new StringBuilder();
         JsonArray params = new JsonArray();
 
-        query.append("SELECT r.id, name, owner AS owner_id, sessions, link, public_link, allow_waiting_room, allow_streaming, streaming_link, streaming_key, active_session, structure, collab, opener ")
+        query.append("SELECT r.id, name, owner AS owner_id, sessions, link, public_link, allow_waiting_room, allow_streaming, streaming_link, streaming_key, active_session, structure, collab, opener, guest_link_enabled ")
                 .append("FROM ").append(WebConference.ROOM_TABLE).append(" r ")
                 .append("LEFT JOIN ").append(WebConference.ROOM_SHARES_TABLE).append(" rs ON r.id = rs.resource_id ")
                 .append("LEFT JOIN ").append(WebConference.MEMBERS_TABLE).append(" m ON (m.id = rs.member_id AND m.group_id IS NOT NULL) ")

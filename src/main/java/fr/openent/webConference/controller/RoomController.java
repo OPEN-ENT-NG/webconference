@@ -5,9 +5,11 @@ import fr.openent.webConference.bigbluebutton.ErrorCode;
 import fr.openent.webConference.core.constants.Field;
 import fr.openent.webConference.event.Event;
 import fr.openent.webConference.security.RoomFilter;
+import fr.openent.webConference.service.GuestLinkService;
 import fr.openent.webConference.service.RoomService;
 import fr.openent.webConference.service.SessionService;
 import fr.openent.webConference.service.StructureService;
+import fr.openent.webConference.service.impl.DefaultGuestLinkService;
 import fr.openent.webConference.service.impl.DefaultRoomService;
 import fr.openent.webConference.service.impl.DefaultSessionService;
 import fr.openent.webConference.service.impl.DefaultStructureService;
@@ -47,6 +49,7 @@ public class RoomController extends ControllerHelper {
     private EventBus eb;
     private RoomService roomService;
     private SessionService sessionService = new DefaultSessionService();
+    private final GuestLinkService guestLinkService = new DefaultGuestLinkService();
     private StructureService structureService = new DefaultStructureService();
     private UserService userService;
     private EventStore eventStore;
@@ -104,7 +107,12 @@ public class RoomController extends ControllerHelper {
                                         log.error("[WebConference@list] Failed to check meeting running for each room.");
                                         renderError(request);
                                     } else if (!evt.right().getValue()) {
-                                        rooms.getJsonObject(finalI).remove("active_session");
+                                        JsonObject room = rooms.getJsonObject(finalI);
+                                        String inactiveSession = (String) room.remove("active_session");
+                                        if (room.getBoolean(Field.GUEST_LINK_ENABLED, false)) {
+                                            guestLinkService.renewIfEnded(room.getString("id"), inactiveSession, instance)
+                                                    .onFailure(err -> log.error("[WebConference@list] Failed to renew guest link of room " + room.getString("id"), err));
+                                        }
                                     }
                                     counter.getAndDecrement();
                                     if (counter.get() <= 0) {
@@ -217,6 +225,11 @@ public class RoomController extends ControllerHelper {
                         log.error("[WebConference@joinAsModerator] Failed to save session.");
                         handler.handle(new Either.Left<>(createSessionEvent.left().toString()));
                         return;
+                    }
+
+                    if (room.getBoolean(Field.GUEST_LINK_ENABLED, false)) {
+                        guestLinkService.bindToSession(room.getString("id"), sessionId)
+                                .onFailure(err -> log.error("[WebConference@joinAsModerator] Failed to bind guest link to session " + sessionId, err));
                     }
 
                     room.remove("opener");
