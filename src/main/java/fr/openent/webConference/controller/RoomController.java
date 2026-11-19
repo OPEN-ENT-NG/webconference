@@ -75,63 +75,134 @@ public class RoomController extends ControllerHelper {
     @SecuredAction(value = "", type = ActionType.AUTHENTICATED)
     public void list(HttpServerRequest request) {
         UserUtils.getUserInfos(eb, request, user -> {
-            if (user != null) {
-                final List<String> groupsAndUserIds = new ArrayList<>();
-                groupsAndUserIds.add(user.getUserId());
-                if (user.getGroupsIds() != null) {
-                    groupsAndUserIds.addAll(user.getGroupsIds());
-                }
-
-                roomService.list(groupsAndUserIds, user, event -> {
-                    if (event.isLeft()) {
-                        renderError(request);
-                        return;
-                    }
-
-                    RoomProviderPool.getSingleton().getInstance(request, user).onComplete(ar -> {
-                        RoomProvider instance = ar.result();
-                        if (instance == null) {
-                            log.error("[WebConference@list] Failed to get a video provider instance.");
-                            renderError(request);
-                            return;
-                        }
-
-                        AtomicInteger counter = new AtomicInteger();
-                        JsonArray rooms = event.right().getValue();
-                        for (int i = 0; i < rooms.size(); i++) {
-                            if (rooms.getJsonObject(i).containsKey("active_session") && rooms.getJsonObject(i).getString("active_session") != null) {
-                                counter.getAndIncrement();
-                                int finalI = i;
-                                instance.isMeetingRunning(rooms.getJsonObject(i).getString("active_session"), evt -> {
-                                    if (evt.isLeft()) {
-                                        log.error("[WebConference@list] Failed to check meeting running for each room.");
-                                        renderError(request);
-                                    } else if (!evt.right().getValue()) {
-                                        JsonObject room = rooms.getJsonObject(finalI);
-                                        String inactiveSession = (String) room.remove("active_session");
-                                        if (room.getBoolean(Field.GUEST_LINK_ENABLED, false)) {
-                                            guestLinkService.renewIfEnded(room.getString("id"), inactiveSession, instance)
-                                                    .onFailure(err -> log.error("[WebConference@list] Failed to renew guest link of room " + room.getString("id"), err));
-                                        }
-                                    }
-                                    counter.getAndDecrement();
-                                    if (counter.get() <= 0) {
-                                        renderJson(request, rooms);
-                                    }
-                                });
-                            }
-                        }
-
-                        if (counter.get() <= 0) {
-                            renderJson(request, rooms);
-                        }
-                    });
-                });
-            } else {
+            if (user == null) {
                 log.error("User not found in session.");
                 Renders.unauthorized(request);
+                return;
+            }
+
+            final List<String> groupsAndUserIds = new ArrayList<>();
+            groupsAndUserIds.add(user.getUserId());
+            if (user.getGroupsIds() != null) {
+                groupsAndUserIds.addAll(user.getGroupsIds());
+            }
+
+            roomService.list(groupsAndUserIds, user, event -> {
+                if (event.isLeft()) {
+                    renderError(request);
+                    return;
+                }
+
+                JsonArray rooms = event.right().getValue();
+                RoomProviderPool.getSingleton().getInstance(request, user)
+                        .compose(instance -> refreshActiveSessions(rooms, instance))
+                        .compose(v -> addGuestLinks(request, rooms, user, groupsAndUserIds))
+                        .onSuccess(v -> renderJson(request, rooms))
+                        .onFailure(err -> {
+                            log.error("[WebConference@list] Failed to list rooms", err);
+                            renderError(request);
+                        });
+            });
+        });
+    }
+
+    private Future<Void> refreshActiveSessions(JsonArray rooms, RoomProvider instance) {
+        List<Future<Void>> checks = new ArrayList<>();
+        for (int i = 0; i < rooms.size(); i++) {
+            JsonObject room = rooms.getJsonObject(i);
+            String activeSession = room.getString(Field.ACTIVE_SESSION);
+            if (activeSession != null) {
+                checks.add(refreshActiveSession(room, activeSession, instance));
+            }
+        }
+        return Future.all(checks).mapEmpty();
+    }
+
+    private Future<Void> refreshActiveSession(JsonObject room, String activeSession, RoomProvider instance) {
+        Promise<Boolean> running = Promise.promise();
+        instance.isMeetingRunning(activeSession, evt -> {
+            if (evt.isLeft()) {
+                running.fail(evt.left().getValue());
+            } else {
+                running.complete(evt.right().getValue());
             }
         });
+
+        return running.future().compose(isRunning -> {
+            if (isRunning) {
+                return Future.succeededFuture();
+            }
+            room.remove(Field.ACTIVE_SESSION);
+            if (!room.getBoolean(Field.GUEST_LINK_ENABLED, false)) {
+                return Future.succeededFuture();
+            }
+            return guestLinkService.renewIfEnded(room.getString("id"), activeSession, instance)
+                    .recover(err -> {
+                        log.error("[WebConference@list] Failed to renew guest link of room " + room.getString("id"), err);
+                        return Future.succeededFuture();
+                    });
+        });
+    }
+
+    private Future<Void> addGuestLinks(HttpServerRequest request, JsonArray rooms, UserInfos user, List<String> groupsAndUserIds) {
+        if (!WebConference.isGuestLinkAllowed()) {
+            return Future.succeededFuture();
+        }
+
+        return managedRoomIds(groupsAndUserIds).compose(managedIds -> {
+            List<String> roomIds = new ArrayList<>();
+            for (int i = 0; i < rooms.size(); i++) {
+                JsonObject room = rooms.getJsonObject(i);
+                boolean canManage = user.getUserId().equals(room.getString("owner_id")) || managedIds.contains(room.getString("id"));
+                if (canManage && room.getBoolean(Field.GUEST_LINK_ENABLED, false)) {
+                    roomIds.add(room.getString("id"));
+                }
+            }
+            return guestLinkService.findLinks(roomIds);
+        }).compose(links -> {
+            for (int i = 0; i < rooms.size(); i++) {
+                JsonObject room = rooms.getJsonObject(i);
+                JsonObject link = links.get(room.getString("id"));
+                if (link != null) {
+                    putGuestLink(request, room, link.getString(Field.GUEST_TOKEN), link.getString(Field.GUEST_SESSION));
+                }
+            }
+            return Future.succeededFuture();
+        });
+    }
+
+    private Future<Set<String>> managedRoomIds(List<String> groupsAndUserIds) {
+        Promise<Set<String>> promise = Promise.promise();
+        roomService.getAllMyRoomRights(groupsAndUserIds, rights -> {
+            if (rights.isLeft()) {
+                promise.fail(rights.left().getValue());
+                return;
+            }
+            Set<String> roomIds = new HashSet<>();
+            for (int i = 0; i < rights.right().getValue().size(); i++) {
+                JsonObject right = rights.right().getValue().getJsonObject(i);
+                if (WebConference.MANAGER_SHARING_BEHAVIOUR.equals(right.getString("action"))) {
+                    roomIds.add(right.getString("resource_id"));
+                }
+            }
+            promise.complete(roomIds);
+        });
+        return promise.future();
+    }
+
+    private static void putGuestLink(HttpServerRequest request, JsonObject room, String token, String boundSession) {
+        room.put("guest_link", getScheme(request) + "://" + getHost(request) + "/webconference/pub/" + token)
+                .put("guest_link_state", boundSession == null ? "next" : "current");
+    }
+
+    // The raw token never leaves the server: managers get the full link, the others nothing.
+    private static JsonObject exposeGuestLink(HttpServerRequest request, JsonObject room) {
+        String token = (String) room.remove(Field.GUEST_TOKEN);
+        String boundSession = (String) room.remove(Field.GUEST_SESSION);
+        if (token != null && WebConference.isGuestLinkAllowed()) {
+            putGuestLink(request, room, token, boundSession);
+        }
+        return room;
     }
 
     @Get("/rooms/:id")
@@ -140,7 +211,38 @@ public class RoomController extends ControllerHelper {
     @ApiDoc("Get given room")
     public void get(HttpServerRequest request) {
         String id = request.getParam("id");
-        roomService.get(id, defaultResponseHandler(request));
+        roomService.get(id, result -> {
+            if (result.isRight()) {
+                result.right().getValue().remove(Field.GUEST_TOKEN);
+                result.right().getValue().remove(Field.GUEST_SESSION);
+            }
+            defaultResponseHandler(request).handle(result);
+        });
+    }
+
+    @Post("/rooms/:id/guest-link")
+    @ResourceFilter(RoomFilter.class)
+    @SecuredAction(value = WebConference.MANAGER_SHARING_RIGHT, type = ActionType.RESOURCE)
+    @ApiDoc("Replace the guest link of a room: the previous link stops working at once")
+    public void regenerateGuestLink(HttpServerRequest request) {
+        String id = request.getParam("id");
+        if (!WebConference.isGuestLinkAllowed()) {
+            forbidden(request);
+            return;
+        }
+
+        guestLinkService.regenerate(id).onComplete(ar -> {
+            if (ar.failed()) {
+                log.error("[WebConference@regenerateGuestLink] Failed to regenerate guest link of room " + id, ar.cause());
+                renderError(request);
+                return;
+            }
+            if (ar.result() == null) {
+                notFound(request);
+                return;
+            }
+            renderJson(request, exposeGuestLink(request, ar.result()));
+        });
     }
 
     @Post("/rooms/:isPublic")
@@ -163,7 +265,7 @@ public class RoomController extends ControllerHelper {
                         return;
                     }
                     guestLinkService.setEnabled(created.right().getValue().getString("id"), true)
-                            .onSuccess(saved -> handler.handle(new Either.Right<>(saved)))
+                            .onSuccess(saved -> handler.handle(new Either.Right<>(exposeGuestLink(request, saved))))
                             .onFailure(err -> handler.handle(new Either.Left<>(err.getMessage())));
                 });
             });
@@ -187,8 +289,8 @@ public class RoomController extends ControllerHelper {
             guestLinkService.setEnabled(id, guestLinkEnabled)
                     .compose(saved -> RoomProviderPool.getSingleton().getInstance(request)
                             .compose(provider -> guestLinkService.bindToRunningSession(saved, provider))
-                            .map(saved))
-                    .onSuccess(saved -> handler.handle(new Either.Right<>(saved)))
+                            .map(bound -> bound ? saved.put(Field.GUEST_SESSION, saved.getString(Field.ACTIVE_SESSION)) : saved))
+                    .onSuccess(saved -> handler.handle(new Either.Right<>(exposeGuestLink(request, saved))))
                     .onFailure(err -> {
                         log.error("[WebConference@RoomController::update] Failed to update guest link of room " + id, err);
                         handler.handle(new Either.Left<>(err.getMessage()));

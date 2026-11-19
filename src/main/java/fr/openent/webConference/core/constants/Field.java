@@ -9,5 +9,6 @@ public class Field {
     public static final String STRUCTURE = "structure";
     public static final String GUEST_LINK_ENABLED = "guest_link_enabled";
     public static final String GUEST_SESSION = "guest_session";
+    public static final String GUEST_TOKEN = "guest_token";
     public static final String ACTIVE_SESSION = "active_session";
 }

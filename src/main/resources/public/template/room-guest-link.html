@@ -1,0 +1,10 @@
+<lightbox show="vm.lightbox.guestLink" on-close="vm.closeGuestLinkLightbox()">
+    <h2><i18n>webconference.guest.link.regenerate</i18n></h2>
+    <div>
+        <i18n>webconference.guest.link.regenerate.confirmation</i18n>
+    </div>
+    <div class="right-magnet">
+        <button class="cell cancel" ng-click="vm.closeGuestLinkLightbox()"><i18n>webconference.cancel</i18n></button>
+        <button class="cell" ng-click="vm.regenerateGuestLink(vm.selectedRoom)"><i18n>webconference.guest.link.regenerate</i18n></button>
+    </div>
+</lightbox>

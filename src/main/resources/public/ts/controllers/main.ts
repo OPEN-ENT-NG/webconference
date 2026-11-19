@@ -26,7 +26,8 @@ interface ViewModel {
 		end: boolean,
 		sharing: boolean,
 		invitation: boolean,
-		delete: boolean
+		delete: boolean,
+		guestLink: boolean
 	};
 	mail: {
 		link: string,
@@ -52,12 +53,15 @@ interface ViewModel {
 	closeInvitationLightbox(): void;
 	openDeleteLightbox(room: Room): void;
 	closeDeleteLightbox(): void;
+	openGuestLinkLightbox(): void;
+	closeGuestLinkLightbox(): void;
 
 	openRoomUpdate(room: Room);
 	openRoomCreation();
 	createRoom(room: Room, isPublic: boolean);
 	updateRoom(room: Room, isPublic: boolean);
 	deleteRoom(room: Room);
+	regenerateGuestLink(room: Room): Promise<void>;
 	sendInvitation(room: Room);
 	startCurrentRoom();
 	isRoomFormEmpty(room: Room): boolean;
@@ -114,7 +118,8 @@ export const mainController = ng.controller('MainController',
 			end: false,
 			sharing: false,
 			invitation: false,
-			delete: false
+			delete: false,
+			guestLink: false
 		};
 		vm.mail = {
 			link: "",
@@ -242,6 +247,16 @@ export const mainController = ng.controller('MainController',
 			vm.lightbox.delete = false;
 		};
 
+		vm.openGuestLinkLightbox = () => {
+			template.open('lightbox', 'room-guest-link');
+			vm.lightbox.guestLink = true;
+		};
+
+		vm.closeGuestLinkLightbox = () => {
+			template.close('lightbox');
+			vm.lightbox.guestLink = false;
+		};
+
 		// Other functions
 
 		const initEmptyRoom = () => {
@@ -289,7 +304,9 @@ export const mainController = ng.controller('MainController',
 				if (room.id === data.id) {
 					room.name = data.name;
 					room.structure = data.structure;
-					room.public_link = data.public_link;
+					room.guest_link_enabled = data.guest_link_enabled;
+					room.guest_link = data.guest_link;
+					room.guest_link_state = data.guest_link_state;
 					room.allow_waiting_room = data.allow_waiting_room;
 					room.allow_streaming = data.allow_streaming;
 					room.streaming_link = data.streaming_link;
@@ -305,6 +322,19 @@ export const mainController = ng.controller('MainController',
 			vm.rooms.all = vm.rooms.all.filter(aRoom => room.id !== aRoom.id);
 			if (vm.selectedRoom.id === room.id) vm.selectedRoom = vm.rooms.all[0];
 			vm.closeDeleteLightbox();
+			$scope.safeApply();
+		};
+
+		vm.regenerateGuestLink = async (room: Room): Promise<void> => {
+			try {
+				const {guest_link, guest_link_state} = await RoomService.regenerateGuestLink(room);
+				room.guest_link = guest_link;
+				room.guest_link_state = guest_link_state;
+				notify.success(idiom.translate('webconference.guest.link.regenerate.success'));
+			} catch (e) {
+				notify.error(idiom.translate('webconference.guest.link.regenerate.error'));
+			}
+			vm.closeGuestLinkLightbox();
 			$scope.safeApply();
 		};
 

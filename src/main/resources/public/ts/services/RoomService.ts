@@ -1,6 +1,6 @@
 import {appPrefix, ng} from 'entcore';
 import { http } from 'entcore-toolkit';
-import {Room, Rooms} from '../interfaces'
+import {IGuestLink, Room, Rooms} from '../interfaces'
 
 export interface RoomService {
     list(): Promise<Rooms>;
@@ -15,6 +15,7 @@ export interface RoomService {
     stopStream(room: Room): Promise<any>;
     sendInvitation(room: Room, mail: {}): Promise<void>;
     getAllMyRoomRights(): Promise<any>;
+    regenerateGuestLink(room: Room): Promise<IGuestLink>;
 }
 
 export const roomService: RoomService = {
@@ -75,6 +76,11 @@ export const roomService: RoomService = {
 
     async getAllMyRoomRights(): Promise<any> {
         const {data} = await http.get(`/${appPrefix}/rooms/rights/all`);
+        return data;
+    },
+
+    async regenerateGuestLink({id}): Promise<IGuestLink> {
+        const {data} = await http.post(`/${appPrefix}/rooms/${id}/guest-link`, {});
         return data;
     }
 };

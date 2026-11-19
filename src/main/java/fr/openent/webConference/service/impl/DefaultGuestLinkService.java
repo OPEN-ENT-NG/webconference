@@ -14,7 +14,11 @@ import org.entcore.common.sql.Sql;
 import org.entcore.common.sql.SqlResult;
 
 import java.security.SecureRandom;
+import java.util.ArrayList;
 import java.util.Base64;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class DefaultGuestLinkService implements GuestLinkService {
     private static final int TOKEN_BYTES = 32;
@@ -38,15 +42,15 @@ public class DefaultGuestLinkService implements GuestLinkService {
     }
 
     @Override
-    public Future<Void> bindToRunningSession(JsonObject room, RoomProvider provider) {
+    public Future<Boolean> bindToRunningSession(JsonObject room, RoomProvider provider) {
         String activeSession = room.getString(Field.ACTIVE_SESSION);
         if (!room.getBoolean(Field.GUEST_LINK_ENABLED, false) || room.getString(Field.GUEST_SESSION) != null || activeSession == null) {
-            return Future.succeededFuture();
+            return Future.succeededFuture(false);
         }
         return provider.getMeetingStatus(activeSession)
                 .compose(status -> status == MeetingStatus.RUNNING
-                        ? bindToSession(room.getString("id"), activeSession)
-                        : Future.<Void>succeededFuture());
+                        ? bindToSession(room.getString("id"), activeSession).map(true)
+                        : Future.succeededFuture(false));
     }
 
     @Override
@@ -121,6 +125,49 @@ public class DefaultGuestLinkService implements GuestLinkService {
             } else {
                 promise.complete(result.right().getValue());
             }
+        }));
+        return promise.future();
+    }
+
+    @Override
+    public Future<JsonObject> regenerate(String roomId) {
+        String query = "UPDATE " + WebConference.ROOM_TABLE + " SET guest_token = ?" +
+                " WHERE id = ? AND guest_link_enabled = TRUE" +
+                " RETURNING id, guest_token, guest_session;";
+        JsonArray params = new JsonArray().add(generateToken()).add(roomId);
+
+        Promise<JsonObject> promise = Promise.promise();
+        Sql.getInstance().prepared(query, params, SqlResult.validResultHandler(result -> {
+            if (result.isLeft()) {
+                promise.fail(result.left().getValue());
+            } else {
+                JsonArray rooms = result.right().getValue();
+                promise.complete(rooms.isEmpty() ? null : rooms.getJsonObject(0));
+            }
+        }));
+        return promise.future();
+    }
+
+    @Override
+    public Future<Map<String, JsonObject>> findLinks(List<String> roomIds) {
+        if (roomIds.isEmpty()) {
+            return Future.succeededFuture(new HashMap<>());
+        }
+        String query = "SELECT id, guest_token, guest_session FROM " + WebConference.ROOM_TABLE +
+                " WHERE id IN " + Sql.listPrepared(roomIds) + " AND guest_link_enabled = TRUE AND guest_token IS NOT NULL;";
+
+        Promise<Map<String, JsonObject>> promise = Promise.promise();
+        Sql.getInstance().prepared(query, new JsonArray(new ArrayList<>(roomIds)), SqlResult.validResultHandler(result -> {
+            if (result.isLeft()) {
+                promise.fail(result.left().getValue());
+                return;
+            }
+            Map<String, JsonObject> links = new HashMap<>();
+            JsonArray rows = result.right().getValue();
+            for (int i = 0; i < rows.size(); i++) {
+                links.put(rows.getJsonObject(i).getString("id"), rows.getJsonObject(i));
+            }
+            promise.complete(links);
         }));
         return promise.future();
     }

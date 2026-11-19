@@ -2,11 +2,20 @@ import {Rights, Shareable} from "entcore";
 import {roomService} from "../services";
 import {Mix} from "entcore-toolkit";
 
+export type GuestLinkState = 'next' | 'current';
+
+export interface IGuestLink {
+    guest_link: string
+    guest_link_state: GuestLinkState
+}
+
 export interface IRoom {
     id?: string
     name: string
     link?: string
-    public_link?: string
+    guest_link_enabled: boolean
+    guest_link?: string
+    guest_link_state?: GuestLinkState
     sessions?: number
     active_session?: string
     structure: string
@@ -28,7 +37,9 @@ export class Room implements Shareable, IRoom {
     id?: string;
     name: string;
     link?: string;
-    public_link?: string;
+    guest_link_enabled: boolean;
+    guest_link?: string;
+    guest_link_state?: GuestLinkState;
     sessions?: number;
     active_session?: string;
     structure: string;
@@ -46,7 +57,9 @@ export class Room implements Shareable, IRoom {
         this.id = '';
         this.name = '';
         this.link = null;
-        this.public_link = null;
+        this.guest_link_enabled = false;
+        this.guest_link = null;
+        this.guest_link_state = null;
         this.sessions = null;
         this.active_session = null;
         this.structure = structure ? structure : null;
@@ -66,7 +79,7 @@ export class Room implements Shareable, IRoom {
             id: this.id,
             name: this.name,
             link: this.link,
-            public_link: this.public_link,
+            guest_link_enabled: this.guest_link_enabled,
             sessions: this.sessions,
             active_session: this.active_session,
             structure: this.structure,

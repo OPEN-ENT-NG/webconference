@@ -39,17 +39,21 @@
                             <i18n>copy.link</i18n>
                         </a>
                     </div>
-                    <div class="twelve-mobile url-container" ng-if="!!vm.selectedRoom.public_link && vm.allowPublicLink">
+                    <div class="twelve-mobile url-container" ng-if="vm.allowPublicLink && !!vm.selectedRoom.guest_link">
                         <div class="input-url cell">
-                            <i18n class="bold cell">webconference.public.link</i18n>
+                            <i18n class="bold cell">webconference.guest.link</i18n>
                         </div>
-                        <a class="clipboard-link-field" data-clipboard-text="[[vm.selectedRoom.public_link]]">
+                        <a class="clipboard-link-field" data-clipboard-text="[[vm.selectedRoom.guest_link]]">
                             <i class="copy"></i>
                             <i18n>copy.link</i18n>
                         </a>
                     </div>
-                    <div class="info vertical-spacing-four" ng-if="!!vm.selectedRoom.public_link && vm.allowPublicLink">
-                        <i18n>webconference.public.link.explanation</i18n>
+                    <div class="info vertical-spacing-four" ng-if="vm.allowPublicLink && !!vm.selectedRoom.guest_link">
+                        <i18n ng-if="vm.selectedRoom.guest_link_state === 'current'">webconference.guest.link.current</i18n>
+                        <i18n ng-if="vm.selectedRoom.guest_link_state !== 'current'">webconference.guest.link.next</i18n>
+                        <button type="button" class="cancel top-spacing-twice" ng-click="vm.openGuestLinkLightbox()">
+                            <i18n>webconference.guest.link.regenerate</i18n>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -84,18 +88,22 @@
                             <i18n>copy.link</i18n>
                         </a>
                     </div>
-                    <div class="twelve url-container zero-mobile" ng-if="!!vm.selectedRoom.public_link && vm.allowPublicLink">
-                        <i18n class="bold one cell">webconference.public.link</i18n>
+                    <div class="twelve url-container zero-mobile" ng-if="vm.allowPublicLink && !!vm.selectedRoom.guest_link">
+                        <i18n class="bold one cell">webconference.guest.link</i18n>
                         <div class="input-url nine cell">
-                            <input type="text" ng-model="vm.selectedRoom.public_link" readonly>
+                            <input type="text" ng-model="vm.selectedRoom.guest_link" readonly>
                         </div>
-                        <a class="clipboard-link-field" data-clipboard-text="[[vm.selectedRoom.public_link]]">
-                           <i class="copy"></i>
+                        <a class="clipboard-link-field" data-clipboard-text="[[vm.selectedRoom.guest_link]]">
+                            <i class="copy"></i>
                             <i18n>copy.link</i18n>
                         </a>
                     </div>
-                    <div class="zero-mobile info vertical-spacing-four" ng-if="!!vm.selectedRoom.public_link && vm.allowPublicLink">
-                        <i18n>webconference.public.link.explanation</i18n>
+                    <div class="zero-mobile info vertical-spacing-four" ng-if="vm.allowPublicLink && !!vm.selectedRoom.guest_link">
+                        <i18n ng-if="vm.selectedRoom.guest_link_state === 'current'">webconference.guest.link.current</i18n>
+                        <i18n ng-if="vm.selectedRoom.guest_link_state !== 'current'">webconference.guest.link.next</i18n>
+                        <button type="button" class="cancel top-spacing-twice" ng-click="vm.openGuestLinkLightbox()">
+                            <i18n>webconference.guest.link.regenerate</i18n>
+                        </button>
                     </div>
                 </div>
                 <div class="zero twelve-mobile flex-space">
