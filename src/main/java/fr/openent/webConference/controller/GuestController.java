@@ -30,6 +30,30 @@ public class GuestController extends ControllerHelper {
 
     private final GuestLinkService guestLinkService = new DefaultGuestLinkService();
 
+    @Get("/pub/:token")
+    @ApiDoc("Render the guest page of a room")
+    public void page(HttpServerRequest request) {
+        resolveAccess(request).onComplete(ar -> {
+            if (ar.failed()) {
+                log.error("[WebConference@GuestController::page] Failed to resolve guest link " + shortToken(request), ar.cause());
+            }
+            GuestAccess access = ar.succeeded() ? ar.result() : null;
+            String token = request.getParam("token");
+            String error = request.getParam("error");
+
+            JsonObject params = new JsonObject()
+                    .put("lang", I18n.acceptLanguage(request))
+                    .put("token", isValidToken(token) ? token : "")
+                    .put("roomName", access != null && access.room != null ? access.room.getString("name") : "")
+                    .put("expired", access != null && access.state == GuestLinkState.EXPIRED)
+                    .put("waiting", access != null && access.state == GuestLinkState.WAITING)
+                    .put("errorInvalidName", ERROR_INVALID_NAME.equals(error))
+                    .put("errorUnavailable", access == null || ERROR_UNAVAILABLE.equals(error));
+            setGuestHeaders(request);
+            renderView(request, params, "guest.html", null);
+        });
+    }
+
     @Get("/pub/:token/status")
     @ApiDoc("Get the state of a guest link: waiting, open or expired")
     public void status(HttpServerRequest request) {
