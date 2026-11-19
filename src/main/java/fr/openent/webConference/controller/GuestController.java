@@ -17,12 +17,11 @@ import io.vertx.core.json.JsonObject;
 import org.entcore.common.controller.ControllerHelper;
 
 import java.util.Locale;
-import java.util.regex.Pattern;
+
+import static fr.openent.webConference.helper.GuestLinkHelper.isValidToken;
+import static fr.openent.webConference.helper.GuestLinkHelper.sanitizeName;
 
 public class GuestController extends ControllerHelper {
-    private static final Pattern TOKEN_FORMAT = Pattern.compile("[A-Za-z0-9_-]{43}");
-    private static final Pattern CONTROL_CHARS = Pattern.compile("\\p{Cntrl}");
-    private static final int MAX_NAME_LENGTH = 64;
     private static final String GUEST_PAGE_PATH = "/webconference/pub/";
     private static final String NAME_SUFFIX_KEY = "webconference.guest.suffix";
     private static final String ERROR_INVALID_NAME = "invalid-name";
@@ -131,18 +130,6 @@ public class GuestController extends ControllerHelper {
                 .putHeader("Cache-Control", "no-store")
                 .putHeader("Referrer-Policy", "no-referrer")
                 .putHeader("X-Robots-Tag", "noindex");
-    }
-
-    private static boolean isValidToken(String token) {
-        return token != null && TOKEN_FORMAT.matcher(token).matches();
-    }
-
-    private static String sanitizeName(String rawName) {
-        if (rawName == null) {
-            return null;
-        }
-        String name = CONTROL_CHARS.matcher(rawName).replaceAll("").trim();
-        return name.isEmpty() || name.length() > MAX_NAME_LENGTH ? null : name;
     }
 
     private static String shortToken(HttpServerRequest request) {
