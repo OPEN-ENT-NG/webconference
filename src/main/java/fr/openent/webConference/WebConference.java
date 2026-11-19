@@ -34,7 +34,10 @@ public class WebConference extends BaseServer {
 	public static final String CONTRIB_SHARING_BEHAVIOUR = "fr-openent-webConference-controller-RoomController|initContribSharingRight";
 	public static final String MANAGER_SHARING_BEHAVIOUR = "fr-openent-webConference-controller-RoomController|initManagerSharingRight";
 	public static JsonObject webconfConfig;
-	public static String publicUrl;
+
+	public static boolean isGuestLinkAllowed() {
+		return webconfConfig != null && Boolean.parseBoolean(String.valueOf(webconfConfig.getValue("allow-public-link", false)));
+	}
 
 	
 	@Override
@@ -48,11 +51,6 @@ public class WebConference extends BaseServer {
 		EventBus eb = getEventBus(vertx);
 
 		webconfConfig = config;
-		if (config.getValue("bigbluebutton") instanceof JsonObject) {
-			publicUrl = config.getJsonObject("bigbluebutton").getString("host") + "/public/rooms/";
-		} else {
-			publicUrl = config.getJsonArray("bigbluebutton").getJsonObject(0).getString("host") + "/public/rooms/";
-		}
 
 		EventStore eventStore = EventStoreFactory.getFactory().getEventStore(WebConference.class.getSimpleName());
 
@@ -81,6 +79,7 @@ public class WebConference extends BaseServer {
 		addController(new SynchroController());
 		addController(new WebConferenceController(eventStore));
 		addController(new WebHookController());
+		addController(new GuestController());
 
 		RoomProviderPool.getSingleton().init(vertx, eb, config);
 

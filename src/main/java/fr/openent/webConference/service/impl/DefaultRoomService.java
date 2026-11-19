@@ -69,16 +69,15 @@ public class DefaultRoomService implements RoomService {
     }
 
     @Override
-    public void create(String referer, JsonObject room, boolean isPublic, UserInfos user, Handler<Either<String, JsonObject>> handler) {
+    public void create(String referer, JsonObject room, UserInfos user, Handler<Either<String, JsonObject>> handler) {
         String id = UUID.randomUUID().toString();
         String moderatorPW = UUID.randomUUID().toString();
         String attendeePW = UUID.randomUUID().toString();
         String link = referer + "/rooms/" + id + "/join";
-        String public_link = isPublic ? (WebConference.publicUrl + id) : null;
         String query = "INSERT INTO " + WebConference.ROOM_TABLE +
-                " (id, name, owner, moderator_pw, attendee_pw, link, public_link, allow_waiting_room, allow_streaming," +
+                " (id, name, owner, moderator_pw, attendee_pw, link, allow_waiting_room, allow_streaming," +
                 " streaming_link, streaming_key, structure)" +
-                " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)" +
+                " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)" +
                 " RETURNING *;";
         JsonArray params = new JsonArray()
                 .add(id)
@@ -87,7 +86,6 @@ public class DefaultRoomService implements RoomService {
                 .add(moderatorPW)
                 .add(attendeePW)
                 .add(link)
-                .add(public_link)
                 .add(room.getBoolean(Field.ALLOW_WAITING_ROOM))
                 .add(room.getBoolean(Field.ALLOW_STREAMING))
                 .add(room.getString(Field.STREAMING_LINK))
@@ -98,10 +96,9 @@ public class DefaultRoomService implements RoomService {
     }
 
     @Override
-    public void update(String id, JsonObject room, boolean isPublic, Handler<Either<String, JsonObject>> handler) {
-        String public_link = isPublic ? (WebConference.publicUrl + id) : null;
+    public void update(String id, JsonObject room, Handler<Either<String, JsonObject>> handler) {
         String query = "UPDATE " + WebConference.ROOM_TABLE +
-                " SET name = ?, structure = ?, collab = ?, opener = ?, public_link = ?, allow_waiting_room = ?," +
+                " SET name = ?, structure = ?, collab = ?, opener = ?, allow_waiting_room = ?," +
                 " allow_streaming = ?, streaming_link = ?, streaming_key = ?" +
                 " WHERE id = ?" +
                 " RETURNING *;";
@@ -110,7 +107,6 @@ public class DefaultRoomService implements RoomService {
                 .add(room.getString("structure"))
                 .add(room.getBoolean("collab", false))
                 .add(room.getString("opener", null))
-                .add(public_link)
                 .add(room.getBoolean("allow_waiting_room"))
                 .add(room.getBoolean("allow_streaming", false))
                 .add(room.getString("streaming_link", null))

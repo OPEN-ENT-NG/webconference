@@ -9,6 +9,7 @@ import org.entcore.common.user.UserInfos;
 import org.entcore.common.user.UserUtils;
 
 import fr.openent.webConference.bigbluebutton.BigBlueButton;
+import fr.openent.webConference.core.constants.Field;
 import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
@@ -132,6 +133,17 @@ public class RoomProviderPool {
         return roomProviderPromise.future();
     }
     
+    /** Guests have no user structures, so the lookup goes by the room's structure first. */
+    public Future<RoomProvider> getInstanceForRoom( final HttpServerRequest request, final JsonObject room ) {
+		String structure = room.getString( Field.STRUCTURE );
+		RoomProvider instance = structure == null ? null : roomProviders.get( structure );
+		if( instance == null ) instance = roomProviders.get( request.host() );
+		if( instance == null ) instance = roomProviders.get( "*" );
+		return instance != null
+				? Future.succeededFuture( instance )
+				: Future.failedFuture( "[WebConference@RoomProviderPool] No video provider for room " + room.getString("id") );
+    }
+
     /** Retrieve the roomProvider for this User, or null if none can be found. */
     private Future<RoomProvider> getInstanceFromUser( final UserInfos user ) {
 		Promise<RoomProvider> roomProviderPromise = Promise.promise();

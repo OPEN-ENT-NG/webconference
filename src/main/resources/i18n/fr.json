@@ -87,6 +87,7 @@
   "webconference.update": "Modifier",
   "webconference.user": "Utilisateur",
   "webconference.waiting.message": "Oups ! La salle que vous tentez de rejoindre n'est pas encore ouverte.",
+  "webconference.guest.suffix": "invité",
   "webconference.waiting.refresh": "Actualiser",
   "webconference.write-message": "Envoyer un message",
   "webconferences.room.create": "Créer une salle"

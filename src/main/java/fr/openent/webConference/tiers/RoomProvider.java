@@ -24,6 +24,8 @@ public interface RoomProvider {
 
 	String getRedirectURL(String sessionID, String userDisplayName, String password);
 
+	String getGuestRedirectURL(String sessionID, String guestDisplayName, String attendeePassword);
+
 	void addWebHook(String webhook, Handler<Either<String, String>> handler);
 
 	void getMeetingInfo(String meetingId, Handler<Either<String, JsonObject>> handler);

@@ -147,11 +147,17 @@ public class BigBlueButton implements RoomProvider {
 
     @Override
     public String getRedirectURL(String sessionID, String userDisplayName, String password) {
-        String encodedName = encodeParams(userDisplayName);
-        String parameters = "fullName=" + encodedName + "&meetingID=" + sessionID + "&password=" + password;
+        return buildJoinURL("fullName=" + encodeParams(userDisplayName) + "&meetingID=" + sessionID + "&password=" + password);
+    }
+
+    @Override
+    public String getGuestRedirectURL(String sessionID, String guestDisplayName, String attendeePassword) {
+        return buildJoinURL("fullName=" + encodeParams(guestDisplayName) + "&meetingID=" + sessionID + "&password=" + attendeePassword + "&guest=true");
+    }
+
+    private String buildJoinURL(String parameters) {
         String checksum = checksum(Actions.JOIN + parameters + this.secret);
-        String url = this.host + this.apiEndpoint + "/" + Actions.JOIN + "?" + parameters + "&checksum=" + checksum;
-        return url;
+        return this.host + this.apiEndpoint + "/" + Actions.JOIN + "?" + parameters + "&checksum=" + checksum;
     }
 
     @Override
