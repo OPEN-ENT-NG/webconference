@@ -28,7 +28,7 @@
     <toolsVersion>2.0.0-final</toolsVersion>
     <junitVersion>4.10</junitVersion>
     <mockitoVersion>[2.0,3.0)</mockitoVersion>
-    <entCoreVersion>6.17-develop-pedago-SNAPSHOT</entCoreVersion>
+    <entCoreVersion>6.18-develop-pedago-SNAPSHOT</entCoreVersion>
     <powerMockVersion>2.0.2</powerMockVersion>
     <modMongoVersion>4.2-develop-pedago-SNAPSHOT</modMongoVersion>
     <modPostgresVersion>2.2-SNAPSHOT</modPostgresVersion>
